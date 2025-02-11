@@ -77,6 +77,49 @@ export function UserView() {
     fetchUsers();
   }, []);
 
+  const updateUserStatus = async (userId: string, newStatus: number) => {
+    try {
+      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/${userId}/status`;
+      const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+  
+      const data = await response.json();
+      if (data.success) {
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.id === userId ? { ...user, status: newStatus } : user
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error updating user status:', error);
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    try {
+      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/${userId}`;
+      const response = await fetch(apiUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      const data = await response.json();
+      if (data.success) {
+        // Remove the deleted user from the local state
+        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
+  };
 
   const dataFiltered = applyFilter({
     inputData: users,
@@ -198,6 +241,8 @@ export function UserView() {
                       row={row}
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
+                      onUpdateStatus={updateUserStatus}
+                      onDeleteUser = {deleteUser}
                     />
                   ))}
 

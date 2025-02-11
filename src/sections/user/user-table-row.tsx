@@ -36,9 +36,11 @@ type UserTableRowProps = {
   row: UserProps;
   selected: boolean;
   onSelectRow: () => void;
+  onUpdateStatus: (userId: string, newStatus: number) => void;  
+  onDeleteUser: (userId: string) => void; 
 };
 
-export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) {
+export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDeleteUser }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
@@ -48,6 +50,12 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
   const handleClosePopover = useCallback(() => {
     setOpenPopover(null);
   }, []);
+
+  const handleStatusChange = useCallback(()=>{
+    const newStatus = row.status ===  1 ? 0 : 1;
+    onUpdateStatus(row.id, newStatus);
+    handleClosePopover();
+  },[row.status, row.id, onUpdateStatus, handleClosePopover])
 
   const getCurrencyLabel = (currency: number) => {
     switch (currency) {
@@ -75,6 +83,10 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
       day: 'numeric',
     });
   };
+  const handleDeleteUser = useCallback(() => {
+    onDeleteUser(row.id);
+    handleClosePopover(); 
+  }, [row.id, onDeleteUser, handleClosePopover]);
 
   return (
     <>
@@ -166,15 +178,15 @@ export function UserTableRow({ row, selected, onSelectRow }: UserTableRowProps) 
             Toggle 2FA
           </MenuItem>
 
-          <MenuItem onClick={handleClosePopover}>
+          <MenuItem onClick={handleStatusChange}>
             <Iconify icon="solar:user-block-bold" />
             {row.status === 1 ? 'Deactivate' : 'Activate'}
           </MenuItem>
 
-          <MenuItem onClick={handleClosePopover} sx={{ color: 'error.main' }}>
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
-          </MenuItem>
+          <MenuItem onClick={handleDeleteUser} sx={{ color: 'error.main' }}>
+  <Iconify icon="solar:trash-bin-trash-bold" />
+  Delete
+</MenuItem>
         </MenuList>
       </Popover>
     </>
