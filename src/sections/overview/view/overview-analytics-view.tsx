@@ -1,6 +1,10 @@
+import {env} from 'src/config/env.config';
+import { useState, useCallback, useEffect } from 'react';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { Box, CircularProgress } from '@mui/material';
+
 
 import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
 import { AnalyticsCurrentVisits } from '../analytics-current-visits';
@@ -9,7 +13,70 @@ import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
 import { AnalyticsOrderTimeline } from '../analytics-order-timeline';
 
+
+export interface UserProps {
+  id: string;
+  username: string;
+  fullname: string;
+  patronymic: string;
+  photo: string;
+  dob: Date;
+  gender: string;
+  email: string;
+  phone_number: string;
+  registration_date: Date;
+  last_login: Date;
+  status: number;
+  is_verified: number;
+  is_2fa: number;
+  currency: number;
+  language: string;
+  country: string;
+  city: string;
+  role_id: number;
+  created_at: Date;
+  updated_at: Date;
+    balance: number;
+  bonus_balance: number;
+  total_deposits: number;
+  total_withdrawals: number;
+  last_deposit_date: Date;
+  last_withdrawal_date: Date;
+}
+
 export function GamingAnalyticsView() {
+  const [users, setUsers] = useState<UserProps[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const activePlayersCount = users.filter((user)=> user.status===1).length;
+
+ useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players`;
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        console.log('data', {data})
+        if (data.success) {
+          setUsers(data.data.players);
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
@@ -34,7 +101,7 @@ export function GamingAnalyticsView() {
           <AnalyticsWidgetSummary
             title="Active Players"
             percent={-0.1}
-            total={1352831}
+            total={activePlayersCount}
             color="secondary"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{

@@ -16,6 +16,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import {GamingAnalyticsView} from 'src/sections/overview/view/overview-analytics-view';
+
 
 import { TableNoData } from '../table-no-data';
 import { UserTableRow } from '../user-table-row';
@@ -46,6 +48,12 @@ export interface UserProps {
   role_id: number;
   created_at: Date;
   updated_at: Date;
+    balance: number;
+  bonus_balance: number;
+  total_deposits: number;
+  total_withdrawals: number;
+  last_deposit_date: Date;
+  last_withdrawal_date: Date;
 }
 
 export function UserView() {
@@ -76,6 +84,8 @@ export function UserView() {
 
     fetchUsers();
   }, []);
+
+  const activePlayersCount = users.filter((user)=> user.status===1).length;
 
   const updateUserStatus = async (userId: string, newStatus: number) => {
     try {
@@ -148,6 +158,7 @@ export function UserView() {
         </Typography>
       </Box>
 
+      {/* <GamingAnalyticsView activePlayersCount={activePlayersCount} /> */}
       <Card>
         <Stack direction="row" spacing={2} sx={{ p: 2 }}>
           <TextField
@@ -219,13 +230,14 @@ export function UserView() {
                   { id: 'phone_number', label: 'Phone Number' },
                   { id: 'is_verified', label: 'Verified', align: 'center' },
                   { id: 'status', label: 'Status' },
-                  { id: 'is_2fa', label: '2FA' },
-                  { id: 'currency', label: 'Currency' },
-                  { id: 'language', label: 'Language' },
-                  { id: 'country', label: 'Country' },
-                  { id: 'city', label: 'City' },
-                  { id: 'role_id', label: 'Role' },
-                  { id: 'created_at', label: 'Created At' },
+                  // { id: 'is_2fa', label: '2FA' },
+                  // { id: 'currency', label: 'Currency' },
+                  // {id: 'balance', label: 'Balance'},
+                  // { id: 'language', label: 'Language' },
+                  // { id: 'country', label: 'Country' },
+                  // { id: 'city', label: 'City' },
+                  // { id: 'role_id', label: 'Role' },
+                  // { id: 'created_at', label: 'Created At' },
                   { id: 'actions', label: 'Actions' },
                 ]}
               />
