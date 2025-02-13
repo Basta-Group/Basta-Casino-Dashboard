@@ -3,8 +3,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
-import { UserProps } from './user-table-row';
 import { Label } from 'src/components/label';
+import { UserProps } from './types';
 
 interface UserDetailDialogProps {
   open: boolean;
