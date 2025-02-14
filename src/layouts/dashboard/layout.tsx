@@ -1,13 +1,10 @@
 import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
-
 import { useState } from 'react';
-
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 
-import { _langs, _notifications } from 'src/_mock';
-
+import { _langs } from 'src/_mock';
 import { Iconify } from 'src/components/iconify';
 
 import { Main } from './main';
@@ -35,16 +32,11 @@ export type DashboardLayoutProps = {
 
 export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) {
   const theme = useTheme();
-
   const [navOpen, setNavOpen] = useState(false);
-
   const layoutQuery: Breakpoint = 'lg';
 
   return (
     <LayoutSection
-      /** **************************************
-       * Header
-       *************************************** */
       headerSection={
         <HeaderSection
           layoutQuery={layoutQuery}
@@ -74,7 +66,6 @@ export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) 
                   data={navData}
                   open={navOpen}
                   onClose={() => setNavOpen(false)}
-                  // workspaces={_workspaces}
                 />
               </>
             ),
@@ -82,7 +73,7 @@ export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) 
               <Box gap={1} display="flex" alignItems="center">
                 <Searchbar />
                 <LanguagePopover data={_langs} />
-                <NotificationsPopover data={_notifications} />
+                <NotificationsPopover />
                 <AccountPopover
                   data={[
                     {
@@ -107,19 +98,8 @@ export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) 
           }}
         />
       }
-      /** **************************************
-       * Sidebar
-       *************************************** */
-      sidebarSection={
-        <NavDesktop data={navData} layoutQuery={layoutQuery} />
-      }
-      /** **************************************
-       * Footer
-       *************************************** */
+      sidebarSection={<NavDesktop data={navData} layoutQuery={layoutQuery} />}
       footerSection={null}
-      /** **************************************
-       * Style
-       *************************************** */
       cssVars={{
         '--layout-nav-vertical-width': '300px',
         '--layout-dashboard-content-pt': theme.spacing(1),

@@ -1,7 +1,6 @@
+import {env} from 'src/config/env.config';
 import type { IconButtonProps } from '@mui/material/IconButton';
-
-import { useState, useCallback } from 'react';
-
+import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import Badge from '@mui/material/Badge';
@@ -18,7 +17,6 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { fToNow } from 'src/utils/format-time';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -33,17 +31,65 @@ type NotificationItemProps = {
   avatarUrl: string | null;
   postedAt: string | number | null;
 };
+interface PaginationData {
+  total: number;
+  page: number;
+  totalPages: number;
+}
 
 export type NotificationsPopoverProps = IconButtonProps & {
   data?: NotificationItemProps[];
 };
 
-export function NotificationsPopover({ data = [], sx, ...other }: NotificationsPopoverProps) {
-  const [notifications, setNotifications] = useState(data);
-
+export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps) {
+  const [notifications, setNotifications] = useState<NotificationItemProps[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationData>({
+    total: 0,
+    page: 1,
+    totalPages: 1
+  });
   const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
-
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch(`${env.api.baseUrl}:${env.api.port}/api/auth/notifications`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch notifications');
+      }
+      const data = await response.json();
+      
+      const transformedNotifications = data.data.notifications.map((notification: any) => ({
+        id: notification._id,
+        type: notification.type,
+        title: notification.user_id?.username || notification.metadata?.username || 'User',
+        isUnRead: true,
+        description: notification.message,
+        avatarUrl: null,
+        postedAt: notification.created_at,
+        metadata: notification.metadata,
+        user_id: notification.user_id ? {
+          username: notification.user_id.username,
+          email: notification.user_id.email,
+          phone_number: notification.user_id.phone_number
+        } : null
+      }));
+  
+      setNotifications(transformedNotifications);
+      setPagination(data.data.pagination);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (openPopover) {
+      fetchNotifications();
+    }
+  }, [openPopover]);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -58,7 +104,6 @@ export function NotificationsPopover({ data = [], sx, ...other }: NotificationsP
       ...notification,
       isUnRead: false,
     }));
-
     setNotifications(updatedNotifications);
   }, [notifications]);
 
@@ -101,7 +146,7 @@ export function NotificationsPopover({ data = [], sx, ...other }: NotificationsP
           </Box>
 
           {totalUnRead > 0 && (
-            <Tooltip title=" Mark all as read">
+            <Tooltip title="Mark all as read">
               <IconButton color="primary" onClick={handleMarkAllAsRead}>
                 <Iconify icon="solar:check-read-outline" />
               </IconButton>
@@ -112,31 +157,39 @@ export function NotificationsPopover({ data = [], sx, ...other }: NotificationsP
         <Divider sx={{ borderStyle: 'dashed' }} />
 
         <Scrollbar fillContent sx={{ minHeight: 240, maxHeight: { xs: 360, sm: 'none' } }}>
-          <List
-            disablePadding
-            subheader={
-              <ListSubheader disableSticky sx={{ py: 1, px: 2.5, typography: 'overline' }}>
-                New
-              </ListSubheader>
-            }
-          >
-            {notifications.slice(0, 2).map((notification) => (
-              <NotificationItem key={notification.id} notification={notification} />
-            ))}
-          </List>
+          {loading ? (
+            <Typography sx={{ p: 2 }}>Loading...</Typography>
+          ) : error ? (
+            <Typography sx={{ p: 2, color: 'error.main' }}>{error}</Typography>
+          ) : (
+            <>
+              <List
+                disablePadding
+                subheader={
+                  <ListSubheader disableSticky sx={{ py: 1, px: 2.5, typography: 'overline' }}>
+                    New
+                  </ListSubheader>
+                }
+              >
+                {notifications.slice(0, 2).map((notification) => (
+                  <NotificationItem key={notification.id} notification={notification} />
+                ))}
+              </List>
 
-          <List
-            disablePadding
-            subheader={
-              <ListSubheader disableSticky sx={{ py: 1, px: 2.5, typography: 'overline' }}>
-                Before that
-              </ListSubheader>
-            }
-          >
-            {notifications.slice(2, 5).map((notification) => (
-              <NotificationItem key={notification.id} notification={notification} />
-            ))}
-          </List>
+              <List
+                disablePadding
+                subheader={
+                  <ListSubheader disableSticky sx={{ py: 1, px: 2.5, typography: 'overline' }}>
+                    Before that
+                  </ListSubheader>
+                }
+              >
+                {notifications.slice(2, 5).map((notification) => (
+                  <NotificationItem key={notification.id} notification={notification} />
+                ))}
+              </List>
+            </>
+          )}
         </Scrollbar>
 
         <Divider sx={{ borderStyle: 'dashed' }} />
@@ -204,48 +257,18 @@ function renderContent(notification: NotificationItemProps) {
     </Typography>
   );
 
-  if (notification.type === 'order-placed') {
-    return {
-      avatarUrl: (
-        <img
-          alt={notification.title}
-          src="/assets/icons/notification/ic-notification-package.svg"
-        />
-      ),
-      title,
-    };
+  let iconPath = '/assets/icons/notification/ic-notification-package.svg';
+  
+  switch (notification.type) {
+    case 'USER_REGISTERED':
+      iconPath = '/assets/icons/notification/ic-notification-user.svg';
+      break;
+    default:
+      iconPath = '/assets/icons/notification/ic-notification-package.svg';
   }
-  if (notification.type === 'order-shipped') {
-    return {
-      avatarUrl: (
-        <img
-          alt={notification.title}
-          src="/assets/icons/notification/ic-notification-shipping.svg"
-        />
-      ),
-      title,
-    };
-  }
-  if (notification.type === 'mail') {
-    return {
-      avatarUrl: (
-        <img alt={notification.title} src="/assets/icons/notification/ic-notification-mail.svg" />
-      ),
-      title,
-    };
-  }
-  if (notification.type === 'chat-message') {
-    return {
-      avatarUrl: (
-        <img alt={notification.title} src="/assets/icons/notification/ic-notification-chat.svg" />
-      ),
-      title,
-    };
-  }
+
   return {
-    avatarUrl: notification.avatarUrl ? (
-      <img alt={notification.title} src={notification.avatarUrl} />
-    ) : null,
+    avatarUrl: <img alt={notification.title} src={iconPath} />,
     title,
   };
 }
