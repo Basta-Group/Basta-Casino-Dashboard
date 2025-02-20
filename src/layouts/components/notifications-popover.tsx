@@ -15,12 +15,15 @@ import ListItemText from '@mui/material/ListItemText';
 import ListSubheader from '@mui/material/ListSubheader';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemButton from '@mui/material/ListItemButton';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
 
 import { fToNow } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-
-// ----------------------------------------------------------------------
 
 type NotificationItemProps = {
   id: string;
@@ -30,7 +33,14 @@ type NotificationItemProps = {
   description: string;
   avatarUrl: string | null;
   postedAt: string | number | null;
+  metadata?: any;
+  user_id?: {
+    username: string;
+    email: string;
+    phone_number: string;
+  } | null;
 };
+
 interface PaginationData {
   total: number;
   page: number;
@@ -41,6 +51,71 @@ export type NotificationsPopoverProps = IconButtonProps & {
   data?: NotificationItemProps[];
 };
 
+interface NotificationsViewProps {
+  open: boolean;
+  onClose: () => void;
+  notifications: NotificationItemProps[];
+  pagination: PaginationData;
+  onPageChange: (page: number) => void;
+  loading: boolean;
+  error: string | null;
+  onMarkAsRead: (notificationId: string) => void;
+}
+
+function NotificationsViewDialog({
+  open,
+  onClose,
+  notifications,
+  pagination,
+  onPageChange,
+  loading,
+  error,
+  onMarkAsRead
+}: NotificationsViewProps) {
+  return (
+    <Dialog 
+      open={open} 
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+    >
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        All Notifications
+        <IconButton onClick={onClose}>
+          <Iconify icon="solar:close-circle-outline" />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent>
+        <Scrollbar>
+          {loading ? (
+            <Typography sx={{ p: 2 }}>Loading...</Typography>
+          ) : error ? (
+            <Typography sx={{ p: 2, color: 'error.main' }}>{error}</Typography>
+          ) : (
+            <List disablePadding>
+              {notifications.map((notification) => (
+                <NotificationItem 
+                  key={notification.id} 
+                  notification={notification}
+                  onClick={() => onMarkAsRead(notification.id)}
+                />
+              ))}
+            </List>
+          )}
+        </Scrollbar>
+        
+        <Stack alignItems="center" sx={{ mt: 2 }}>
+          <Pagination 
+            count={pagination.totalPages}
+            page={pagination.page}
+            onChange={(_, page) => onPageChange(page)}
+          />
+        </Stack>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps) {
   const [notifications, setNotifications] = useState<NotificationItemProps[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,12 +125,17 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
     page: 1,
     totalPages: 1
   });
+  const [viewAllOpen, setViewAllOpen] = useState(false);
+  const [allNotifications, setAllNotifications] = useState<NotificationItemProps[]>([]);
   const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (page: number = 1, isViewAll: boolean = false) => {
     try {
-      const response = await fetch(`${env.api.baseUrl}:${env.api.port}/api/auth/notifications`);
+      setLoading(true);
+      const response = await fetch(
+        `${env.api.baseUrl}:${env.api.port}/api/auth/notifications?page=${page}&limit=${isViewAll ? 10 : 5}`
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch notifications');
       }
@@ -76,8 +156,12 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
           phone_number: notification.user_id.phone_number
         } : null
       }));
-  
-      setNotifications(transformedNotifications);
+
+      if (isViewAll) {
+        setAllNotifications(transformedNotifications);
+      } else {
+        setNotifications(transformedNotifications);
+      }
       setPagination(data.data.pagination);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -85,9 +169,10 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
       setLoading(false);
     }
   };
+
   useEffect(() => {
     if (openPopover) {
-      fetchNotifications();
+      fetchNotifications(1, false);
     }
   }, [openPopover]);
 
@@ -99,13 +184,62 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
     setOpenPopover(null);
   }, []);
 
-  const handleMarkAllAsRead = useCallback(() => {
-    const updatedNotifications = notifications.map((notification) => ({
-      ...notification,
-      isUnRead: false,
-    }));
-    setNotifications(updatedNotifications);
+  const handleMarkAllAsRead = useCallback(async () => {
+    try {
+      const response = await fetch(`${env.api.baseUrl}:${env.api.port}/api/auth/notifications/mark-all-read`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to mark notifications as read');
+      }
+
+      const updatedNotifications = notifications.map((notification) => ({
+        ...notification,
+        isUnRead: false,
+      }));
+      setNotifications(updatedNotifications);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mark as read');
+    }
   }, [notifications]);
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      const response = await fetch(
+        `${env.api.baseUrl}:${env.api.port}/api/auth/notifications/${notificationId}/mark-read`,
+        {
+          method: 'POST',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to mark notification as read');
+      }
+
+      const updatedNotifications = notifications.map((notification) =>
+        notification.id === notificationId
+          ? { ...notification, isUnRead: false }
+          : notification
+      );
+      setNotifications(updatedNotifications);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mark as read');
+    }
+  };
+
+  const handleViewAllOpen = () => {
+    setViewAllOpen(true);
+    fetchNotifications(1, true);
+  };
+
+  const handleViewAllClose = () => {
+    setViewAllOpen(false);
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchNotifications(page, true);
+  };
 
   return (
     <>
@@ -172,7 +306,11 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
                 }
               >
                 {notifications.slice(0, 2).map((notification) => (
-                  <NotificationItem key={notification.id} notification={notification} />
+                  <NotificationItem 
+                    key={notification.id} 
+                    notification={notification}
+                    onClick={() => handleMarkAsRead(notification.id)}
+                  />
                 ))}
               </List>
 
@@ -185,7 +323,11 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
                 }
               >
                 {notifications.slice(2, 5).map((notification) => (
-                  <NotificationItem key={notification.id} notification={notification} />
+                  <NotificationItem 
+                    key={notification.id} 
+                    notification={notification}
+                    onClick={() => handleMarkAsRead(notification.id)}
+                  />
                 ))}
               </List>
             </>
@@ -195,22 +337,43 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
         <Divider sx={{ borderStyle: 'dashed' }} />
 
         <Box sx={{ p: 1 }}>
-          <Button fullWidth disableRipple color="inherit">
+          <Button 
+            fullWidth 
+            disableRipple 
+            color="inherit"
+            onClick={handleViewAllOpen}
+          >
             View all
           </Button>
         </Box>
       </Popover>
+
+      <NotificationsViewDialog
+        open={viewAllOpen}
+        onClose={handleViewAllClose}
+        notifications={allNotifications}
+        pagination={pagination}
+        onPageChange={handlePageChange}
+        loading={loading}
+        error={error}
+        onMarkAsRead={handleMarkAsRead}
+      />
     </>
   );
 }
 
-// ----------------------------------------------------------------------
-
-function NotificationItem({ notification }: { notification: NotificationItemProps }) {
+function NotificationItem({ 
+  notification, 
+  onClick 
+}: { 
+  notification: NotificationItemProps;
+  onClick?: () => void;
+}) {
   const { avatarUrl, title } = renderContent(notification);
 
   return (
     <ListItemButton
+      onClick={onClick}
       sx={{
         py: 1.5,
         px: 2.5,
@@ -244,8 +407,6 @@ function NotificationItem({ notification }: { notification: NotificationItemProp
     </ListItemButton>
   );
 }
-
-// ----------------------------------------------------------------------
 
 function renderContent(notification: NotificationItemProps) {
   const title = (
