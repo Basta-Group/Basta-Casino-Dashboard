@@ -26,10 +26,10 @@ A powerful, modern admin dashboard for gaming platforms built with React and Mat
 
 ```bash
 # Clone the repository
-git clone https://github.com/game-player-admin/material-kit-react.git
+git clone https://github.com/Basta-Casino/Dashboard
 
 # Navigate to project directory
-cd material-kit-react
+cd Basta-Casino/Dashboard
 
 # Install dependencies
 npm install
