@@ -43,6 +43,8 @@ export interface UserProps {
 }
 
 export function GamingAnalyticsView() {
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  console.log('=====token===', token);
   const [users, setUsers] = useState<UserProps[]>([]);
   const [activePlayersData, setActivePlayersData] = useState<number[]>([0]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,13 @@ export function GamingAnalyticsView() {
     const fetchPlayerStats = async () => {
       try {
         const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/statistics`;
-        const response = await fetch(apiUrl);
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`, 
+          },
+        });
         const data = await response.json();
 
         console.log('data', { data });
@@ -89,7 +97,7 @@ export function GamingAnalyticsView() {
       }
     };
     fetchPlayerStats();
-  }, []);
+  }, [token]);
 
   if (loading) {
     return (
