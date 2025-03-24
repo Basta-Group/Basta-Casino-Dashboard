@@ -35,14 +35,17 @@ export function SignInView() {
       setLoading(true);
       setError('');
       const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/login`;
+      const requestData = { ...formData, role_id: 1 };
 
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestData),
       });
 
       const data = await response.json();
+
+      console.log("==data==",data)
 
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');

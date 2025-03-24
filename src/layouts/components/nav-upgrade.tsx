@@ -20,7 +20,7 @@ export function CasinoPromo({ sx, ...other }: StackProps) {
       }}
       {...other}
     >
-      <Typography
+      {/* <Typography
         variant="h6"
         sx={(theme) => ({
           ...textGradient(
@@ -86,7 +86,7 @@ export function CasinoPromo({ sx, ...other }: StackProps) {
         }}
       >
         *Terms & Conditions Apply. Please Play Responsibly
-      </Typography>
+      </Typography> */}
     </Box>
   );
 }

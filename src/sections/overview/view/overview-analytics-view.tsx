@@ -1,10 +1,9 @@
-import {env} from 'src/config/env.config';
+import { env } from 'src/config/env.config';
 import { useState, useCallback, useEffect } from 'react';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Box, CircularProgress } from '@mui/material';
-
 
 import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
 import { AnalyticsCurrentVisits } from '../analytics-current-visits';
@@ -12,7 +11,6 @@ import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
 import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
 import { AnalyticsOrderTimeline } from '../analytics-order-timeline';
-
 
 export interface UserProps {
   id: string;
@@ -36,7 +34,7 @@ export interface UserProps {
   role_id: number;
   created_at: Date;
   updated_at: Date;
-    balance: number;
+  balance: number;
   bonus_balance: number;
   total_deposits: number;
   total_withdrawals: number;
@@ -45,18 +43,22 @@ export interface UserProps {
 }
 
 export function GamingAnalyticsView() {
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
+
   const [users, setUsers] = useState<UserProps[]>([]);
+  const [activePlayersData, setActivePlayersData] = useState<number[]>([0]);
+  const [activePlayersRegionData, setActivePlayersRegionData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const activePlayersCount = users.filter((user)=> user.status===1).length;
+  const activePlayersCount = users.filter((user) => user.status === 1).length;
 
- useEffect(() => {
+  useEffect(() => {
     const fetchUsers = async () => {
       try {
         const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players`;
         const response = await fetch(apiUrl);
         const data = await response.json();
-        console.log('data', {data})
+        console.log('data', { data });
         if (data.success) {
           setUsers(data.data.players);
         }
@@ -68,7 +70,63 @@ export function GamingAnalyticsView() {
     };
 
     fetchUsers();
-  }, []);
+    /* fetch players  stats */
+    const fetchPlayerStats = async () => {
+      try {
+        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/statistics`;
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+
+        console.log('data', { data });
+
+        if (data.success) {
+          const stats = data.data.activePlayersPerMonth;
+
+          const seriesData = stats.map((item: any) => item.activePlayers);
+
+          setActivePlayersData(seriesData);
+        }
+      } catch (error) {
+        console.error('Error fetching player stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlayerStats();
+    /* Fetch players region stats */
+    const fetchPlayerRegionStats = async () => {
+      try {
+        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/region/statistics`;
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+
+        console.log('player region data', { data });
+
+        if (data.success) {
+          setActivePlayersRegionData(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching player Region stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlayerRegionStats();
+    
+  }, [token]);
 
   if (loading) {
     return (
@@ -105,8 +163,22 @@ export function GamingAnalyticsView() {
             color="secondary"
             icon={<img alt="icon" src="/assets/icons/glass/ic-glass-users.svg" />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [56, 47, 40, 62, 73, 30, 23, 54],
+              categories: [
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December',
+              ],
+
+              series: activePlayersData || [],
             }}
           />
         </Grid>
@@ -143,11 +215,12 @@ export function GamingAnalyticsView() {
           <AnalyticsCurrentVisits
             title="Players by Region"
             chart={{
-              series: [
-                { label: 'USD Players', value: 3500 },
-                { label: 'INR Players', value: 2500 },
-                { label: 'GBP Players', value: 1500 },
-              ],
+              series: activePlayersRegionData,
+              //  [
+              //   { label: 'USD Players', value: 3500 },
+              //   { label: 'INR Players', value: 2500 },
+              //   { label: 'GBP Players', value: 1500 },
+              // ],
             }}
           />
         </Grid>
@@ -193,13 +266,13 @@ export function GamingAnalyticsView() {
         </Grid>
 
         <Grid xs={12} md={6} lg={4}>
-          <AnalyticsOrderTimeline 
-            title="Recent Transactions" 
+          <AnalyticsOrderTimeline
+            title="Recent Transactions"
             list={[
               { id: '1', title: 'Deposit', time: '2 hours ago', type: 'deposit' },
               { id: '2', title: 'Withdrawal', time: '4 hours ago', type: 'withdrawal' },
               { id: '3', title: 'Game Purchase', time: '6 hours ago', type: 'purchase' },
-            ]} 
+            ]}
           />
         </Grid>
       </Grid>
