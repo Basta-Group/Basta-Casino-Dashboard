@@ -44,9 +44,10 @@ export interface UserProps {
 
 export function GamingAnalyticsView() {
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
-  console.log('=====token===', token);
+
   const [users, setUsers] = useState<UserProps[]>([]);
   const [activePlayersData, setActivePlayersData] = useState<number[]>([0]);
+  const [activePlayersRegionData, setActivePlayersRegionData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const activePlayersCount = users.filter((user) => user.status === 1).length;
@@ -69,6 +70,7 @@ export function GamingAnalyticsView() {
     };
 
     fetchUsers();
+    /* fetch players  stats */
     const fetchPlayerStats = async () => {
       try {
         const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/statistics`;
@@ -76,7 +78,7 @@ export function GamingAnalyticsView() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`, 
+            Authorization: `Bearer ${token}`,
           },
         });
         const data = await response.json();
@@ -96,7 +98,34 @@ export function GamingAnalyticsView() {
         setLoading(false);
       }
     };
+
     fetchPlayerStats();
+    /* Fetch players region stats */
+    const fetchPlayerRegionStats = async () => {
+      try {
+        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/region/statistics`;
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+
+        console.log('player region data', { data });
+
+        if (data.success) {
+          setActivePlayersRegionData(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching player Region stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlayerRegionStats();
+    
   }, [token]);
 
   if (loading) {
@@ -186,11 +215,12 @@ export function GamingAnalyticsView() {
           <AnalyticsCurrentVisits
             title="Players by Region"
             chart={{
-              series: [
-                { label: 'USD Players', value: 3500 },
-                { label: 'INR Players', value: 2500 },
-                { label: 'GBP Players', value: 1500 },
-              ],
+              series: activePlayersRegionData,
+              //  [
+              //   { label: 'USD Players', value: 3500 },
+              //   { label: 'INR Players', value: 2500 },
+              //   { label: 'GBP Players', value: 1500 },
+              // ],
             }}
           />
         </Grid>
