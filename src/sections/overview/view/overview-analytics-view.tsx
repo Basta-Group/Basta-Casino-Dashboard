@@ -125,7 +125,6 @@ export function GamingAnalyticsView() {
       }
     };
     fetchPlayerRegionStats();
-    
   }, [token]);
 
   if (loading) {

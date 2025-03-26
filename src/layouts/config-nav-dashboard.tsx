@@ -78,6 +78,14 @@ export const navData = [
       { title: 'Admin Users', path: '/access/users' },
     ],
   },
+  {
+    title: 'Payment Management',
+    path: '/payment-details',
+    children: [
+      { title: 'Invoices', path: '/payments/invoices' },
+      { title: 'Refunds', path: '/payments/refunds' },
+    ],
+  },
 ];
 
 export type NavItem = {
