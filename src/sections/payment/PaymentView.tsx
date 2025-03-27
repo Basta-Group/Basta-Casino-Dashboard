@@ -22,7 +22,7 @@ const STRIPE_KEYS = {
 };
 
 export function PaymentView() {
-  const [showPassword, setShowPassword] = useState({
+  const [showPassword, setShowPassword] = useState<Record<string, boolean>>({
     STRIPE_SECRET_KEY: false,
     STRIPE_PUBLISHABLE_KEY: false,
     STRIPE_WEBHOOK_SECRET: false,
