@@ -64,6 +64,7 @@ export function UserView() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCurrency, setFilterCurrency] = useState('all');
   const [filter2FA, setFilter2FA] = useState('all');
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -94,6 +95,7 @@ export function UserView() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ status: newStatus }),
       });
@@ -118,6 +120,7 @@ export function UserView() {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
       });
   

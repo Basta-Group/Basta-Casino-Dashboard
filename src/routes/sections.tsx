@@ -10,6 +10,7 @@ import { DashboardLayout } from 'src/layouts/dashboard';
 
 // ----------------------------------------------------------------------
 
+// Lazy-loaded pages
 export const HomePage = lazy(() => import('src/pages/home'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/user'));
@@ -20,6 +21,7 @@ export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 // ----------------------------------------------------------------------
 
+// Loading fallback
 const renderFallback = (
   <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
     <LinearProgress
@@ -33,15 +35,25 @@ const renderFallback = (
   </Box>
 );
 
+// Authentication check
+const isAuthenticated = () => !!localStorage.getItem('accessToken');
+
+// Auth Guard
+const AuthGuard = ({ children }: { children: React.ReactNode }) =>
+  isAuthenticated() ? <>{children}</> : <Navigate to="/sign-in" replace />;
+
+
 export function Router() {
   return useRoutes([
     {
       element: (
-        <DashboardLayout>
-          <Suspense fallback={renderFallback}>
-            <Outlet />
-          </Suspense>
-        </DashboardLayout>
+        <AuthGuard>
+          <DashboardLayout>
+            <Suspense fallback={renderFallback}>
+              <Outlet />
+            </Suspense>
+          </DashboardLayout>
+        </AuthGuard>
       ),
       children: [
         { element: <HomePage />, index: true },

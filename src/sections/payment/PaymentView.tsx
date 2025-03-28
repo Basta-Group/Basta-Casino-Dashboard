@@ -29,6 +29,7 @@ export function PaymentView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
 
   useEffect(() => {
     const fetchStripeConfig = async () => {
@@ -38,6 +39,7 @@ export function PaymentView() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -59,7 +61,7 @@ export function PaymentView() {
       }
     };
     fetchStripeConfig();
-  }, []);
+  }, [token]);
 
   const handleCopy = (key: string) => {
     navigator.clipboard.writeText(stripeKeys[key as keyof typeof stripeKeys]);
@@ -79,6 +81,7 @@ export function PaymentView() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ stripeMode }),
       });
