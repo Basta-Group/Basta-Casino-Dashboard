@@ -15,7 +15,7 @@ import {
 
 export const _myAccount = {
   displayName: 'Basta Group',
-  email: 'demo@minimals.cc',
+  email: 'admin@bastagroup.com',
   photoURL: '/assets/images/avatar/avatar-25.webp',
 };
 

@@ -108,22 +108,25 @@ export function PaymentView() {
     <>
       <Box
         sx={{
-          maxWidth: 400,
-          minWidth: { xs: 'auto', sm: 400 },
+          maxWidth: 480,
+          minWidth: { xs: 'auto', sm: 480 },
           margin: 'auto',
-          mt: 10,
-          p: 3,
-          boxShadow: 3,
-          borderRadius: 2,
+          mt: 1,
+          p: 4,
+          boxShadow: 4,
+          borderRadius: 3,
           bgcolor: '#fff',
         }}
       >
-        <Box gap={1.5} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 5 }}>
-          <Typography variant="h5">Payment Details</Typography>
+        <Box gap={2} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 6 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            Stripe Details
+          </Typography>
         </Box>
-        <Box display="flex" flexDirection="column" alignItems="flex-end">
+
+        <Box display="flex" flexDirection="column" alignItems="center">
           {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+            <Alert severity="error" sx={{ width: '100%', mb: 3, borderRadius: 2 }}>
               {error}
             </Alert>
           )}
@@ -133,9 +136,21 @@ export function PaymentView() {
               fullWidth
               label={field}
               value={stripeKeys[field as keyof typeof stripeKeys]}
-              InputLabelProps={{ shrink: true, sx: { color: 'text.primary' } }}
+              InputLabelProps={{
+                shrink: true,
+                sx: {
+                  color: 'text.primary',
+                  fontSize: '1.1rem',
+                  fontWeight: 500,
+                },
+              }}
               type={showPassword[field] ? 'text' : 'password'}
               InputProps={{
+                sx: {
+                  fontSize: '1.1rem',
+                  bgcolor: '#f9fafb',
+                  borderRadius: 1.5,
+                },
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
@@ -143,16 +158,20 @@ export function PaymentView() {
                         setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }))
                       }
                       edge="end"
+                      sx={{ p: 1 }}
                     >
                       <Iconify
                         icon={showPassword[field] ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                        width={24}
                       />
                     </IconButton>
+
                     <Tooltip title={copiedField === field ? 'Copied!' : 'Copy'}>
-                      <IconButton onClick={() => handleCopy(field)} edge="end">
+                      <IconButton onClick={() => handleCopy(field)} edge="end" sx={{ p: 1 }}>
                         <Iconify
                           icon={copiedField === field ? 'solar:check-bold' : 'solar:copy-bold'}
-                          color={copiedField === field ? 'green' : 'inherit'}
+                          width={24}
+                          color={copiedField === field ? 'success.main' : 'text.secondary'}
                         />
                       </IconButton>
                     </Tooltip>
@@ -160,15 +179,23 @@ export function PaymentView() {
                 ),
                 readOnly: true,
               }}
-              sx={{ mb: 3 }}
+              sx={{ mb: 4 }}
             />
           ))}
           <FormControlLabel
             control={
-              <Switch checked={toggleState} onChange={(e) => setToggleState(e.target.checked)} />
+              <Switch
+                checked={toggleState}
+                onChange={(e) => setToggleState(e.target.checked)}
+                size="medium"
+              />
             }
-            label={toggleState ? 'Live' : 'Test'}
-            sx={{ mb: 3 }}
+            label={
+              <Typography sx={{ fontSize: '1.1rem', color: 'text.primary' }}>
+                {toggleState ? 'Live' : 'Test'}
+              </Typography>
+            }
+            sx={{ mb: 4 }}
           />
           <LoadingButton
             fullWidth
@@ -193,7 +220,7 @@ export function PaymentView() {
         )}
       </Box>
 
-      <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }} />
+      <Divider sx={{ my: 4, '&::before, &::after': { borderTopStyle: 'dashed' } }} />
     </>
   );
 }

@@ -13,7 +13,7 @@ import { RouterLink } from 'src/routes/components';
 
 import { varAlpha } from 'src/theme/styles';
 
-import { Logo } from 'src/components/logo';
+import Logo from 'src/components/logo/logo';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import { CasinoPromo } from '../components/nav-upgrade';
@@ -27,7 +27,7 @@ export type NavContentProps = {
   data: {
     path: string;
     title: string;
-    icon: React.ReactNode;
+    icon?: React.ReactNode;
     info?: React.ReactNode;
   }[];
   slots?: {

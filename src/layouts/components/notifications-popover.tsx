@@ -1,4 +1,4 @@
-import {env} from 'src/config/env.config';
+import { env } from 'src/config/env.config';
 import type { IconButtonProps } from '@mui/material/IconButton';
 import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
@@ -20,9 +20,10 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
+import Skeleton from '@mui/material/Skeleton';
 
 import { fToNow } from 'src/utils/format-time';
-import { Iconify } from 'src/components/iconify';
+import { Icon } from '@iconify/react';
 import { Scrollbar } from 'src/components/scrollbar';
 
 type NotificationItemProps = {
@@ -70,32 +71,62 @@ function NotificationsViewDialog({
   onPageChange,
   loading,
   error,
-  onMarkAsRead
+  onMarkAsRead,
 }: NotificationsViewProps) {
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-    >
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        All Notifications
-        <IconButton onClick={onClose}>
-          <Iconify icon="solar:close-circle-outline" />
+        <Box display="flex" alignItems="center" gap={1}>
+          <Icon icon="solar:bell-bing-bold-duotone" width={24} />
+          <Typography variant="h6">All Notifications</Typography>
+        </Box>
+        <IconButton onClick={onClose} sx={{ color: 'text.secondary' }}>
+          <Icon icon="solar:close-circle-outline" width={24} />
         </IconButton>
       </DialogTitle>
       <DialogContent>
         <Scrollbar>
           {loading ? (
-            <Typography sx={{ p: 2 }}>Loading...</Typography>
+            <Box sx={{ p: 2 }}>
+              {[...Array(5)].map((_, index) => (
+                <Box key={index} sx={{ mb: 2 }}>
+                  <Skeleton variant="rectangular" width="100%" height={80} />
+                </Box>
+              ))}
+            </Box>
           ) : error ? (
-            <Typography sx={{ p: 2, color: 'error.main' }}>{error}</Typography>
+            <Box
+              sx={{
+                p: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+              }}
+            >
+              <Icon icon="solar:danger-circle-bold-duotone" width={48} color="error.main" />
+              <Typography sx={{ mt: 2, color: 'error.main' }}>{error}</Typography>
+            </Box>
+          ) : notifications.length === 0 ? (
+            <Box
+              sx={{
+                p: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+              }}
+            >
+              <Icon icon="solar:bell-off-broken" width={48} color="text.disabled" />
+              <Typography sx={{ mt: 2, color: 'text.disabled' }}>
+                No notifications available
+              </Typography>
+            </Box>
           ) : (
             <List disablePadding>
               {notifications.map((notification) => (
-                <NotificationItem 
-                  key={notification.id} 
+                <NotificationItem
+                  key={notification.id}
                   notification={notification}
                   onClick={() => onMarkAsRead(notification.id)}
                 />
@@ -103,14 +134,18 @@ function NotificationsViewDialog({
             </List>
           )}
         </Scrollbar>
-        
-        <Stack alignItems="center" sx={{ mt: 2 }}>
-          <Pagination 
-            count={pagination.totalPages}
-            page={pagination.page}
-            onChange={(_, page) => onPageChange(page)}
-          />
-        </Stack>
+
+        {!loading && !error && notifications.length > 0 && (
+          <Stack alignItems="center" sx={{ mt: 2 }}>
+            <Pagination
+              count={pagination.totalPages}
+              page={pagination.page}
+              onChange={(_, page) => onPageChange(page)}
+              shape="rounded"
+              color="primary"
+            />
+          </Stack>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -123,7 +158,7 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
   const [pagination, setPagination] = useState<PaginationData>({
     total: 0,
     page: 1,
-    totalPages: 1
+    totalPages: 1,
   });
   const [viewAllOpen, setViewAllOpen] = useState(false);
   const [allNotifications, setAllNotifications] = useState<NotificationItemProps[]>([]);
@@ -140,7 +175,7 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
         throw new Error('Failed to fetch notifications');
       }
       const data = await response.json();
-      
+
       const transformedNotifications = data.data.notifications.map((notification: any) => ({
         id: notification._id,
         type: notification.type,
@@ -150,11 +185,13 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
         avatarUrl: null,
         postedAt: notification.created_at,
         metadata: notification.metadata,
-        user_id: notification.user_id ? {
-          username: notification.user_id.username,
-          email: notification.user_id.email,
-          phone_number: notification.user_id.phone_number
-        } : null
+        user_id: notification.user_id
+          ? {
+              username: notification.user_id.username,
+              email: notification.user_id.email,
+              phone_number: notification.user_id.phone_number,
+            }
+          : null,
       }));
 
       if (isViewAll) {
@@ -186,10 +223,13 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
 
   const handleMarkAllAsRead = useCallback(async () => {
     try {
-      const response = await fetch(`${env.api.baseUrl}:${env.api.port}/api/auth/notifications/mark-all-read`, {
-        method: 'POST',
-      });
-      
+      const response = await fetch(
+        `${env.api.baseUrl}:${env.api.port}/api/auth/notifications/mark-all-read`,
+        {
+          method: 'POST',
+        }
+      );
+
       if (!response.ok) {
         throw new Error('Failed to mark notifications as read');
       }
@@ -218,9 +258,7 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
       }
 
       const updatedNotifications = notifications.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, isUnRead: false }
-          : notification
+        notification.id === notificationId ? { ...notification, isUnRead: false } : notification
       );
       setNotifications(updatedNotifications);
     } catch (err) {
@@ -246,11 +284,14 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
       <IconButton
         color={openPopover ? 'primary' : 'default'}
         onClick={handleOpenPopover}
-        sx={sx}
+        sx={{
+          position: 'relative',
+          ...sx,
+        }}
         {...other}
       >
-        <Badge badgeContent={totalUnRead} color="error">
-          <Iconify width={24} icon="solar:bell-bing-bold-duotone" />
+        <Badge badgeContent={totalUnRead} color="error" max={9}>
+          <Icon icon="solar:bell-bing-bold-duotone" width={24} />
         </Badge>
       </IconButton>
 
@@ -267,22 +308,36 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
+              boxShadow: '0px 12px 24px rgba(0, 0, 0, 0.1)',
+              borderRadius: 2,
             },
           },
         }}
       >
         <Box display="flex" alignItems="center" sx={{ py: 2, pl: 2.5, pr: 1.5 }}>
           <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="subtitle1">Notifications</Typography>
+            <Typography variant="subtitle1" fontWeight="bold">
+              Notifications
+            </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              You have {totalUnRead} unread messages
+              {totalUnRead === 0
+                ? 'No unread messages'
+                : `${totalUnRead} unread message${totalUnRead > 1 ? 's' : ''}`}
             </Typography>
           </Box>
 
           {totalUnRead > 0 && (
             <Tooltip title="Mark all as read">
-              <IconButton color="primary" onClick={handleMarkAllAsRead}>
-                <Iconify icon="solar:check-read-outline" />
+              <IconButton
+                color="primary"
+                onClick={handleMarkAllAsRead}
+                sx={{
+                  '&:hover': {
+                    backgroundColor: 'primary.lighter',
+                  },
+                }}
+              >
+                <Icon icon="solar:check-read-outline" width={20} />
               </IconButton>
             </Tooltip>
           )}
@@ -290,11 +345,43 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
 
         <Divider sx={{ borderStyle: 'dashed' }} />
 
-        <Scrollbar fillContent sx={{ minHeight: 240, maxHeight: { xs: 360, sm: 'none' } }}>
+        <Scrollbar fillContent sx={{ minHeight: 240, maxHeight: { xs: 360, sm: '60vh' } }}>
           {loading ? (
-            <Typography sx={{ p: 2 }}>Loading...</Typography>
+            <Box sx={{ p: 2 }}>
+              {[...Array(3)].map((_, index) => (
+                <Box key={index} sx={{ mb: 2 }}>
+                  <Skeleton variant="rectangular" width="100%" height={80} />
+                </Box>
+              ))}
+            </Box>
           ) : error ? (
-            <Typography sx={{ p: 2, color: 'error.main' }}>{error}</Typography>
+            <Box
+              sx={{
+                p: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+              }}
+            >
+              <Icon icon="solar:danger-circle-bold-duotone" width={48} color="error.main" />
+              <Typography sx={{ mt: 2, color: 'error.main' }}>{error}</Typography>
+            </Box>
+          ) : notifications.length === 0 ? (
+            <Box
+              sx={{
+                p: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+              }}
+            >
+              <Icon icon="solar:bell-off-broken" width={48} color="text.disabled" />
+              <Typography sx={{ mt: 2, color: 'text.disabled' }}>
+                No notifications available
+              </Typography>
+            </Box>
           ) : (
             <>
               <List
@@ -306,8 +393,8 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
                 }
               >
                 {notifications.slice(0, 2).map((notification) => (
-                  <NotificationItem 
-                    key={notification.id} 
+                  <NotificationItem
+                    key={notification.id}
                     notification={notification}
                     onClick={() => handleMarkAsRead(notification.id)}
                   />
@@ -318,13 +405,13 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
                 disablePadding
                 subheader={
                   <ListSubheader disableSticky sx={{ py: 1, px: 2.5, typography: 'overline' }}>
-                    Before that
+                    Earlier
                   </ListSubheader>
                 }
               >
                 {notifications.slice(2, 5).map((notification) => (
-                  <NotificationItem 
-                    key={notification.id} 
+                  <NotificationItem
+                    key={notification.id}
                     notification={notification}
                     onClick={() => handleMarkAsRead(notification.id)}
                   />
@@ -334,18 +421,29 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
           )}
         </Scrollbar>
 
-        <Divider sx={{ borderStyle: 'dashed' }} />
-
-        <Box sx={{ p: 1 }}>
-          <Button 
-            fullWidth 
-            disableRipple 
-            color="inherit"
-            onClick={handleViewAllOpen}
-          >
-            View all
-          </Button>
-        </Box>
+        {notifications.length > 0 && (
+          <>
+            <Divider sx={{ borderStyle: 'dashed' }} />
+            <Box sx={{ p: 1 }}>
+              <Button
+                fullWidth
+                disableRipple
+                color="inherit"
+                onClick={handleViewAllOpen}
+                endIcon={<Icon icon="solar:arrow-right-outline" width={16} />}
+                sx={{
+                  justifyContent: 'space-between',
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                    color: 'primary.main',
+                  },
+                }}
+              >
+                View all notifications
+              </Button>
+            </Box>
+          </>
+        )}
       </Popover>
 
       <NotificationsViewDialog
@@ -362,14 +460,14 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
   );
 }
 
-function NotificationItem({ 
-  notification, 
-  onClick 
-}: { 
+function NotificationItem({
+  notification,
+  onClick,
+}: {
   notification: NotificationItemProps;
   onClick?: () => void;
 }) {
-  const { avatarUrl, title } = renderContent(notification);
+  const { avatarIcon, title } = renderContent(notification);
 
   return (
     <ListItemButton
@@ -378,16 +476,35 @@ function NotificationItem({
         py: 1.5,
         px: 2.5,
         mt: '1px',
+        gap: 2,
         ...(notification.isUnRead && {
           bgcolor: 'action.selected',
         }),
+        '&:hover': {
+          backgroundColor: 'action.hover',
+        },
       }}
     >
       <ListItemAvatar>
-        <Avatar sx={{ bgcolor: 'background.neutral' }}>{avatarUrl}</Avatar>
+        <Avatar
+          sx={{
+            bgcolor: 'background.neutral',
+            color: 'primary.main',
+            width: 40,
+            height: 40,
+          }}
+        >
+          {avatarIcon}
+        </Avatar>
       </ListItemAvatar>
       <ListItemText
         primary={title}
+        primaryTypographyProps={{
+          variant: 'subtitle2',
+          sx: {
+            fontWeight: notification.isUnRead ? 'fontWeightBold' : 'fontWeightMedium',
+          },
+        }}
         secondary={
           <Typography
             variant="caption"
@@ -399,11 +516,22 @@ function NotificationItem({
               color: 'text.disabled',
             }}
           >
-            <Iconify width={14} icon="solar:clock-circle-outline" />
+            <Icon icon="solar:clock-circle-outline" width={14} />
             {fToNow(notification.postedAt)}
           </Typography>
         }
       />
+      {notification.isUnRead && (
+        <Box
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            bgcolor: 'primary.main',
+            flexShrink: 0,
+          }}
+        />
+      )}
     </ListItemButton>
   );
 }
@@ -418,18 +546,27 @@ function renderContent(notification: NotificationItemProps) {
     </Typography>
   );
 
-  let iconPath = '/assets/icons/notification/ic-notification-package.svg';
-  
+  let icon = 'solar:user-bold-duotone';
+
   switch (notification.type) {
     case 'USER_REGISTERED':
-      iconPath = '/assets/icons/notification/ic-notification-user.svg';
+      icon = 'solar:user-bold-duotone';
+      break;
+    case 'ORDER_CREATED':
+      icon = 'solar:cart-bold-duotone';
+      break;
+    case 'PAYMENT_RECEIVED':
+      icon = 'solar:wallet-bold-duotone';
+      break;
+    case 'SYSTEM_NOTIFICATION':
+      icon = 'solar:info-circle-bold-duotone';
       break;
     default:
-      iconPath = '/assets/icons/notification/ic-notification-package.svg';
+      icon = 'solar:bell-bing-bold-duotone';
   }
 
   return {
-    avatarUrl: <img alt={notification.title} src={iconPath} />,
+    avatarIcon: <Icon icon={icon} width={20} />,
     title,
   };
 }
