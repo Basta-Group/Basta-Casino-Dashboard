@@ -1,3 +1,4 @@
+import { Icon } from '@iconify/react';
 import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
 
@@ -38,8 +39,8 @@ export const navData = [
   },
   {
     title: 'Transactions',
-    path: '/blog',
-    icon: icon('ic-banking'),
+    path: '/transactions',
+    icon: <Icon icon="mdi:account-balance" fontSize="22px" />,
     children: [
       { title: 'Transaction History', path: '/transactions/history' },
       { title: 'Payment Processing', path: '/transactions/processing' },
@@ -49,7 +50,7 @@ export const navData = [
   {
     title: 'Reports & Analytics',
     path: '/reports',
-    icon: icon('ic-file'),
+    icon: <Icon icon="mdi:file-chart" fontSize="22px" />, // Replacing ic-file
     children: [
       { title: 'Financial Reports', path: '/reports/financial' },
       { title: 'Player Analytics', path: '/reports/players' },
@@ -60,7 +61,7 @@ export const navData = [
   {
     title: 'System Settings',
     path: '/settings',
-    icon: icon('ic-settings'),
+    icon: <Icon icon="mdi:cog" fontSize="22px" />, // Replacing ic-settings
     children: [
       { title: 'Currency Settings', path: '/settings/currency' },
       { title: 'Payment Methods', path: '/settings/payment' },
@@ -81,6 +82,7 @@ export const navData = [
   {
     title: 'Payment Management',
     path: '/payment-details',
+    icon: <Icon icon="mdi:credit-card" fontSize="22px" />,
     children: [
       { title: 'Invoices', path: '/payments/invoices' },
       { title: 'Refunds', path: '/payments/refunds' },

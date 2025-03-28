@@ -4,7 +4,7 @@ import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Box, CircularProgress } from '@mui/material';
-
+import { Icon } from '@iconify/react';
 import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
 import { AnalyticsCurrentVisits } from '../analytics-current-visits';
 import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
@@ -146,14 +146,13 @@ export function GamingAnalyticsView() {
             title="Total Revenue"
             percent={2.6}
             total={714000}
-            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-money.svg" />}
+            icon={<Icon icon="mdi:currency-usd" style={{ fontSize: '48px' }} />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [22, 8, 35, 50, 82, 84, 77, 12],
             }}
           />
         </Grid>
-
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
             title="Active Players"
@@ -181,35 +180,32 @@ export function GamingAnalyticsView() {
             }}
           />
         </Grid>
-
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
             title="Game Sessions"
             percent={2.8}
             total={1723315}
             color="warning"
-            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-game.svg" />}
+            icon={<Icon icon="mdi:gamepad-variant" style={{ fontSize: '48px' }} />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [40, 70, 50, 28, 70, 75, 7, 64],
             }}
           />
         </Grid>
-
         <Grid xs={12} sm={6} md={3}>
           <AnalyticsWidgetSummary
             title="Transactions"
             percent={3.6}
             total={234}
             color="success"
-            icon={<img alt="icon" src="/assets/icons/glass/ic-glass-transaction.svg" />}
+            icon={<Icon icon="mdi:cash-multiple" style={{ fontSize: '48px' }} />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [56, 30, 23, 54, 47, 40, 62, 73],
             }}
           />
         </Grid>
-
         <Grid xs={12} md={6} lg={4}>
           <AnalyticsCurrentVisits
             title="Players by Region"
@@ -223,7 +219,6 @@ export function GamingAnalyticsView() {
             }}
           />
         </Grid>
-
         <Grid xs={12} md={6} lg={8}>
           <AnalyticsWebsiteVisits
             title="Gaming Activity"
@@ -237,7 +232,6 @@ export function GamingAnalyticsView() {
             }}
           />
         </Grid>
-
         <Grid xs={12} md={6} lg={8}>
           <AnalyticsConversionRates
             title="Game Performance"
@@ -251,7 +245,6 @@ export function GamingAnalyticsView() {
             }}
           />
         </Grid>
-
         <Grid xs={12} md={6} lg={4}>
           <AnalyticsTrafficBySite
             title="Payment Methods"
@@ -263,7 +256,6 @@ export function GamingAnalyticsView() {
             ]}
           />
         </Grid>
-
         <Grid xs={12} md={6} lg={4}>
           <AnalyticsOrderTimeline
             title="Recent Transactions"
