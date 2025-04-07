@@ -19,46 +19,25 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { GamingAnalyticsView } from 'src/sections/overview/view/overview-analytics-view';
 
 import { TableNoData } from '../../user/table-no-data';
-import { UserTableRow } from '../../user/user-table-row';
+import { UserTableRow } from '../user-table-row';
 import { UserTableHead } from '../../user/user-table-head';
 import { TableEmptyRows } from '../../user/table-empty-rows';
 import { UserTableToolbar } from '../../user/user-table-toolbar';
-import { emptyRows, applyFilter, getComparator } from '../../user/utils';
+import { emptyRows, applyFilter, getComparator } from '../utils';
 
-export interface UserProps {
+export interface AffiliateProps {
   id: string;
-  username: string;
-  fullname: string;
-  patronymic: string;
-  photo: string;
-  dob: Date;
-  gender: string;
+  firstname: string;
+  lastname: string;
   email: string;
-  phone_number: string;
-  registration_date: Date;
-  last_login: Date;
-  status: number;
-  is_verified: number;
-  is_2fa: number;
-  currency: number;
-  language: string;
-  country: string;
-  city: string;
-  role_id: number;
-  created_at: Date;
-  updated_at: Date;
-  balance: number;
-  bonus_balance: number;
-  total_deposits: number;
-  total_withdrawals: number;
-  last_deposit_date: Date;
-  last_withdrawal_date: Date;
+  phonenumber: string;
+  status: string;
+  referralCode: string;
 }
-
 
 export function AffiliateView() {
   const table = useTable();
-  const [users, setUsers] = useState<UserProps[]>([]);
+  const [users, setUsers] = useState<AffiliateProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterName, setFilterName] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -76,37 +55,16 @@ export function AffiliateView() {
           },
         });
         const data = await response.json();
-        console.log('data', data);
 
         if (data.data && Array.isArray(data.data.data)) {
-          const transformedUsers = data.data.data.map((item: any): UserProps => ({
+          const transformedUsers: AffiliateProps[] = data.data.data.map((item: any) => ({
             id: item._id,
-            username: item.firstname ?? '', // No "username" in API
-            fullname: ` ${item.lastname ?? ''}`,
-            patronymic: '',
-            photo: '',
-            dob: new Date(), // not available
-            gender: '',
+            firstname: item.firstname ?? '',
+            lastname: item.lastname ?? '',
             email: item.email,
-            phone_number: item.phonenumber ?? '',
-            registration_date: new Date(item.createdAt),
-            last_login: new Date(item.updatedAt),
-            status: item.status === 'Active' ? 1 : 0,
-            is_verified: item.verification_token ? 0 : 1,
-            is_2fa: 0,
-            currency: 0,
-            language: '',
-            country: item.country,
-            city: '',
-            role_id: 0,
-            created_at: new Date(item.createdAt),
-            updated_at: new Date(item.updatedAt),
-            balance: 0,
-            bonus_balance: 0,
-            total_deposits: 0,
-            total_withdrawals: 0,
-            last_deposit_date: new Date(),
-            last_withdrawal_date: new Date(),
+            phonenumber: item.phonenumber ?? '',
+            referralCode: item.referralCode ?? '',
+            status: item.status,
           }));
 
           setUsers(transformedUsers);
@@ -121,26 +79,9 @@ export function AffiliateView() {
     fetchUsers();
   }, [token]);
 
-  const activePlayersCount = users.filter((user) => user.status === 1).length;
-
   const updateUserStatus = async (userId: string, newStatus: number) => {
     try {
-      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/${userId}/status`;
-      const response = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setUsers((prevUsers) =>
-          prevUsers.map((user) => (user.id === userId ? { ...user, status: newStatus } : user))
-        );
-      }
+      console.log('update-status');
     } catch (error) {
       console.error('Error updating user status:', error);
     }
@@ -148,19 +89,7 @@ export function AffiliateView() {
 
   const deleteUser = async (userId: string) => {
     try {
-      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/${userId}`;
-      const response = await fetch(apiUrl, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-      }
+      console.log('delete');
     } catch (error) {
       console.error('Error deleting user:', error);
     }
@@ -210,8 +139,8 @@ export function AffiliateView() {
                   )
                 }
                 headLabel={[
-                  { id: 'username', label: 'First Name' },
-                  { id: 'fullname', label: 'Last Name' },
+                  { id: 'firstname', label: 'First Name' },
+                  { id: 'lastname', label: 'Last Name' },
                   { id: 'email', label: 'Email' },
                   { id: 'phone_number', label: 'Phone Number' },
                   { id: 'referralCode', label: 'Referral Code' },
@@ -261,10 +190,9 @@ export function AffiliateView() {
   );
 }
 
-
 function useTable() {
   const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('username');
+  const [orderBy, setOrderBy] = useState('firstname');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selected, setSelected] = useState<string[]>([]);
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
