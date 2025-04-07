@@ -56,7 +56,7 @@ export interface UserProps {
 }
 
 
-export function AffiliateView() {
+export function AdminAffiliateView() {
   const table = useTable();
   const [users, setUsers] = useState<UserProps[]>([]);
   const [loading, setLoading] = useState(true);
