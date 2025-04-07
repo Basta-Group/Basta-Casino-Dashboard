@@ -18,12 +18,12 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { GamingAnalyticsView } from 'src/sections/overview/view/overview-analytics-view';
 
-import { TableNoData } from '../table-no-data';
-import { UserTableRow } from '../user-table-row';
-import { UserTableHead } from '../user-table-head';
-import { TableEmptyRows } from '../table-empty-rows';
-import { UserTableToolbar } from '../user-table-toolbar';
-import { emptyRows, applyFilter, getComparator } from '../utils';
+import { TableNoData } from '../../user/table-no-data';
+import { UserTableRow } from '../../user/user-table-row';
+import { UserTableHead } from '../../user/user-table-head';
+import { TableEmptyRows } from '../../user/table-empty-rows';
+import { UserTableToolbar } from '../../user/user-table-toolbar';
+import { emptyRows, applyFilter, getComparator } from '../../user/utils';
 
 export interface UserProps {
   id: string;
@@ -55,7 +55,8 @@ export interface UserProps {
   last_withdrawal_date: Date;
 }
 
-export function UserView() {
+
+export function AffiliateView() {
   const table = useTable();
   const [users, setUsers] = useState<UserProps[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,13 +69,47 @@ export function UserView() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players`;
-        const response = await fetch(apiUrl);
+        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users`;
+        const response = await fetch(apiUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const data = await response.json();
-        console.log('data', { data });
-        if (data.success) {
-          const nonAdminUsers = data.data.players.filter((user: UserProps) => user.role_id !== 1);
-          setUsers(nonAdminUsers);
+        console.log('data', data);
+
+        if (data.data && Array.isArray(data.data.data)) {
+          const transformedUsers = data.data.data.map((item: any): UserProps => ({
+            id: item._id,
+            username: item.firstname ?? '', // No "username" in API
+            fullname: ` ${item.lastname ?? ''}`,
+            patronymic: '',
+            photo: '',
+            dob: new Date(), // not available
+            gender: '',
+            email: item.email,
+            phone_number: item.phonenumber ?? '',
+            registration_date: new Date(item.createdAt),
+            last_login: new Date(item.updatedAt),
+            status: item.status === 'Active' ? 1 : 0,
+            is_verified: item.verification_token ? 0 : 1,
+            is_2fa: 0,
+            currency: 0,
+            language: '',
+            country: item.country,
+            city: '',
+            role_id: 0,
+            created_at: new Date(item.createdAt),
+            updated_at: new Date(item.updatedAt),
+            balance: 0,
+            bonus_balance: 0,
+            total_deposits: 0,
+            total_withdrawals: 0,
+            last_deposit_date: new Date(),
+            last_withdrawal_date: new Date(),
+          }));
+
+          setUsers(transformedUsers);
         }
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -84,7 +119,7 @@ export function UserView() {
     };
 
     fetchUsers();
-  }, []);
+  }, [token]);
 
   const activePlayersCount = users.filter((user) => user.status === 1).length;
 
@@ -124,7 +159,6 @@ export function UserView() {
 
       const data = await response.json();
       if (data.success) {
-        // Remove the deleted user from the local state
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
       }
     } catch (error) {
@@ -155,60 +189,11 @@ export function UserView() {
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Players
+          Affiliate
         </Typography>
       </Box>
 
-      {/* <GamingAnalyticsView activePlayersCount={activePlayersCount} /> */}
       <Card>
-        <Stack direction="row" spacing={2} sx={{ p: 2 }}>
-          <TextField
-            select
-            label="Status"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            sx={{ width: 200 }}
-          >
-            <MenuItem value="all">All Status</MenuItem>
-            <MenuItem value="1">Active</MenuItem>
-            <MenuItem value="0">Inactive</MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            label="Currency"
-            value={filterCurrency}
-            onChange={(e) => setFilterCurrency(e.target.value)}
-            sx={{ width: 200 }}
-          >
-            <MenuItem value="all">All Currencies</MenuItem>
-            <MenuItem value="0">USD</MenuItem>
-            <MenuItem value="1">INR</MenuItem>
-            <MenuItem value="2">Pound</MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            label="2FA Status"
-            value={filter2FA}
-            onChange={(e) => setFilter2FA(e.target.value)}
-            sx={{ width: 200 }}
-          >
-            <MenuItem value="all">All</MenuItem>
-            <MenuItem value="1">Enabled</MenuItem>
-            <MenuItem value="0">Disabled</MenuItem>
-          </TextField>
-        </Stack>
-
-        <UserTableToolbar
-          numSelected={table.selected.length}
-          filterName={filterName}
-          onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setFilterName(event.target.value);
-            table.onResetPage();
-          }}
-        />
-
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>
@@ -225,20 +210,12 @@ export function UserView() {
                   )
                 }
                 headLabel={[
-                  { id: 'username', label: 'Username' },
-                  { id: 'fullname', label: 'Full Name' },
+                  { id: 'username', label: 'First Name' },
+                  { id: 'fullname', label: 'Last Name' },
                   { id: 'email', label: 'Email' },
                   { id: 'phone_number', label: 'Phone Number' },
-                  { id: 'is_verified', label: 'Verified', align: 'center' },
+                  { id: 'referralCode', label: 'Referral Code' },
                   { id: 'status', label: 'Status' },
-                  // { id: 'is_2fa', label: '2FA' },
-                  // { id: 'currency', label: 'Currency' },
-                  // {id: 'balance', label: 'Balance'},
-                  // { id: 'language', label: 'Language' },
-                  // { id: 'country', label: 'Country' },
-                  // { id: 'city', label: 'City' },
-                  // { id: 'role_id', label: 'Role' },
-                  // { id: 'created_at', label: 'Created At' },
                   { id: 'actions', label: 'Actions' },
                 ]}
               />
@@ -283,6 +260,7 @@ export function UserView() {
     </DashboardContent>
   );
 }
+
 
 function useTable() {
   const [page, setPage] = useState(0);

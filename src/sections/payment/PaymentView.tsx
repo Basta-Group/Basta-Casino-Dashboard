@@ -33,6 +33,7 @@ export function PaymentView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
 
   // Stripe-inspired color palette
   const colors = {

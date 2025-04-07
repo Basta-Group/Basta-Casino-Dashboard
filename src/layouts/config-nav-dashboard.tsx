@@ -27,6 +27,14 @@ export const navData = [
       { title: 'Player Balances', path: '/players/balances' },
     ],
   },
+    {
+    title: 'Affiliate  Management',
+    path: '/affiliate',
+    icon: icon('ic-user'),
+    children: [
+      { title: 'Player List', path: '/players/list' },
+    ],
+  },
   {
     title: 'Game Management',
     path: '/products',
