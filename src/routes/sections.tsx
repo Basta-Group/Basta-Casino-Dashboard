@@ -8,6 +8,7 @@ import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import TransactionPage from 'src/pages/TransactionPage';
+import DashboardBanner from 'src/pages/DashboardBanner';
 
 // ----------------------------------------------------------------------
 
@@ -52,6 +53,7 @@ export function Router() {
         { path: 'blog', element: <BlogPage /> },
         { path: 'payment-details', element: <PaymentPage /> },
         { path: 'transactions', element: <TransactionPage /> },
+        { path: 'dashboard-banner', element: <DashboardBanner /> },
       ],
     },
     {
