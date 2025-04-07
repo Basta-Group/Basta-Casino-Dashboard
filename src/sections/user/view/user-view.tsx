@@ -1,4 +1,4 @@
-  import {env} from 'src/config/env.config';
+import { env } from 'src/config/env.config';
 import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -16,8 +16,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import {GamingAnalyticsView} from 'src/sections/overview/view/overview-analytics-view';
-
+import { GamingAnalyticsView } from 'src/sections/overview/view/overview-analytics-view';
 
 import { TableNoData } from '../table-no-data';
 import { UserTableRow } from '../user-table-row';
@@ -48,7 +47,7 @@ export interface UserProps {
   role_id: number;
   created_at: Date;
   updated_at: Date;
-    balance: number;
+  balance: number;
   bonus_balance: number;
   total_deposits: number;
   total_withdrawals: number;
@@ -72,9 +71,10 @@ export function UserView() {
         const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players`;
         const response = await fetch(apiUrl);
         const data = await response.json();
-        console.log('data', {data})
+        console.log('data', { data });
         if (data.success) {
-          setUsers(data.data.players);
+          const nonAdminUsers = data.data.players.filter((user: UserProps) => user.role_id !== 1);
+          setUsers(nonAdminUsers);
         }
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -86,7 +86,7 @@ export function UserView() {
     fetchUsers();
   }, []);
 
-  const activePlayersCount = users.filter((user)=> user.status===1).length;
+  const activePlayersCount = users.filter((user) => user.status === 1).length;
 
   const updateUserStatus = async (userId: string, newStatus: number) => {
     try {
@@ -99,13 +99,11 @@ export function UserView() {
         },
         body: JSON.stringify({ status: newStatus }),
       });
-  
+
       const data = await response.json();
       if (data.success) {
         setUsers((prevUsers) =>
-          prevUsers.map((user) =>
-            user.id === userId ? { ...user, status: newStatus } : user
-          )
+          prevUsers.map((user) => (user.id === userId ? { ...user, status: newStatus } : user))
         );
       }
     } catch (error) {
@@ -123,7 +121,7 @@ export function UserView() {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       const data = await response.json();
       if (data.success) {
         // Remove the deleted user from the local state
@@ -257,7 +255,7 @@ export function UserView() {
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
                       onUpdateStatus={updateUserStatus}
-                      onDeleteUser = {deleteUser}
+                      onDeleteUser={deleteUser}
                     />
                   ))}
 
@@ -336,13 +334,10 @@ function useTable() {
     setPage(newPage);
   }, []);
 
-  const onChangeRowsPerPage = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setRowsPerPage(parseInt(event.target.value, 10));
-      setPage(0);
-    },
-    []
-  );
+  const onChangeRowsPerPage = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  }, []);
 
   return {
     page,
