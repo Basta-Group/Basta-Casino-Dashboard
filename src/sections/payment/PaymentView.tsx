@@ -101,14 +101,16 @@ export function PaymentView() {
     const config = paymentConfigs.find((c) => c.id === configId);
     if (config) {
       navigator.clipboard.writeText(config.config[key]);
-      setCopiedField(`${configId}-${key}`);
+      setCopiedField(`${config.id}-${key}`);
       setTimeout(() => setCopiedField(null), 1500);
     }
   };
 
-  const handleModeChange = (configId: string, newMode: PaymentMode) => {
+  const handleModeChange = (configId: string, isTestMode: boolean) => {
     setPaymentConfigs((prev) =>
-      prev.map((config) => (config.id === configId ? { ...config, mode: newMode } : config))
+      prev.map((config) =>
+        config.id === configId ? { ...config, mode: isTestMode ? 'test' : 'live' } : config
+      )
     );
   };
 
@@ -235,27 +237,25 @@ export function PaymentView() {
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={config.mode === 'live'}
-                      onChange={(e) =>
-                        handleModeChange(config.id, e.target.checked ? 'live' : 'test')
-                      }
+                      checked={config.mode === 'test'}
+                      onChange={(e) => handleModeChange(config.id, e.target.checked)}
                       size="medium"
                       disabled={loading}
                       sx={{
                         '& .MuiSwitch-thumb': {
                           backgroundColor:
-                            config.mode === 'live' ? colors.primary : colors.secondary,
+                            config.mode === 'test' ? colors.primary : colors.secondary,
                         },
                         '& .MuiSwitch-track': {
                           backgroundColor:
-                            config.mode === 'live' ? colors.primaryLight : colors.secondaryLight,
+                            config.mode === 'test' ? colors.primaryLight : colors.secondaryLight,
                         },
                       }}
                     />
                   }
                   label={
                     <Typography sx={{ fontSize: '1rem', color: colors.textPrimary }}>
-                      {config.mode === 'live' ? 'Live Mode' : 'Test Mode'}
+                      Test Mode
                     </Typography>
                   }
                 />
