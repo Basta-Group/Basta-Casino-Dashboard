@@ -1,1 +1,1 @@
-export * from './affiliate-view';
+export * from './AdminAffiliateView';

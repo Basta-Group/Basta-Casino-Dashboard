@@ -9,6 +9,7 @@ import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import TransactionPage from 'src/pages/TransactionPage';
 import DashboardBanner from 'src/pages/DashboardBanner';
+import AdminAffiliatePage from 'src/pages/AdminAffiliatePage';
 
 // ----------------------------------------------------------------------
 
@@ -17,11 +18,16 @@ export const HomePage = lazy(() => import('src/pages/home'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const TransactionsPage = lazy(() => import('src/pages/TransactionPage'));
 export const UserPage = lazy(() => import('src/pages/user'));
-export const AffiliatePage = lazy(() => import('src/pages/affiliate'));
+export const AffiliatePage = lazy(() => import('src/pages/AdminAffiliatePage'));
 export const PaymentPage = lazy(() => import('src/pages/PaymentPage'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
+// affliate-routes
+const AffiliateLoginPage = lazy(() => import('src/affliate/pages/login'));
+const AffiliateForgotPage = lazy(() => import('src/affliate/pages/ForgetPassword'));
+const AffiliateDashboardPage = lazy(() => import('src/affliate/pages/dashboard'));
+const AffiliateLayout = lazy(() => import('src/affliate/layouts/AffliateLayout'));
 
 // ----------------------------------------------------------------------
 
@@ -46,7 +52,6 @@ const isAuthenticated = () => !!localStorage.getItem('accessToken');
 const AuthGuard = ({ children }: { children: React.ReactNode }) =>
   isAuthenticated() ? <>{children}</> : <Navigate to="/sign-in" replace />;
 
-
 export function Router() {
   return useRoutes([
     {
@@ -62,12 +67,26 @@ export function Router() {
       children: [
         { element: <HomePage />, index: true },
         { path: 'user', element: <UserPage /> },
-        { path: 'affiliate', element: <AffiliatePage/> },
+        { path: 'admin-affiliate', element: <AdminAffiliatePage /> },
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
         { path: 'payment-details', element: <PaymentPage /> },
         { path: 'transactions', element: <TransactionPage /> },
         { path: 'dashboard-banner', element: <DashboardBanner /> },
+      ],
+    },
+    // ✅ Affiliate Routes here
+    {
+      path: 'affiliate',
+      element: (
+        <Suspense fallback={renderFallback}>
+          <AffiliateLayout />
+        </Suspense>
+      ),
+      children: [
+        { path: 'login', element: <AffiliateLoginPage /> },
+        { path: 'forget-password', element: <AffiliateForgotPage /> },
+        { path: 'dashboard', element: <AffiliateDashboardPage /> },
       ],
     },
     {

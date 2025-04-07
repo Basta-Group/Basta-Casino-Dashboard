@@ -6,7 +6,7 @@ import { AdminAffiliateView } from 'src/sections/affiliate/view';
 
 // ----------------------------------------------------------------------
 
-export default function Page() {
+export default function AdminAffiliatePage() {
   return (
     <>
       <Helmet>
