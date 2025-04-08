@@ -3,21 +3,17 @@ import { Outlet } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
-
 import { LayoutSection } from 'src/layouts/core/layout-section';
 import { HeaderSection } from 'src/layouts/core/header-section';
 import { layoutClasses } from 'src/layouts/classes';
-
 import { NavMobile, NavDesktop } from 'src/layouts/dashboard/nav';
 import { MenuButton } from 'src/layouts/components/menu-button';
 import { Searchbar } from 'src/layouts/components/searchbar';
 import { AccountPopover } from 'src/layouts/components/account-popover';
 import { LanguagePopover } from 'src/layouts/components/language-popover';
 import { NotificationsPopover } from 'src/layouts/components/notifications-popover';
-
 import { _langs } from 'src/_mock';
 import { Iconify } from 'src/components/iconify';
-
 import { affiliateNavData } from '../config-nav';
 
 const transformedNavData = affiliateNavData.map((item) => ({
@@ -77,7 +73,7 @@ export default function AffiliateLayout() {
                   data={[
                     {
                       label: 'Home',
-                      href: '/',
+                      href: '/home',
                       icon: <Iconify width={22} icon="solar:home-angle-bold-duotone" />,
                     },
                     {
