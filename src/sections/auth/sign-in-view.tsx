@@ -13,13 +13,11 @@ import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { env } from 'src/config/env.config';
 
-// Type definition for form data
 interface SignInFormData {
   email: string;
   password: string;
 }
 
-// Type definition for API response
 interface SignInResponse {
   success: boolean;
   message?: string;
