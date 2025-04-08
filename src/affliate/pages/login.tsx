@@ -9,19 +9,16 @@ import {
   IconButton,
   Alert,
   Stack,
-  Grid,
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Iconify } from 'src/components/iconify';
 import { useRouter } from 'src/routes/hooks';
-
-// Type definition for form data
+// Type definitions remain the same
 interface LoginFormData {
   email: string;
   password: string;
 }
 
-// Type definition for API response
 interface LoginResponse {
   success: boolean;
   message: string;
@@ -49,7 +46,7 @@ export default function AffiliateLoginPage() {
   const [formData, setFormData] = useState<LoginFormData>({ email: '', password: '' });
   const [touched, setTouched] = useState({ email: false, password: false });
 
-  // Handle input change
+  // Handle input change, validate form, handle login, and handle key press functions remain the same
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -58,7 +55,6 @@ export default function AffiliateLoginPage() {
     setFieldErrors((prev) => ({ ...prev, [name]: '' }));
   }, []);
 
-  // Validate form fields
   const validateForm = useCallback(() => {
     if (!formData.email) return 'Email is required';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
@@ -66,7 +62,6 @@ export default function AffiliateLoginPage() {
     return '';
   }, [formData]);
 
-  // Handle login submission
   const handleLogin = useCallback(async () => {
     const validationError = validateForm();
     if (validationError) {
@@ -126,7 +121,6 @@ export default function AffiliateLoginPage() {
     }
   }, [formData, router, validateForm]);
 
-  // Handle Enter key press
   const handleKeyPress = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && !loading) {
@@ -139,27 +133,22 @@ export default function AffiliateLoginPage() {
   return (
     <Box
       sx={{
-        height: '100vh',
-        width: '100vw',
         display: 'flex',
-        overflow: 'hidden', // Prevent outer scrolling
-        bgcolor: '#f5f7fa',
+        overflow: 'hidden',
       }}
     >
-      {/* Left Side - Form Section */}
       <Box
         sx={{
-          width: { xs: '100%', md: '40%' },
+          width: { xs: '100%' },
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          p: 4,
           bgcolor: 'white',
-          overflow: 'auto', // Allow scrolling only if content overflows
+          overflow: 'auto',
         }}
       >
-        <Box sx={{ maxWidth: 400, width: '100%', mx: 'auto' }}>
+        <Box>
           <Stack spacing={3} alignItems="center" sx={{ mb: 4 }}>
             <Box
               component="img"
@@ -291,75 +280,6 @@ export default function AffiliateLoginPage() {
             </Typography>
           </Stack>
         </Box>
-      </Box>
-
-      {/* Right Side - Promotional Section */}
-      <Box
-        sx={{
-          display: { xs: 'none', md: 'flex' },
-          width: '60%',
-          height: '100%',
-          p: 6,
-          bgcolor: '#f0f4f8',
-          overflow: 'auto', // Allow scrolling only if content overflows
-          flexDirection: 'column',
-          justifyContent: 'center',
-        }}
-      >
-        <Stack spacing={4}>
-          <Typography variant="h3" fontWeight="bold" color="primary">
-            Recommend Games. Earn Commissions.
-          </Typography>
-
-          <Typography variant="body1" sx={{ fontSize: '1.1rem' }}>
-            Welcome to one of the largest affiliate programs in the online casino industry. The
-            BASTA Casino Affiliate Program helps content creators, bloggers, and influencers
-            monetize their traffic.
-          </Typography>
-
-          <Grid container spacing={3} sx={{ mt: 2 }}>
-            <Grid item xs={4}>
-              <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 2, height: '100%' }}>
-                <Typography variant="h5" color="primary" gutterBottom>
-                  1. Sign up
-                </Typography>
-                <Typography variant="body2">
-                  Join thousands of affiliates earning with the BASTA Casino Affiliate Program.
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={4}>
-              <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 2, height: '100%' }}>
-                <Typography variant="h5" color="primary" gutterBottom>
-                  2. Recommend
-                </Typography>
-                <Typography variant="body2">
-                  Share thousands of casino games with your audience using our customized linking
-                  tools.
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={4}>
-              <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 2, height: '100%' }}>
-                <Typography variant="h5" color="primary" gutterBottom>
-                  3. Earn
-                </Typography>
-                <Typography variant="body2" sx={{}}>
-                  Earn up to 40% commission on player deposits and sign-ups with our competitive
-                  rates.
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
-
-          <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 2, mt: 2 }}>
-            <Typography variant="body1" fontStyle="italic">
-              &quot;Since we have a global audience, the BASTA Affiliate Program has helped us
-              scale our earnings internationally. It&apos;s been simple to sign up and
-              use!&quot; - CasinoBlog
-            </Typography>
-          </Box>
-        </Stack>
       </Box>
     </Box>
   );

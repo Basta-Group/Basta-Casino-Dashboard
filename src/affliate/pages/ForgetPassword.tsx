@@ -46,7 +46,6 @@ export default function AffiliateForgotPasswordPage() {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -55,13 +54,8 @@ export default function AffiliateForgotPasswordPage() {
     >
       <Box
         sx={{
-          maxWidth: 400,
           width: '100%',
-          border: '1px solid',
-          borderColor: 'grey.300',
           borderRadius: 1,
-          p: 3,
-          bgcolor: 'background.paper',
         }}
       >
         <Box gap={1.5} display="flex" flexDirection="column" alignItems="center">
@@ -109,14 +103,14 @@ export default function AffiliateForgotPasswordPage() {
           )}
 
           <Divider
-            sx={{ my: 3, width: '100%', '&::before, &::after': { borderTopStyle: 'dashed' } }}
+            sx={{ my: 1, width: '100%', '&::before, &::after': { borderTopStyle: 'dashed' } }}
           />
 
           <Link
             variant="body2"
-            color="inherit"
             onClick={() => router.push('/affiliate/login')}
-            sx={{ cursor: 'pointer' }}
+            color="primary"
+            sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
           >
             Back to Login
           </Link>

@@ -1,11 +1,5 @@
 import { useState, useCallback } from 'react';
-import {
-  Box,
-  TextField,
-  Typography,
-  Link,
-  Alert,
-} from '@mui/material';
+import { Box, TextField, Typography, Link, Alert } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useRouter } from 'src/routes/hooks';
 
@@ -59,8 +53,14 @@ export default function AffiliateRegisterPage() {
   }, [formData, router]);
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
-      <Box sx={{ maxWidth: 400, width: '100%', border: '1px solid', borderColor: 'grey.300', borderRadius: 1, p: 3, bgcolor: 'background.paper' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Box>
         <Box gap={1.5} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 5 }}>
           <Typography variant="h5">Affiliate Registration</Typography>
           <Typography variant="body2" color="text.secondary">
@@ -68,7 +68,11 @@ export default function AffiliateRegisterPage() {
           </Typography>
         </Box>
 
-        {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         <TextField
           fullWidth
@@ -130,7 +134,10 @@ export default function AffiliateRegisterPage() {
         </LoadingButton>
 
         <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 2 }}>
-          Already have an account? <Link href="/affiliate/login" variant="subtitle2">Log in</Link>
+          Already have an account?{' '}
+          <Link href="/affiliate/login" variant="subtitle2">
+            Log in
+          </Link>
         </Typography>
       </Box>
     </Box>

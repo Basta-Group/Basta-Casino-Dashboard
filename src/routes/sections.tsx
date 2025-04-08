@@ -23,7 +23,7 @@ export const Page404 = lazy(() => import('src/pages/page-not-found'));
 // Affiliate routes
 const AffiliateLoginPage = lazy(() => import('src/affliate/pages/login'));
 const AffiliateForgotPage = lazy(() => import('src/affliate/pages/ForgetPassword'));
-const AffiliateRegisterPage = lazy(() => import('src/affliate/pages/AffiliateRegisterPage')); // New import
+const AffiliateRegisterPage = lazy(() => import('src/affliate/pages/AffiliateRegisterPage'));
 const AffiliateDashboardPage = lazy(() => import('src/affliate/pages/dashboard'));
 const AffiliateLayout = lazy(() => import('src/affliate/layouts/AffliateLayout'));
 
@@ -102,7 +102,7 @@ export function Router() {
           children: [
             { path: 'login', element: <AffiliateLoginPage /> },
             { path: 'forget-password', element: <AffiliateForgotPage /> },
-            { path: 'register', element: <AffiliateRegisterPage /> }, // Added register route
+            { path: 'register', element: <AffiliateRegisterPage /> },
           ],
         },
         {
