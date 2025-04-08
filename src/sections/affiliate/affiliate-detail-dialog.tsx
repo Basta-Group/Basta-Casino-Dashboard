@@ -3,7 +3,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
-import { Label } from 'src/components/label';
 import { AffiliateProps } from './types';
 
 interface UserDetailDialogProps {

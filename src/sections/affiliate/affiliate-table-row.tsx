@@ -1,9 +1,6 @@
 import { useState, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
 import Popover from '@mui/material/Popover';
 import TableRow from '@mui/material/TableRow';
-import Checkbox from '@mui/material/Checkbox';
 import MenuList from '@mui/material/MenuList';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
@@ -17,8 +14,8 @@ type AffialiteTableRowProps = {
   row: AffiliateProps;
   selected: boolean;
   onSelectRow: () => void;
-  onUpdateStatus: (userId: string, newStatus: number) => void;
-  onDeleteUser: (userId: string) => void;
+  onUpdateStatus: (userId: string, newStatus: string) => void;
+  // onDeleteUser: (userId: string) => void;
 };
 
 export function UserTableRow({
@@ -26,7 +23,7 @@ export function UserTableRow({
   selected,
   onSelectRow,
   onUpdateStatus,
-  onDeleteUser,
+  // onDeleteUser,
 }: AffialiteTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
@@ -50,26 +47,21 @@ export function UserTableRow({
 
   const handleStatusChange = useCallback(
     () => {
-      // const newStatus = row.status === 1 ? 0 : 1;
-      // onUpdateStatus(row.id, newStatus);
-      // handleClosePopover();
+      const newStatus = row.status === 'Active' ? 'Banned' : 'Active';
+      onUpdateStatus(row.id, newStatus);
+      handleClosePopover();
     },
-    // [row.status, row.id, onUpdateStatus, handleClosePopover]
-    []
+    [row.status, row.id, onUpdateStatus, handleClosePopover]
   );
 
-  const handleDeleteUser = useCallback(() => {
-    onDeleteUser(row.id);
-    handleClosePopover();
-  }, [row.id, onDeleteUser, handleClosePopover]);
+  // const handleDeleteUser = useCallback(() => {
+  //   onDeleteUser(row.id);
+  //   handleClosePopover();
+  // }, [row.id, onDeleteUser, handleClosePopover]);
 
   return (
     <>
-      <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
-        <TableCell padding="checkbox">
-          <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
-        </TableCell>
-
+      <TableRow hover tabIndex={-1} >
         <TableCell>{row.firstname || '-'}</TableCell>
         <TableCell>{row.lastname || '-'}</TableCell>
         <TableCell>{row.email || '-'}</TableCell>
@@ -117,13 +109,13 @@ export function UserTableRow({
 
           <MenuItem onClick={handleStatusChange}>
             <Iconify icon="solar:user-block-bold" />
-            {/* {row.status === 1 ? 'Deactivate' : 'Activate'} */}
+            {row.status === "Active"? 'Banned' : 'Active'}
           </MenuItem>
 
-          <MenuItem onClick={handleDeleteUser} sx={{ color: 'error.main' }}>
+          {/* <MenuItem onClick={handleDeleteUser} sx={{ color: 'error.main' }}>
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
-          </MenuItem>
+          </MenuItem> */}
         </MenuList>
       </Popover>
 

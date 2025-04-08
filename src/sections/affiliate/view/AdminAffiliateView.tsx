@@ -3,26 +3,21 @@ import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
-import MenuItem from '@mui/material/MenuItem';
 import TableBody from '@mui/material/TableBody';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { Iconify } from 'src/components/iconify';
+
 import { Scrollbar } from 'src/components/scrollbar';
-import { GamingAnalyticsView } from 'src/sections/overview/view/overview-analytics-view';
 
 import { TableNoData } from '../../user/table-no-data';
 import { UserTableRow } from '../affiliate-table-row';
-import { UserTableHead } from '../../user/user-table-head';
+import { UserTableHead } from '../affiliate-table-head';
 import { TableEmptyRows } from '../../user/table-empty-rows';
-import { UserTableToolbar } from '../../user/user-table-toolbar';
+
 import { emptyRows, applyFilter, getComparator } from '../utils';
 
 export interface AffiliateProps {
@@ -32,12 +27,12 @@ export interface AffiliateProps {
   email: string;
   phonenumber: string;
   status: string;
-  referralCode:string;
-  country:string;
-  marketingEmailsOptIn:boolean;
-  hearAboutUs:string;
-  createdAt:Date;
-  promotionMethod: string[]; 
+  referralCode: string;
+  country: string;
+  marketingEmailsOptIn: boolean;
+  hearAboutUs: string;
+  createdAt: Date;
+  promotionMethod: string[];
 }
 
 export function AdminAffiliateView() {
@@ -48,50 +43,69 @@ export function AdminAffiliateView() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCurrency, setFilterCurrency] = useState('all');
   const [filter2FA, setFilter2FA] = useState('all');
+
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users`;
-        const response = await fetch(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-
-        if (data.data && Array.isArray(data.data.data)) {
-          const transformedUsers: AffiliateProps[] = data.data.data.map((item: any) => ({
-            id: item._id,
-            firstname: item.firstname ?? '',
-            lastname: item.lastname ?? '',
-            email: item.email,
-            phonenumber: item.phonenumber ?? '',
-            referralCode: item.referralCode ?? '',
-            status: item.status,
-            country: item.country??'',
-            marketingEmailsOptIn: item.marketingEmailsOptIn ?? false,
-            hearAboutUs: item.hearAboutUs ?? '',
-            createdAt: item.createdAt ?? '',
-            promotionMethod: item.promotionMethod ?? [],
-          }));
-
-          setUsers(transformedUsers);
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, [token]);
-
-  const updateUserStatus = async (userId: string, newStatus: number) => {
+  const fetchUsers = useCallback(async () => {
     try {
-      console.log('update-status');
+      setLoading(true);
+      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users`;
+      const response = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+
+      if (data.data && Array.isArray(data.data.data)) {
+        const transformedUsers: AffiliateProps[] = data.data.data.map((item: any) => ({
+          id: item._id,
+          firstname: item.firstname ?? '',
+          lastname: item.lastname ?? '',
+          email: item.email,
+          phonenumber: item.phonenumber ?? '',
+          referralCode: item.referralCode ?? '',
+          status: item.status,
+          country: item.country ?? '',
+          marketingEmailsOptIn: item.marketingEmailsOptIn ?? false,
+          hearAboutUs: item.hearAboutUs ?? '',
+          createdAt: item.createdAt ?? '',
+          promotionMethod: item.promotionMethod ?? [],
+        }));
+
+        setUsers(transformedUsers);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]); // <--- IMPORTANT
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]); // ✅ Now clean and valid
+
+  const updateUserStatus = async (userId: string, newStatus: string) => {
+    try {
+      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users/status/${userId}?status=${newStatus}`;
+
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Status updated successfully:', result);
+
+      fetchUsers(); // will still work because it’s memoized
     } catch (error) {
       console.error('Error updating user status:', error);
     }
@@ -171,7 +185,7 @@ export function AdminAffiliateView() {
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
                       onUpdateStatus={updateUserStatus}
-                      onDeleteUser={deleteUser}
+                      // onDeleteUser={deleteUser}
                     />
                   ))}
 
