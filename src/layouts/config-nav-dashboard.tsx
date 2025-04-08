@@ -31,7 +31,7 @@ export const navData = [
     title: 'Affiliate Management',
     path: '/admin-affiliate',
     icon: icon('ic-user'),
-    children: [{ title: 'Player List', path: '/players/list' }],
+    children: [{ title: 'Affiliate List', path: '/admin-affiliate' }],
   },
   {
     title: 'Game Management',

@@ -10,11 +10,10 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import {AffiliateProps} from './types'
-import { UserDetailDialog } from '../user/user-detail-dialog';
+import { AffiliateProps } from './types';
+import { AffiliateDialog } from './affiliate-detail-dialog';
 
-
-type UserTableRowProps = {
+type AffialiteTableRowProps = {
   row: AffiliateProps;
   selected: boolean;
   onSelectRow: () => void;
@@ -22,7 +21,13 @@ type UserTableRowProps = {
   onDeleteUser: (userId: string) => void;
 };
 
-export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDeleteUser }: UserTableRowProps) {
+export function UserTableRow({
+  row,
+  selected,
+  onSelectRow,
+  onUpdateStatus,
+  onDeleteUser,
+}: AffialiteTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -43,14 +48,15 @@ export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDel
     setOpenDialog(false);
   }, []);
 
-  const handleStatusChange = useCallback(() => {
-    // const newStatus = row.status === 1 ? 0 : 1;
-    // onUpdateStatus(row.id, newStatus);
-    // handleClosePopover();
-  }, 
-  // [row.status, row.id, onUpdateStatus, handleClosePopover]
-  []
-);
+  const handleStatusChange = useCallback(
+    () => {
+      // const newStatus = row.status === 1 ? 0 : 1;
+      // onUpdateStatus(row.id, newStatus);
+      // handleClosePopover();
+    },
+    // [row.status, row.id, onUpdateStatus, handleClosePopover]
+    []
+  );
 
   const handleDeleteUser = useCallback(() => {
     onDeleteUser(row.id);
@@ -64,27 +70,14 @@ export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDel
           <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
         </TableCell>
 
-      
-
         <TableCell>{row.firstname || '-'}</TableCell>
         <TableCell>{row.lastname || '-'}</TableCell>
         <TableCell>{row.email || '-'}</TableCell>
         <TableCell>{row.phonenumber || '-'}</TableCell>
         <TableCell>{row.referralCode || '-'}</TableCell>
 
-        {/* <TableCell align="center">
-          <Label color={row.is_verified === 1 ? 'success' : 'error'}>
-            {row.is_verified === 1 ? 'Verified' : 'Unverified'}
-          </Label>
-        </TableCell> */}
-
         <TableCell>
-          {/* <Label color={row.status === 0 ? 'error' : 'success'}>
-            {row.status === 1 ? 'Active' : 'Inactive'}
-          </Label>   */}
-          <Label >
-            {row.status }
-          </Label>
+          <Label>{row.status}</Label>
         </TableCell>
 
         <TableCell>
@@ -134,11 +127,7 @@ export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDel
         </MenuList>
       </Popover>
 
-      {/* <UserDetailDialog 
-        open={openDialog}
-        onClose={handleCloseDialog}
-        user={row}
-      /> */}
+      <AffiliateDialog open={openDialog} onClose={handleCloseDialog} user={row} />
     </>
   );
 }

@@ -5,5 +5,10 @@ export interface AffiliateProps {
   email: string;
   phonenumber: string;
   status: string;
-  referralCode:string
+  referralCode:string;
+  country:string;
+  marketingEmailsOptIn:boolean;
+  hearAboutUs:string;
+  createdAt:Date;
+  promotionMethod: string[]; 
 }

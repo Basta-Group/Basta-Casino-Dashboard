@@ -19,7 +19,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { GamingAnalyticsView } from 'src/sections/overview/view/overview-analytics-view';
 
 import { TableNoData } from '../../user/table-no-data';
-import { UserTableRow } from '../user-table-row';
+import { UserTableRow } from '../affiliate-table-row';
 import { UserTableHead } from '../../user/user-table-head';
 import { TableEmptyRows } from '../../user/table-empty-rows';
 import { UserTableToolbar } from '../../user/user-table-toolbar';
@@ -32,7 +32,12 @@ export interface AffiliateProps {
   email: string;
   phonenumber: string;
   status: string;
-  referralCode: string;
+  referralCode:string;
+  country:string;
+  marketingEmailsOptIn:boolean;
+  hearAboutUs:string;
+  createdAt:Date;
+  promotionMethod: string[]; 
 }
 
 export function AdminAffiliateView() {
@@ -65,6 +70,11 @@ export function AdminAffiliateView() {
             phonenumber: item.phonenumber ?? '',
             referralCode: item.referralCode ?? '',
             status: item.status,
+            country: item.country??'',
+            marketingEmailsOptIn: item.marketingEmailsOptIn ?? false,
+            hearAboutUs: item.hearAboutUs ?? '',
+            createdAt: item.createdAt ?? '',
+            promotionMethod: item.promotionMethod ?? [],
           }));
 
           setUsers(transformedUsers);

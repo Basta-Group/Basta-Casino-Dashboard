@@ -1,4 +1,4 @@
-import type { AffiliateProps } from './view/affiliate-view';
+import type { AffiliateProps } from './view/AdminAffiliateView';
 
 export const visuallyHidden = {
   border: 0,
