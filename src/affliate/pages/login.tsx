@@ -142,7 +142,7 @@ export default function AffiliateLoginPage() {
         height: '100vh',
         width: '100vw',
         display: 'flex',
-        overflow: 'hidden',
+        overflow: 'hidden', // Prevent outer scrolling
         bgcolor: '#f5f7fa',
       }}
     >
@@ -156,7 +156,7 @@ export default function AffiliateLoginPage() {
           justifyContent: 'center',
           p: 4,
           bgcolor: 'white',
-          overflowY: 'auto',
+          overflow: 'auto', // Allow scrolling only if content overflows
         }}
       >
         <Box sx={{ maxWidth: 400, width: '100%', mx: 'auto' }}>
@@ -279,7 +279,7 @@ export default function AffiliateLoginPage() {
             </Divider>
 
             <Typography variant="body2" color="text.secondary" textAlign="center">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link
                 href="/affiliate/register"
                 variant="subtitle2"
@@ -301,7 +301,7 @@ export default function AffiliateLoginPage() {
           height: '100%',
           p: 6,
           bgcolor: '#f0f4f8',
-          overflowY: 'auto',
+          overflow: 'auto', // Allow scrolling only if content overflows
           flexDirection: 'column',
           justifyContent: 'center',
         }}
@@ -344,7 +344,7 @@ export default function AffiliateLoginPage() {
                 <Typography variant="h5" color="primary" gutterBottom>
                   3. Earn
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{}}>
                   Earn up to 40% commission on player deposits and sign-ups with our competitive
                   rates.
                 </Typography>
@@ -354,8 +354,9 @@ export default function AffiliateLoginPage() {
 
           <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 2, mt: 2 }}>
             <Typography variant="body1" fontStyle="italic">
-              "Since we have a global audience, the BASTA Affiliate Program has helped us scale our
-              earnings internationally. It's been simple to sign up and use!" - CasinoBlog
+              &quot;Since we have a global audience, the BASTA Affiliate Program has helped us
+              scale our earnings internationally. It&apos;s been simple to sign up and
+              use!&quot; - CasinoBlog
             </Typography>
           </Box>
         </Stack>
