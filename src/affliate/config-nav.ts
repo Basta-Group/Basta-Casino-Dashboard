@@ -14,11 +14,11 @@ export const affiliateNavData = [
     href: '/affiliate/earnings',
     icon: { icon: 'solar:wallet-2-bold-duotone' },
   },
-  {
-    label: 'Login',
-    href: '/affiliate/login',
-    icon: { icon: 'solar:login-bold-duotone' },
-  },
+  // {
+  //   label: 'Login',
+  //   href: '/affiliate/login',
+  //   icon: { icon: 'solar:login-bold-duotone' },
+  // },
   {
     label: 'Forgot Password',
     href: '/affiliate/forget-password',

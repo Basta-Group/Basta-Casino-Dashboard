@@ -1,41 +1,85 @@
 import { useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
-import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import Alert from '@mui/material/Alert';
-
+import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { env } from 'src/config/env.config';
 
+// Type definition for form data
+interface SignInFormData {
+  email: string;
+  password: string;
+}
+
+// Type definition for API response
+interface SignInResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    user: {
+      id: string;
+      email: string;
+      username: string;
+      role: number;
+      requires2FA?: boolean;
+    };
+    token: string;
+    expiresIn: number;
+  };
+  error?: string;
+  errors?: Array<{ param?: string; message: string }>;
+}
+
 export function SignInView() {
   const router = useRouter();
+  const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState<string>('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<SignInFormData>({ email: '', password: '' });
+  const [touched, setTouched] = useState({ email: false, password: false });
 
-  const handleChange = useCallback((e:any) => {
+  // Handle input change
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setError('');
+    setFieldErrors((prev) => ({ ...prev, [name]: '' }));
   }, []);
 
+  // Client-side validation
+  const validateForm = useCallback(() => {
+    if (!formData.email) return 'Email is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
+    if (!formData.password) return 'Password is required';
+    return '';
+  }, [formData]);
+
+  // Handle sign-in submission
   const handleSignIn = useCallback(async () => {
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
+    setLoading(true);
+    setError('');
+    setFieldErrors({});
+
     try {
-      setLoading(true);
-      setError('');
       const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/login`;
-      const requestData = { ...formData, role_id: 1 };
+      const requestData = { ...formData, role_id: 1 }; // Role 1 for admin
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -43,11 +87,24 @@ export function SignInView() {
         body: JSON.stringify(requestData),
       });
 
-      const data = await response.json();
+      const data: SignInResponse = await response.json();
 
-      console.log("==data==",data)
-
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        if (data.errors && Array.isArray(data.errors)) {
+          const errorMap: Record<string, string> = {};
+          data.errors.forEach((err) => {
+            if (err.param) {
+              errorMap[err.param] = err.message;
+            } else {
+              setError(err.message);
+            }
+          });
+          setFieldErrors(errorMap);
+          return;
+        }
         throw new Error(data.message || 'Login failed');
       }
 
@@ -60,68 +117,154 @@ export function SignInView() {
       }
 
       localStorage.setItem('accessToken', data.data.token);
-      router.push('/');
+
+      if (data.data.user.requires2FA) {
+        router.push(`/verify-2fa?playerId=${data.data.user.id}`);
+      } else {
+        router.push('/');
+      }
     } catch (err) {
-      console.error('Login error:', err);
-      setError(err.message || 'An error occurred during sign in');
+      console.error('Sign-in error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
-  }, [formData, router]);
+  }, [formData, router, validateForm]);
+
+  // Handle Enter key press
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !loading) {
+        handleSignIn();
+      }
+    },
+    [handleSignIn, loading]
+  );
 
   return (
-    <>
-      <Box gap={1.5} display="flex" flexDirection="column" alignItems="center" sx={{ mb: 5 }}>
-        <Typography variant="h5">Sign in</Typography>
-      </Box>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'transparent',
+        p: 2,
+      }}
+    >
+      <Box
+        sx={{
+          width: '100%',
+        }}
+      >
+        <Stack spacing={2} alignItems="center" sx={{ mb: 4 }}>
+          <Typography variant="h5" component="h1" fontWeight="bold">
+            Admin Sign In
+          </Typography>
+          <Typography variant="body1" color="text.secondary" textAlign="center">
+            Enter your admin credentials to access
+            <br />
+            the dashboard
+          </Typography>
+        </Stack>
 
-      <Box display="flex" flexDirection="column" alignItems="flex-end">
-        {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
-        <TextField
-          fullWidth
-          name="email"
-          label="Email address"
-          value={formData.email}
-          onChange={handleChange}
-          InputLabelProps={{ shrink: true }}
-          sx={{ mb: 3 }}
-        />
-        <Link variant="body2" color="inherit" sx={{ mb: 1.5 }}>
-          Forgot password?
-        </Link>
-        <TextField
-          fullWidth
-          name="password"
-          label="Password"
-          value={formData.password}
-          onChange={handleChange}
-          InputLabelProps={{ shrink: true }}
-          type={showPassword ? 'text' : 'password'}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                  <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 3 }}
-        />
-        <LoadingButton
-          fullWidth
-          size="large"
-          type="submit"
-          color="inherit"
-          variant="contained"
-          onClick={handleSignIn}
-          loading={loading}
-        >
-          Sign in
-        </LoadingButton>
-      </Box>
+        <Stack spacing={3}>
+          {error && (
+            <Alert severity="error" sx={{ borderRadius: 1 }}>
+              {error}
+            </Alert>
+          )}
 
-      <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }} />
-    </>
+          <TextField
+            fullWidth
+            name="email"
+            label="Email address"
+            value={formData.email}
+            onChange={handleChange}
+            onKeyPress={handleKeyPress}
+            error={touched.email && (!formData.email || !!fieldErrors.email)}
+            helperText={
+              (touched.email && !formData.email && 'Email is required') || fieldErrors.email || ''
+            }
+            disabled={loading}
+            variant="outlined"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 1,
+                backgroundColor: '#f8f9fa',
+              },
+            }}
+          />
+
+          <TextField
+            fullWidth
+            name="password"
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            value={formData.password}
+            onChange={handleChange}
+            onKeyPress={handleKeyPress}
+            error={touched.password && (!formData.password || !!fieldErrors.password)}
+            helperText={
+              (touched.password && !formData.password && 'Password is required') ||
+              fieldErrors.password ||
+              ''
+            }
+            disabled={loading}
+            variant="outlined"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    disabled={loading}
+                  >
+                    <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 1,
+                backgroundColor: '#f8f9fa',
+              },
+            }}
+          />
+
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Link
+              href="/forgot-password"
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' },
+              }}
+            >
+              Forgot password?
+            </Link>
+          </Box>
+
+          <LoadingButton
+            fullWidth
+            size="large"
+            variant="contained"
+            onClick={handleSignIn}
+            loading={loading}
+            disabled={!formData.email || !formData.password}
+            sx={{
+              py: 1.5,
+              borderRadius: 1,
+              textTransform: 'none',
+              fontWeight: 'medium',
+              fontSize: '1rem',
+            }}
+          >
+            Sign In
+          </LoadingButton>
+        </Stack>
+      </Box>
+    </Box>
   );
 }

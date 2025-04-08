@@ -51,8 +51,8 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
       // Close the popover
       handleClosePopover();
       
-      // Redirect to sign-in page
-      router.push('/sign-in');
+      // Redirect to root page (login selection)
+      router.push('/'); // Changed from '/sign-in' to '/'
       
     } catch (error) {
       console.error('Logout failed:', error);

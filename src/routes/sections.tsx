@@ -1,9 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Outlet, Navigate, useRoutes } from 'react-router-dom';
-
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
-
 import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
@@ -11,10 +9,8 @@ import TransactionPage from 'src/pages/TransactionPage';
 import DashboardBanner from 'src/pages/DashboardBanner';
 import AdminAffiliatePage from 'src/pages/AdminAffiliatePage';
 
-// ----------------------------------------------------------------------
-
-// Lazy-loaded pages
 export const HomePage = lazy(() => import('src/pages/home'));
+export const LandingPage = lazy(() => import('src/pages/landing'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const TransactionsPage = lazy(() => import('src/pages/TransactionPage'));
 export const UserPage = lazy(() => import('src/pages/user'));
@@ -23,15 +19,14 @@ export const PaymentPage = lazy(() => import('src/pages/PaymentPage'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
-// affliate-routes
+
+// Affiliate routes
 const AffiliateLoginPage = lazy(() => import('src/affliate/pages/login'));
 const AffiliateForgotPage = lazy(() => import('src/affliate/pages/ForgetPassword'));
+const AffiliateRegisterPage = lazy(() => import('src/affliate/pages/AffiliateRegisterPage')); // New import
 const AffiliateDashboardPage = lazy(() => import('src/affliate/pages/dashboard'));
 const AffiliateLayout = lazy(() => import('src/affliate/layouts/AffliateLayout'));
 
-// ----------------------------------------------------------------------
-
-// Loading fallback
 const renderFallback = (
   <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
     <LinearProgress
@@ -45,24 +40,37 @@ const renderFallback = (
   </Box>
 );
 
-// Authentication check
-const isAuthenticated = () => !!localStorage.getItem('accessToken');
+const isAdminAuthenticated = () => !!localStorage.getItem('accessToken');
+const isAffiliateAuthenticated = () => !!localStorage.getItem('affiliateToken');
 
-// Auth Guard
-const AuthGuard = ({ children }: { children: React.ReactNode }) =>
-  isAuthenticated() ? <>{children}</> : <Navigate to="/sign-in" replace />;
+const AdminAuthGuard = ({ children }: { children: React.ReactNode }) =>
+  isAdminAuthenticated() ? <>{children}</> : <Navigate to="/sign-in" replace />;
+
+const AffiliateAuthGuard = ({ children }: { children: React.ReactNode }) =>
+  isAffiliateAuthenticated() ? <>{children}</> : <Navigate to="/affiliate/login" replace />;
+
+const PublicAffiliateRoutesGuard = ({ children }: { children: React.ReactNode }) =>
+  !isAffiliateAuthenticated() ? <>{children}</> : <Navigate to="/affiliate/dashboard" replace />;
 
 export function Router() {
   return useRoutes([
     {
+      path: '/home',
       element: (
-        <AuthGuard>
+        <Suspense fallback={renderFallback}>
+          <LandingPage />
+        </Suspense>
+      ),
+    },
+    {
+      element: (
+        <AdminAuthGuard>
           <DashboardLayout>
             <Suspense fallback={renderFallback}>
               <Outlet />
             </Suspense>
           </DashboardLayout>
-        </AuthGuard>
+        </AdminAuthGuard>
       ),
       children: [
         { element: <HomePage />, index: true },
@@ -75,18 +83,42 @@ export function Router() {
         { path: 'dashboard-banner', element: <DashboardBanner /> },
       ],
     },
-    // ✅ Affiliate Routes here
     {
       path: 'affiliate',
       element: (
         <Suspense fallback={renderFallback}>
-          <AffiliateLayout />
+          <Outlet />
         </Suspense>
       ),
       children: [
-        { path: 'login', element: <AffiliateLoginPage /> },
-        { path: 'forget-password', element: <AffiliateForgotPage /> },
-        { path: 'dashboard', element: <AffiliateDashboardPage /> },
+        {
+          element: (
+            <PublicAffiliateRoutesGuard>
+              <AuthLayout>
+                <Outlet />
+              </AuthLayout>
+            </PublicAffiliateRoutesGuard>
+          ),
+          children: [
+            { path: 'login', element: <AffiliateLoginPage /> },
+            { path: 'forget-password', element: <AffiliateForgotPage /> },
+            { path: 'register', element: <AffiliateRegisterPage /> }, // Added register route
+          ],
+        },
+        {
+          element: (
+            <AffiliateAuthGuard>
+              <AffiliateLayout />
+              <Outlet />
+            </AffiliateAuthGuard>
+          ),
+          children: [
+            { path: 'dashboard', element: <AffiliateDashboardPage /> },
+            { path: 'referrals', element: <div>Referrals Page</div> },
+            { path: 'earnings', element: <div>Earnings Page</div> },
+            { index: true, element: <Navigate to="/affiliate/dashboard" replace /> },
+          ],
+        },
       ],
     },
     {

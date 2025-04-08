@@ -57,7 +57,7 @@ export function AuthLayout({ sx, children, header }: AuthLayoutProps) {
                 color="inherit"
                 sx={{ typography: 'subtitle2' }}
               >
-                Need help?
+                {/* Need help? */}
               </Link>
             ),
           }}
