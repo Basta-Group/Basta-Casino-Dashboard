@@ -271,7 +271,7 @@ export default function AffiliateLoginPage() {
             </Divider>
 
             <Typography variant="body2" color="text.secondary" textAlign="center">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link
                 href="/affiliate/register"
                 variant="subtitle2"

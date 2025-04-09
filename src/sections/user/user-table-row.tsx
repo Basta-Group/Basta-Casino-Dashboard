@@ -72,6 +72,8 @@ export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDel
         <TableCell>{row.email || '-'}</TableCell>
         <TableCell>{row.phone_number || '-'}</TableCell>
 
+        <TableCell>{row.referredByName || 'N/A'}</TableCell>
+
         <TableCell align="center">
           <Label color={row.is_verified === 1 ? 'success' : 'error'}>
             {row.is_verified === 1 ? 'Verified' : 'Unverified'}

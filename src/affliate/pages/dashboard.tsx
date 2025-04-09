@@ -1,4 +1,3 @@
-// src/affiliate/pages/dashboard.tsx
 import React from 'react';
 import {
   Box,
@@ -19,7 +18,9 @@ import { Iconify } from 'src/components/iconify'; // Assuming you have this comp
 
 // Styled components for custom styling
 const StatCard = styled(Card)(({ theme }) => ({
+  backgroundColor: '#F9FAFB', // Light gray-blue
   transition: 'transform 0.2s, box-shadow 0.2s',
+  borderRadius: theme.shape.borderRadius * 2,
   '&:hover': {
     transform: 'translateY(-4px)',
     boxShadow: theme.shadows[6],
@@ -27,11 +28,22 @@ const StatCard = styled(Card)(({ theme }) => ({
 }));
 
 const DashboardHeader = styled(Box)(({ theme }) => ({
-  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+  background: `linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%)`, // Teal gradient
   borderRadius: theme.shape.borderRadius,
   padding: theme.spacing(3),
   color: theme.palette.common.white,
   marginBottom: theme.spacing(4),
+  boxShadow: theme.shadows[8],
+}));
+
+const ActionButton = styled(Button)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius * 2,
+  padding: theme.spacing(1, 3),
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'scale(1.05)',
+    boxShadow: theme.shadows[4],
+  },
 }));
 
 export default function AffiliateDashboardPage() {
@@ -46,16 +58,20 @@ export default function AffiliateDashboardPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100', p: 4 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#E0F2F1', p: 4 }}>
+      {' '}
+      {/* Light teal background */}
       {/* Header Section */}
       <DashboardHeader>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box display="flex" alignItems="center" gap={2}>
-            <Avatar sx={{ bgcolor: 'white', color: 'primary.main', width: 48, height: 48 }}>
+            <Avatar sx={{ bgcolor: '#FF8A65', color: 'white', width: 48, height: 48 }}>
+              {' '}
+              {/* Coral avatar */}
               <Iconify icon="solar:user-bold" width={24} />
             </Avatar>
             <Box>
-              <Typography variant="h4" component="h1">
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
                 Welcome, Affiliate!
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.9 }}>
@@ -63,18 +79,16 @@ export default function AffiliateDashboardPage() {
               </Typography>
             </Box>
           </Box>
-          <Button
+          <ActionButton
             variant="contained"
-            color="secondary"
             startIcon={<Iconify icon="solar:wallet-bold" />}
             onClick={() => router.push('/affiliate/payouts')}
-            sx={{ bgcolor: 'white', color: 'primary.main', '&:hover': { bgcolor: 'grey.100' } }}
+            sx={{ bgcolor: '#FF7043', color: 'white', '&:hover': { bgcolor: '#F06292' } }} // Coral button
           >
             Request Payout
-          </Button>
+          </ActionButton>
         </Box>
       </DashboardHeader>
-
       {/* Stats Section */}
       <Grid container spacing={3}>
         {/* Referrals Card */}
@@ -82,12 +96,17 @@ export default function AffiliateDashboardPage() {
           <StatCard elevation={3}>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
-                <Iconify icon="solar:users-group-rounded-bold" width={32} color="primary.main" />
+                <Iconify icon="solar:users-group-rounded-bold" width={32} color="#26A69A" />{' '}
+                {/* Teal icon */}
                 <Box>
-                  <Typography variant="h6" color="text.secondary">
+                  <Typography variant="h6" color="#78909C">
+                    {' '}
+                    {/* Muted gray */}
                     Referrals
                   </Typography>
-                  <Typography variant="h4" color="primary.main">
+                  <Typography variant="h4" color="#26A69A">
+                    {' '}
+                    {/* Teal */}
                     {stats.referrals}
                   </Typography>
                 </Box>
@@ -101,13 +120,16 @@ export default function AffiliateDashboardPage() {
           <StatCard elevation={3}>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
-                <Iconify icon="solar:card-bold" width={32} color="success.main" />
+                <Iconify icon="solar:card-bold" width={32} color="#FF7043" /> {/* Coral icon */}
                 <Box>
-                  <Typography variant="h6" color="text.secondary">
+                  <Typography variant="h6" color="#78909C">
+                    {' '}
+                    {/* Muted gray */}
                     Earnings
                   </Typography>
-                  <Typography variant="h4" color="success.main">
-                    ₹{stats.earnings.toLocaleString()}
+                  <Typography variant="h4" color="#FF7043">
+                    {' '}
+                    {/* Coral */}₹{stats.earnings.toLocaleString()}
                   </Typography>
                 </Box>
               </Box>
@@ -120,13 +142,17 @@ export default function AffiliateDashboardPage() {
           <StatCard elevation={3}>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
-                <Iconify icon="solar:clock-circle-bold" width={32} color="warning.main" />
+                <Iconify icon="solar:clock-circle-bold" width={32} color="#F06292" />{' '}
+                {/* Pink icon */}
                 <Box>
-                  <Typography variant="h6" color="text.secondary">
+                  <Typography variant="h6" color="#78909C">
+                    {' '}
+                    {/* Muted gray */}
                     Pending Payouts
                   </Typography>
-                  <Typography variant="h4" color="warning.main">
-                    ₹{stats.pendingPayouts.toLocaleString()}
+                  <Typography variant="h4" color="#F06292">
+                    {' '}
+                    {/* Pink */}₹{stats.pendingPayouts.toLocaleString()}
                   </Typography>
                 </Box>
               </Box>
@@ -136,8 +162,12 @@ export default function AffiliateDashboardPage() {
 
         {/* Conversion Rate */}
         <Grid item xs={12}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper elevation={3} sx={{ p: 3, bgcolor: '#F9FAFB' }}>
+            {' '}
+            {/* Light gray-blue */}
+            <Typography variant="h6" gutterBottom color="#26A69A">
+              {' '}
+              {/* Teal */}
               Conversion Rate
             </Typography>
             <Box display="flex" alignItems="center" gap={2}>
@@ -145,23 +175,38 @@ export default function AffiliateDashboardPage() {
                 <LinearProgress
                   variant="determinate"
                   value={stats.conversionRate}
-                  sx={{ height: 10, borderRadius: 5 }}
+                  sx={{
+                    height: 10,
+                    borderRadius: 5,
+                    bgcolor: '#B0BEC5', // Light gray
+                    '& .MuiLinearProgress-bar': { bgcolor: '#26A69A' }, // Teal bar
+                  }}
                 />
               </Box>
-              <Typography variant="h6" color="primary.main">
+              <Typography variant="h6" color="#26A69A">
+                {' '}
+                {/* Teal */}
                 {stats.conversionRate}%
               </Typography>
             </Box>
           </Paper>
         </Grid>
       </Grid>
-
       {/* Additional Actions */}
       <Box mt={4} textAlign="center">
-        <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }} />
-        <Typography variant="body2" color="text.secondary">
+        <Divider
+          sx={{
+            my: 3,
+            '&::before, &::after': { borderTopStyle: 'dashed', borderColor: '#B0BEC5' },
+          }}
+        />
+        <Typography variant="body2" color="#78909C">
+          {' '}
+          {/* Muted gray */}
           Need help?{' '}
-          <Link variant="body2" sx={{ cursor: 'pointer' }}>
+          <Link variant="body2" sx={{ cursor: 'pointer', color: '#FF7043' }}>
+            {' '}
+            {/* Coral link */}
             Contact Support
           </Link>
         </Typography>

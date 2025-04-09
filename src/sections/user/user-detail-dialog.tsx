@@ -34,10 +34,14 @@ export function UserDetailDialog({ open, onClose, user }: UserDetailDialogProps)
 
   const getCurrencyLabel = (currency: number) => {
     switch (currency) {
-      case 0: return 'USD';
-      case 1: return 'INR';
-      case 2: return 'Pound';
-      default: return '-';
+      case 0:
+        return 'USD';
+      case 1:
+        return 'INR';
+      case 2:
+        return 'Pound';
+      default:
+        return '-';
     }
   };
 
@@ -59,50 +63,50 @@ export function UserDetailDialog({ open, onClose, user }: UserDetailDialogProps)
           <DetailItem label="Full Name" value={user.fullname} />
           <DetailItem label="Email" value={user.email} />
           <DetailItem label="Phone" value={user.phone_number} />
-          
-          <DetailItem 
-            label="Status" 
+          <DetailItem label="Referred By" value={user.referredByName || 'N/A'} />
+
+          <DetailItem
+            label="Status"
             value={
               <Label color={user.status === 0 ? 'error' : 'success'}>
                 {user.status === 1 ? 'Active' : 'Inactive'}
               </Label>
             }
           />
-          
-          <DetailItem 
-            label="Verification" 
+
+          <DetailItem
+            label="Verification"
             value={
               <Label color={user.is_verified === 1 ? 'success' : 'error'}>
                 {user.is_verified === 1 ? 'Verified' : 'Unverified'}
               </Label>
             }
           />
-          
-          <DetailItem 
-            label="2FA Status" 
+
+          <DetailItem
+            label="2FA Status"
             value={
               <Label color={user.is_2fa === 1 ? 'success' : 'warning'}>
                 {user.is_2fa === 1 ? 'Enabled' : 'Disabled'}
               </Label>
             }
           />
-          
+
           <DetailItem label="Currency" value={getCurrencyLabel(user.currency)} />
-          <DetailItem 
-            label="Balance" 
+          <DetailItem
+            label="Balance"
             value={
               <Label color={user.balance > 0 ? 'success' : 'warning'}>
                 {formatBalance(user.balance, user.currency)}
               </Label>
             }
           />
-          
+
           <DetailItem label="Language" value={user.language || '-'} />
           <DetailItem label="Country" value={user.country || '-'} />
           <DetailItem label="City" value={user.city || '-'} />
           <DetailItem label="Registration Date" value={formatDate(user.created_at)} />
           <DetailItem label="Last Login" value={formatDate(user.last_login)} />
-          {/* <DetailItem label="Created At" value={formatDate(user.created_at)} /> */}
         </Grid>
       </DialogContent>
     </Dialog>

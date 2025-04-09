@@ -53,6 +53,7 @@ export interface UserProps {
   total_withdrawals: number;
   last_deposit_date: Date;
   last_withdrawal_date: Date;
+  referredByName: string;
 }
 
 export function UserView() {
@@ -229,6 +230,7 @@ export function UserView() {
                   { id: 'fullname', label: 'Full Name' },
                   { id: 'email', label: 'Email' },
                   { id: 'phone_number', label: 'Phone Number' },
+                  { id: 'referredByName', label: 'Referred By' },
                   { id: 'is_verified', label: 'Verified', align: 'center' },
                   { id: 'status', label: 'Status' },
                   // { id: 'is_2fa', label: '2FA' },
