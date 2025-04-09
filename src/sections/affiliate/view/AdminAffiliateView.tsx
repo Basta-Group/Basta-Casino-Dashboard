@@ -26,7 +26,7 @@ export interface AffiliateProps {
   lastname: string;
   email: string;
   phonenumber: string;
-  status: string;
+  status: number;
   referralCode: string;
   country: string;
   marketingEmailsOptIn: boolean;
@@ -80,13 +80,13 @@ export function AdminAffiliateView() {
     } finally {
       setLoading(false);
     }
-  }, [token]); // <--- IMPORTANT
+  }, [token]); 
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]); // ✅ Now clean and valid
+  }, [fetchUsers]); 
 
-  const updateUserStatus = async (userId: string, newStatus: string) => {
+  const updateUserStatus = async (userId: string, newStatus: number) => {
     try {
       const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users/status/${userId}?status=${newStatus}`;
 
