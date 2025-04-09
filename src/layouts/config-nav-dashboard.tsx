@@ -67,7 +67,7 @@ export const navData = [
   {
     title: 'System Settings',
     path: '/settings',
-    icon: <Icon icon="mdi:cog" fontSize="22px" />, // Replacing ic-settings
+    icon: <Icon icon="mdi:cog" fontSize="22px" />,
     children: [
       { title: 'Currency Settings', path: '/settings/currency' },
       { title: 'Payment Methods', path: '/settings/payment' },
