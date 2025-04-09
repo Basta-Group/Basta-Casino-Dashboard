@@ -26,4 +26,5 @@ export interface UserProps {
   total_withdrawals: number;
   last_deposit_date: Date;
   last_withdrawal_date: Date;
+  referredByName: string;
 }
