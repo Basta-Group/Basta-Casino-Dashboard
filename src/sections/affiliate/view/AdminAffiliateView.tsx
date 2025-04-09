@@ -3,7 +3,11 @@ import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import MenuItem from '@mui/material/MenuItem';
 import TableBody from '@mui/material/TableBody';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
@@ -17,7 +21,7 @@ import { TableNoData } from '../../user/table-no-data';
 import { UserTableRow } from '../affiliate-table-row';
 import { UserTableHead } from '../affiliate-table-head';
 import { TableEmptyRows } from '../../user/table-empty-rows';
-
+import { UserTableToolbar } from '../affiliate-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
 
 export interface AffiliateProps {
@@ -80,11 +84,11 @@ export function AdminAffiliateView() {
     } finally {
       setLoading(false);
     }
-  }, [token]); 
+  }, [token]);
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]); 
+  }, [fetchUsers]);
 
   const updateUserStatus = async (userId: string, newStatus: number) => {
     try {
@@ -147,6 +151,28 @@ export function AdminAffiliateView() {
       </Box>
 
       <Card>
+        <Stack direction="row" spacing={2} sx={{ p: 2 }}>
+          <TextField
+            select
+            label="Status"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            sx={{ width: 200 }}
+          >
+            <MenuItem value="all">All Status</MenuItem>
+            <MenuItem value="1">Active</MenuItem>
+            <MenuItem value="0">Inactive</MenuItem>
+            <MenuItem value="2">Banned</MenuItem>
+          </TextField>
+        </Stack>
+        <UserTableToolbar
+          numSelected={table.selected.length}
+          filterName={filterName}
+          onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setFilterName(event.target.value);
+            table.onResetPage();
+          }}
+        />
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>
