@@ -32,7 +32,7 @@ export function AffiliateDialog({ open, onClose, user }: UserDetailDialogProps) 
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>User Details</DialogTitle>
+      <DialogTitle>Affiliate Details</DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={3}>
           <DetailItem label="First Name" value={user.firstname} />

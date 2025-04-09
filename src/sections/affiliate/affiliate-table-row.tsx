@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import Popover from '@mui/material/Popover';
 import TableRow from '@mui/material/TableRow';
+import Checkbox from '@mui/material/Checkbox';
 import MenuList from '@mui/material/MenuList';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
@@ -61,16 +62,22 @@ export function UserTableRow({
 
   return (
     <>
-      <TableRow hover tabIndex={-1} >
+      <TableRow hover tabIndex={-1} role="checkbox" selected={selected} >
+          <TableCell padding="checkbox">
+                  <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
+                </TableCell>
         <TableCell>{row.firstname || '-'}</TableCell>
         <TableCell>{row.lastname || '-'}</TableCell>
         <TableCell>{row.email || '-'}</TableCell>
         <TableCell>{row.phonenumber || '-'}</TableCell>
         <TableCell>{row.referralCode || '-'}</TableCell>
 
-        <TableCell>
-          <Label>{row.status}</Label>
-        </TableCell>
+        <TableCell align="center">
+  <Label color={row.status === 'Active' ? 'success' : 'error'}>
+    {row.status}
+  </Label>
+</TableCell>
+
 
         <TableCell>
           <IconButton onClick={handleOpenPopover}>
