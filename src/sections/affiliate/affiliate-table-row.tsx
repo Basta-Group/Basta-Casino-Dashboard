@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Popover from '@mui/material/Popover';
 import TableRow from '@mui/material/TableRow';
 import Checkbox from '@mui/material/Checkbox';
@@ -56,6 +57,11 @@ export function UserTableRow({
   //   onDeleteUser(row.id);
   //   handleClosePopover();
   // }, [row.id, onDeleteUser, handleClosePopover]);
+  const navigate = useNavigate();
+
+  const handleOpenUsers = () => {
+    navigate('/referred-user-listing');
+  };
 
   return (
     <>
@@ -108,6 +114,10 @@ export function UserTableRow({
           <MenuItem onClick={handleOpenDialog}>
             <Iconify icon="solar:eye-bold" />
             View Details
+          </MenuItem>
+          <MenuItem onClick={handleOpenUsers}>
+            <Iconify icon="solar:eye-bold" />
+            See reffered Users
           </MenuItem>
 
           <MenuItem onClick={handleStatusChange}>
