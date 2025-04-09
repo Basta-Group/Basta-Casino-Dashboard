@@ -4,7 +4,7 @@ export interface AffiliateProps {
   lastname: string;
   email: string;
   phonenumber: string;
-  status: string;
+  status: number;
   referralCode:string;
   country:string;
   marketingEmailsOptIn:boolean;

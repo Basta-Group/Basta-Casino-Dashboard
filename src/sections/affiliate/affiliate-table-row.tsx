@@ -15,7 +15,7 @@ type AffialiteTableRowProps = {
   row: AffiliateProps;
   selected: boolean;
   onSelectRow: () => void;
-  onUpdateStatus: (userId: string, newStatus: string) => void;
+  onUpdateStatus: (userId: string, newStatus: number) => void;
   // onDeleteUser: (userId: string) => void;
 };
 
@@ -46,14 +46,11 @@ export function UserTableRow({
     setOpenDialog(false);
   }, []);
 
-  const handleStatusChange = useCallback(
-    () => {
-      const newStatus = row.status === 'Active' ? 'Banned' : 'Active';
-      onUpdateStatus(row.id, newStatus);
-      handleClosePopover();
-    },
-    [row.status, row.id, onUpdateStatus, handleClosePopover]
-  );
+  const handleStatusChange = useCallback(() => {
+    const newStatus = row.status === 1 ? 2 : 1;
+    onUpdateStatus(row.id, newStatus);
+    handleClosePopover();
+  }, [row.status, row.id, onUpdateStatus, handleClosePopover]);
 
   // const handleDeleteUser = useCallback(() => {
   //   onDeleteUser(row.id);
@@ -62,10 +59,10 @@ export function UserTableRow({
 
   return (
     <>
-      <TableRow hover tabIndex={-1} role="checkbox" selected={selected} >
-          <TableCell padding="checkbox">
-                  <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
-                </TableCell>
+      <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
+        <TableCell padding="checkbox">
+          <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
+        </TableCell>
         <TableCell>{row.firstname || '-'}</TableCell>
         <TableCell>{row.lastname || '-'}</TableCell>
         <TableCell>{row.email || '-'}</TableCell>
@@ -73,11 +70,10 @@ export function UserTableRow({
         <TableCell>{row.referralCode || '-'}</TableCell>
 
         <TableCell align="center">
-  <Label color={row.status === 'Active' ? 'success' : 'error'}>
-    {row.status}
-  </Label>
-</TableCell>
-
+          <Label color={row.status === 1 ? 'success' : row.status === 2 ? 'error' : 'warning'}>
+            {row.status === 1 ? 'Active' : row.status === 2 ? 'Banned' : 'InActive'}
+          </Label>
+        </TableCell>
 
         <TableCell>
           <IconButton onClick={handleOpenPopover}>
@@ -116,7 +112,7 @@ export function UserTableRow({
 
           <MenuItem onClick={handleStatusChange}>
             <Iconify icon="solar:user-block-bold" />
-            {row.status === "Active"? 'Banned' : 'Active'}
+            {row.status === 1 ? 'Banned' : 'Active'}
           </MenuItem>
 
           {/* <MenuItem onClick={handleDeleteUser} sx={{ color: 'error.main' }}>

@@ -39,7 +39,11 @@ export function AffiliateDialog({ open, onClose, user }: UserDetailDialogProps) 
           <DetailItem label="Last Name" value={user.lastname} />
           <DetailItem label="Email" value={user.email} />
           <DetailItem label="Phone" value={user.phonenumber ? user.phonenumber : '-'} />
-          <DetailItem label="Status" value={user.status} />
+          <DetailItem
+            label="Status"
+            value={user.status === 1 ? 'Active' : user.status === 0 ? 'InActive' : 'Banned'}
+          />
+
           <DetailItem label="Referral Code" value={user.referralCode} />
           <DetailItem label="Country" value={user.country} />
           <DetailItem
