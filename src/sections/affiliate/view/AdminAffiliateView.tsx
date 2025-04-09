@@ -3,144 +3,109 @@ import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
-import MenuItem from '@mui/material/MenuItem';
 import TableBody from '@mui/material/TableBody';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { Iconify } from 'src/components/iconify';
+
 import { Scrollbar } from 'src/components/scrollbar';
-import { GamingAnalyticsView } from 'src/sections/overview/view/overview-analytics-view';
 
 import { TableNoData } from '../../user/table-no-data';
-import { UserTableRow } from '../../user/user-table-row';
-import { UserTableHead } from '../../user/user-table-head';
+import { UserTableRow } from '../affiliate-table-row';
+import { UserTableHead } from '../affiliate-table-head';
 import { TableEmptyRows } from '../../user/table-empty-rows';
-import { UserTableToolbar } from '../../user/user-table-toolbar';
-import { emptyRows, applyFilter, getComparator } from '../../user/utils';
 
-export interface UserProps {
+import { emptyRows, applyFilter, getComparator } from '../utils';
+
+export interface AffiliateProps {
   id: string;
-  username: string;
-  fullname: string;
-  patronymic: string;
-  photo: string;
-  dob: Date;
-  gender: string;
+  firstname: string;
+  lastname: string;
   email: string;
-  phone_number: string;
-  registration_date: Date;
-  last_login: Date;
-  status: number;
-  is_verified: number;
-  is_2fa: number;
-  currency: number;
-  language: string;
+  phonenumber: string;
+  status: string;
+  referralCode: string;
   country: string;
-  city: string;
-  role_id: number;
-  created_at: Date;
-  updated_at: Date;
-  balance: number;
-  bonus_balance: number;
-  total_deposits: number;
-  total_withdrawals: number;
-  last_deposit_date: Date;
-  last_withdrawal_date: Date;
+  marketingEmailsOptIn: boolean;
+  hearAboutUs: string;
+  createdAt: Date;
+  promotionMethod: string[];
 }
-
 
 export function AdminAffiliateView() {
   const table = useTable();
-  const [users, setUsers] = useState<UserProps[]>([]);
+  const [users, setUsers] = useState<AffiliateProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterName, setFilterName] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCurrency, setFilterCurrency] = useState('all');
   const [filter2FA, setFilter2FA] = useState('all');
+
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users`;
-        const response = await fetch(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        console.log('data', data);
-
-        if (data.data && Array.isArray(data.data.data)) {
-          const transformedUsers = data.data.data.map((item: any): UserProps => ({
-            id: item._id,
-            username: item.firstname ?? '', // No "username" in API
-            fullname: ` ${item.lastname ?? ''}`,
-            patronymic: '',
-            photo: '',
-            dob: new Date(), // not available
-            gender: '',
-            email: item.email,
-            phone_number: item.phonenumber ?? '',
-            registration_date: new Date(item.createdAt),
-            last_login: new Date(item.updatedAt),
-            status: item.status === 'Active' ? 1 : 0,
-            is_verified: item.verification_token ? 0 : 1,
-            is_2fa: 0,
-            currency: 0,
-            language: '',
-            country: item.country,
-            city: '',
-            role_id: 0,
-            created_at: new Date(item.createdAt),
-            updated_at: new Date(item.updatedAt),
-            balance: 0,
-            bonus_balance: 0,
-            total_deposits: 0,
-            total_withdrawals: 0,
-            last_deposit_date: new Date(),
-            last_withdrawal_date: new Date(),
-          }));
-
-          setUsers(transformedUsers);
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, [token]);
-
-  const activePlayersCount = users.filter((user) => user.status === 1).length;
-
-  const updateUserStatus = async (userId: string, newStatus: number) => {
+  const fetchUsers = useCallback(async () => {
     try {
-      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/${userId}/status`;
+      setLoading(true);
+      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users`;
       const response = await fetch(apiUrl, {
-        method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await response.json();
+
+      if (data.data && Array.isArray(data.data.data)) {
+        const transformedUsers: AffiliateProps[] = data.data.data.map((item: any) => ({
+          id: item._id,
+          firstname: item.firstname ?? '',
+          lastname: item.lastname ?? '',
+          email: item.email,
+          phonenumber: item.phonenumber ?? '',
+          referralCode: item.referralCode ?? '',
+          status: item.status,
+          country: item.country ?? '',
+          marketingEmailsOptIn: item.marketingEmailsOptIn ?? false,
+          hearAboutUs: item.hearAboutUs ?? '',
+          createdAt: item.createdAt ?? '',
+          promotionMethod: item.promotionMethod ?? [],
+        }));
+
+        setUsers(transformedUsers);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]); // <--- IMPORTANT
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]); // ✅ Now clean and valid
+
+  const updateUserStatus = async (userId: string, newStatus: string) => {
+    try {
+      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users/status/${userId}?status=${newStatus}`;
+
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
-      const data = await response.json();
-      if (data.success) {
-        setUsers((prevUsers) =>
-          prevUsers.map((user) => (user.id === userId ? { ...user, status: newStatus } : user))
-        );
+      if (!response.ok) {
+        throw new Error(`Failed to update status: ${response.status}`);
       }
+
+      const result = await response.json();
+      console.log('Status updated successfully:', result);
+
+      fetchUsers(); // will still work because it’s memoized
     } catch (error) {
       console.error('Error updating user status:', error);
     }
@@ -148,19 +113,7 @@ export function AdminAffiliateView() {
 
   const deleteUser = async (userId: string) => {
     try {
-      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/${userId}`;
-      const response = await fetch(apiUrl, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-      }
+      console.log('delete');
     } catch (error) {
       console.error('Error deleting user:', error);
     }
@@ -210,8 +163,8 @@ export function AdminAffiliateView() {
                   )
                 }
                 headLabel={[
-                  { id: 'username', label: 'First Name' },
-                  { id: 'fullname', label: 'Last Name' },
+                  { id: 'firstname', label: 'First Name' },
+                  { id: 'lastname', label: 'Last Name' },
                   { id: 'email', label: 'Email' },
                   { id: 'phone_number', label: 'Phone Number' },
                   { id: 'referralCode', label: 'Referral Code' },
@@ -232,7 +185,7 @@ export function AdminAffiliateView() {
                       selected={table.selected.includes(row.id)}
                       onSelectRow={() => table.onSelectRow(row.id)}
                       onUpdateStatus={updateUserStatus}
-                      onDeleteUser={deleteUser}
+                      // onDeleteUser={deleteUser}
                     />
                   ))}
 
@@ -261,10 +214,9 @@ export function AdminAffiliateView() {
   );
 }
 
-
 function useTable() {
   const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('username');
+  const [orderBy, setOrderBy] = useState('firstname');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selected, setSelected] = useState<string[]>([]);
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
