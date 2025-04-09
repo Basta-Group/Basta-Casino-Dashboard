@@ -13,7 +13,8 @@ import {
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Iconify } from 'src/components/iconify';
 import { useRouter } from 'src/routes/hooks';
-// Type definitions remain the same
+
+// Type definitions
 interface LoginFormData {
   email: string;
   password: string;
@@ -26,9 +27,9 @@ interface LoginResponse {
     user: {
       id: string;
       email: string;
-      username: string;
-      role: number;
-      requires2FA?: boolean;
+      firstname?: string;
+      lastname?: string;
+      status: 'Active' | 'Inactive' | 'Banned';
     };
     token: string;
     expiresIn: number;
@@ -46,7 +47,7 @@ export default function AffiliateLoginPage() {
   const [formData, setFormData] = useState<LoginFormData>({ email: '', password: '' });
   const [touched, setTouched] = useState({ email: false, password: false });
 
-  // Handle input change, validate form, handle login, and handle key press functions remain the same
+  // Handle input change
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -55,6 +56,7 @@ export default function AffiliateLoginPage() {
     setFieldErrors((prev) => ({ ...prev, [name]: '' }));
   }, []);
 
+  // Validate form
   const validateForm = useCallback(() => {
     if (!formData.email) return 'Email is required';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
@@ -62,6 +64,7 @@ export default function AffiliateLoginPage() {
     return '';
   }, [formData]);
 
+  // Handle login
   const handleLogin = useCallback(async () => {
     const validationError = validateForm();
     if (validationError) {
@@ -74,11 +77,13 @@ export default function AffiliateLoginPage() {
     setFieldErrors({});
 
     try {
-      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}:${import.meta.env.VITE_API_PORT}/api/auth/affiliate/login`;
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}:${
+        import.meta.env.VITE_API_PORT
+      }/api/auth/affiliate-login`;
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, role_id: 2 }),
+        body: JSON.stringify(formData), // No role_id needed for this endpoint
       });
 
       const data: LoginResponse = await response.json();
@@ -108,11 +113,8 @@ export default function AffiliateLoginPage() {
 
       localStorage.setItem('affiliateToken', data.data.token);
 
-      if (data.data.user.requires2FA) {
-        router.push(`/affiliate/verify-2fa?playerId=${data.data.user.id}`);
-      } else {
-        router.push('/affiliate/dashboard');
-      }
+      // Redirect based on backend response (no 2FA in this API, so straight to dashboard)
+      router.push('/affiliate/dashboard');
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -121,6 +123,7 @@ export default function AffiliateLoginPage() {
     }
   }, [formData, router, validateForm]);
 
+  // Handle key press
   const handleKeyPress = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && !loading) {
@@ -268,7 +271,7 @@ export default function AffiliateLoginPage() {
             </Divider>
 
             <Typography variant="body2" color="text.secondary" textAlign="center">
-              Don&apos;t have an account?{' '}
+              Don't have an account?{' '}
               <Link
                 href="/affiliate/register"
                 variant="subtitle2"
