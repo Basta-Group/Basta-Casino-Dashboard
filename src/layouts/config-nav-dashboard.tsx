@@ -54,15 +54,9 @@ export const navData = [
     ],
   },
   {
-    title: 'Reports & Analytics',
-    path: '/reports',
-    icon: <Icon icon="mdi:file-chart" fontSize="22px" />, // Replacing ic-file
-    children: [
-      { title: 'Financial Reports', path: '/reports/financial' },
-      { title: 'Player Analytics', path: '/reports/players' },
-      { title: 'Game Performance', path: '/reports/games' },
-      { title: 'Audit Logs', path: '/reports/audit' },
-    ],
+    title: 'Affliate Commission Control',
+    path: '/commission-control',
+    icon: <Icon icon="mdi:file-chart" fontSize="22px" />,
   },
   {
     title: 'System Settings',

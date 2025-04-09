@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import Popover from '@mui/material/Popover';
@@ -10,9 +11,8 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import {UserProps} from './types'
+import { UserProps } from './types';
 import { UserDetailDialog } from './user-detail-dialog';
-
 
 type UserTableRowProps = {
   row: UserProps;
@@ -21,10 +21,15 @@ type UserTableRowProps = {
   onUpdateStatus: (userId: string, newStatus: number) => void;
   onDeleteUser: (userId: string) => void;
 };
-
-export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDeleteUser }: UserTableRowProps) {
+export function UserTableRow({
+  row,
+  selected,
+  onSelectRow,
+  onUpdateStatus,
+  onDeleteUser,
+}: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
-  const [openDialog, setOpenDialog] = useState(false);
+  const navigate = useNavigate();
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -34,14 +39,10 @@ export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDel
     setOpenPopover(null);
   }, []);
 
-  const handleOpenDialog = useCallback(() => {
+  const handleViewDetails = useCallback(() => {
+    navigate(`/user/${row.id}`);
     handleClosePopover();
-    setOpenDialog(true);
-  }, [handleClosePopover]);
-
-  const handleCloseDialog = useCallback(() => {
-    setOpenDialog(false);
-  }, []);
+  }, [navigate, row.id, handleClosePopover]);
 
   const handleStatusChange = useCallback(() => {
     const newStatus = row.status === 1 ? 0 : 1;
@@ -53,7 +54,6 @@ export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDel
     onDeleteUser(row.id);
     handleClosePopover();
   }, [row.id, onDeleteUser, handleClosePopover]);
-
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
@@ -116,7 +116,7 @@ export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDel
             },
           }}
         >
-          <MenuItem onClick={handleOpenDialog}>
+          <MenuItem onClick={handleViewDetails}>
             <Iconify icon="solar:eye-bold" />
             View Details
           </MenuItem>
@@ -132,12 +132,6 @@ export function UserTableRow({ row, selected, onSelectRow, onUpdateStatus, onDel
           </MenuItem>
         </MenuList>
       </Popover>
-
-      <UserDetailDialog 
-        open={openDialog}
-        onClose={handleCloseDialog}
-        user={row}
-      />
     </>
   );
 }
