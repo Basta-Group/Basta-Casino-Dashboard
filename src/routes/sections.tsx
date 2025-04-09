@@ -8,6 +8,7 @@ import { DashboardLayout } from 'src/layouts/dashboard';
 import TransactionPage from 'src/pages/TransactionPage';
 import DashboardBanner from 'src/pages/DashboardBanner';
 import AdminAffiliatePage from 'src/pages/AdminAffiliatePage';
+import AffiliateInfoPage from 'src/affliate/pages/AffiliateInfoPage';
 
 export const HomePage = lazy(() => import('src/pages/home'));
 export const LandingPage = lazy(() => import('src/pages/landing'));
@@ -116,6 +117,7 @@ export function Router() {
             { path: 'dashboard', element: <AffiliateDashboardPage /> },
             { path: 'referrals', element: <div>Referrals Page</div> },
             { path: 'earnings', element: <div>Earnings Page</div> },
+            { path: 'affliate-info', element: <AffiliateInfoPage /> },
             { index: true, element: <Navigate to="/affiliate/dashboard" replace /> },
           ],
         },

@@ -59,7 +59,15 @@ export default function AffiliateForgotPasswordPage() {
         }}
       >
         <Box gap={1.5} display="flex" flexDirection="column" alignItems="center">
-          <Typography variant="h5">Forgot Password</Typography>
+          <Box
+            component="img"
+            src="/assets/icons/BastaLogo.svg"
+            alt="BASTA Casino Logo"
+            sx={{ width: 150, height: 'auto', mb: 2 }}
+          />
+          <Typography sx={{ mb: 2 }} variant="h5">
+            Forgot Password
+          </Typography>
           <Typography variant="body2" color="text.secondary" textAlign="center">
             Enter your email address to receive a password reset link
           </Typography>
