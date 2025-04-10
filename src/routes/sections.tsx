@@ -112,6 +112,7 @@ export function Router() {
             { path: 'login', element: <AffiliateLoginPage /> },
             { path: 'forget-password', element: <AffiliateForgotPage /> },
             { path: 'register', element: <AffiliateRegisterPage /> },
+            // { path: 'affliate-info', element: <AffiliateInfoPage /> },
           ],
         },
         {

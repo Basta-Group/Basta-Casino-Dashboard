@@ -121,7 +121,7 @@ export function AffiliateTableRow({
           </MenuItem>
           <MenuItem onClick={handleOpenUsers}>
             <Iconify icon="solar:eye-bold" />
-            See reffered Users
+            Referred Users
           </MenuItem>
 
           <MenuItem onClick={handleStatusChange}>

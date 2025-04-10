@@ -6,13 +6,19 @@ import Popover from '@mui/material/Popover';
 import TableRow from '@mui/material/TableRow';
 import Checkbox from '@mui/material/Checkbox';
 import MenuList from '@mui/material/MenuList';
+import { Typography } from '@mui/material';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Button from '@mui/material/Button';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { UserProps } from './types';
-import { UserDetailDialog } from './user-detail-dialog';
 
 type UserTableRowProps = {
   row: UserProps;
@@ -21,6 +27,7 @@ type UserTableRowProps = {
   onUpdateStatus: (userId: string, newStatus: number) => void;
   onDeleteUser: (userId: string) => void;
 };
+
 export function UserTableRow({
   row,
   selected,
@@ -29,6 +36,7 @@ export function UserTableRow({
   onDeleteUser,
 }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState<'status' | 'delete' | null>(null);
   const navigate = useNavigate();
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
@@ -44,16 +52,31 @@ export function UserTableRow({
     handleClosePopover();
   }, [navigate, row.id, handleClosePopover]);
 
+  const handleOpenStatusDialog = useCallback(() => {
+    setOpenConfirmDialog('status');
+    handleClosePopover();
+  }, [handleClosePopover]);
+
+  const handleOpenDeleteDialog = useCallback(() => {
+    setOpenConfirmDialog('delete');
+    handleClosePopover();
+  }, [handleClosePopover]);
+
+  const handleCloseDialog = useCallback(() => {
+    setOpenConfirmDialog(null);
+  }, []);
+
   const handleStatusChange = useCallback(() => {
     const newStatus = row.status === 1 ? 0 : 1;
     onUpdateStatus(row.id, newStatus);
-    handleClosePopover();
-  }, [row.status, row.id, onUpdateStatus, handleClosePopover]);
+    handleCloseDialog();
+  }, [row.status, row.id, onUpdateStatus, handleCloseDialog]);
 
   const handleDeleteUser = useCallback(() => {
     onDeleteUser(row.id);
-    handleClosePopover();
-  }, [row.id, onDeleteUser, handleClosePopover]);
+    handleCloseDialog();
+  }, [row.id, onDeleteUser, handleCloseDialog]);
+
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
@@ -121,17 +144,132 @@ export function UserTableRow({
             View Details
           </MenuItem>
 
-          <MenuItem onClick={handleStatusChange}>
+          <MenuItem onClick={handleOpenStatusDialog}>
             <Iconify icon="solar:user-block-bold" />
             {row.status === 1 ? 'Deactivate' : 'Activate'}
           </MenuItem>
 
-          <MenuItem onClick={handleDeleteUser} sx={{ color: 'error.main' }}>
+          <MenuItem onClick={handleOpenDeleteDialog} sx={{ color: 'error.main' }}>
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>
         </MenuList>
       </Popover>
+
+      <Dialog
+        open={openConfirmDialog === 'status'}
+        onClose={handleCloseDialog}
+        aria-labelledby="status-confirm-dialog-title"
+        aria-describedby="status-confirm-dialog-description"
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 2,
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            minWidth: 300,
+            maxWidth: 400,
+          },
+        }}
+      >
+        <DialogTitle
+          id="status-confirm-dialog-title"
+          sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}
+        >
+          <Iconify
+            icon={row.status === 1 ? 'solar:user-block-bold' : 'solar:user-check-bold'}
+            sx={{ color: row.status === 1 ? 'error.main' : 'success.main' }}
+          />
+          {row.status === 1 ? 'Deactivate User' : 'Activate User'}
+        </DialogTitle>
+        <DialogContent sx={{ py: 2, textAlign: 'center' }}>
+          <DialogContentText id="status-confirm-dialog-description">
+            <Typography variant="body1" color="#000">
+              Are you sure you want to {row.status === 1 ? 'deactivate' : 'activate'} the user{' '}
+              <strong>
+                &quot;{row.fullname || row.email || row.phone_number || 'this user'}&quot;
+              </strong>
+              ?
+            </Typography>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'center' }}>
+          <Button
+            onClick={handleCloseDialog}
+            variant="outlined"
+            color="inherit"
+            sx={{ borderRadius: 1, mx: 1 }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleStatusChange}
+            variant="contained"
+            color={row.status === 1 ? 'error' : 'success'}
+            autoFocus
+            sx={{ borderRadius: 1, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', mx: 1 }}
+          >
+            {row.status === 1 ? 'Deactivate' : 'Activate'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmation Dialog for Delete */}
+      <Dialog
+        open={openConfirmDialog === 'delete'}
+        onClose={handleCloseDialog}
+        aria-labelledby="delete-confirm-dialog-title"
+        aria-describedby="delete-confirm-dialog-description"
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 2,
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            minWidth: 300,
+            maxWidth: 400,
+          },
+        }}
+      >
+        <DialogTitle
+          id="delete-confirm-dialog-title"
+          sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}
+        >
+          <Iconify icon="solar:trash-bin-trash-bold" sx={{ color: 'error.main' }} />
+          Delete User
+        </DialogTitle>
+        <DialogContent sx={{ py: 2, textAlign: 'center' }}>
+          <DialogContentText id="delete-confirm-dialog-description">
+            <Typography variant="body1" color="#000">
+              Are you sure you want to delete the user{' '}
+              <strong>
+                &quot;{row.fullname || row.email || row.phone_number || 'this user'}&quot;
+              </strong>
+              ?
+              <Typography component="span" color="error.main">
+                {' '}
+                <br />
+                This action cannot be undone.
+              </Typography>
+            </Typography>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'center' }}>
+          <Button
+            onClick={handleCloseDialog}
+            variant="outlined"
+            color="inherit"
+            sx={{ borderRadius: 1, mx: 1 }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteUser}
+            variant="contained"
+            color="error"
+            autoFocus
+            sx={{ borderRadius: 1, boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', mx: 1 }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
