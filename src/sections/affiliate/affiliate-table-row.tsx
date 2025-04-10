@@ -59,9 +59,12 @@ export function AffiliateTableRow({
   // }, [row.id, onDeleteUser, handleClosePopover]);
   const navigate = useNavigate();
 
+
+
   const handleOpenUsers = () => {
-    navigate('/referred-user-listing');
+    navigate(`/referred-user-listing/${row.id}`);
   };
+  
 
   return (
     <>
@@ -71,6 +74,7 @@ export function AffiliateTableRow({
         </TableCell>
         <TableCell>{row.firstname || '-'}</TableCell>
         <TableCell>{row.lastname || '-'}</TableCell>
+        <TableCell>{}</TableCell>
         <TableCell>{row.email || '-'}</TableCell>
         <TableCell>{row.phonenumber || '-'}</TableCell>
         <TableCell>{row.referralCode || '-'}</TableCell>

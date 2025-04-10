@@ -191,6 +191,7 @@ export function AdminAffiliateView() {
                 headLabel={[
                   { id: 'firstname', label: 'First Name' },
                   { id: 'lastname', label: 'Last Name' },
+                  { id: 'revenue', label: 'Revenue' },
                   { id: 'email', label: 'Email' },
                   { id: 'phone_number', label: 'Phone Number' },
                   { id: 'referralCode', label: 'Referral Code' },

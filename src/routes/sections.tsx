@@ -81,7 +81,7 @@ export function Router() {
       children: [
         { element: <HomePage />, index: true },
         { path: 'user', element: <UserPage /> },
-        { path: 'referred-user-listing', element: <ReferredUsersListingView /> },
+        { path: 'referred-user-listing/:id', element: <ReferredUsersListingView /> },
         { path: 'user/:userId', element: <UserDetailPage /> },
         { path: 'admin-affiliate', element: <AdminAffiliatePage /> },
         { path: 'products', element: <ProductsPage /> },
