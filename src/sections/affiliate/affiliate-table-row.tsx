@@ -20,7 +20,7 @@ type AffialiteTableRowProps = {
   // onDeleteUser: (userId: string) => void;
 };
 
-export function UserTableRow({
+export function AffiliateTableRow({
   row,
   selected,
   onSelectRow,
