@@ -114,6 +114,7 @@ export function Router() {
             { path: 'forget-password', element: <AffiliateForgotPage /> },
             { path: 'reset-password', element: <AffiliateResetPasswordPage /> },
             { path: 'register', element: <AffiliateRegisterPage /> },
+            // { path: 'affliate-info', element: <AffiliateInfoPage /> },
           ],
         },
         {

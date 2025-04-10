@@ -221,7 +221,7 @@ export function GamingAnalyticsView() {
         </Grid>
         <Grid xs={12} md={6} lg={8}>
           <AnalyticsWebsiteVisits
-            title="Gaming Activity"
+            title="Users Activity"
             subheader="(+43%) than last month"
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
