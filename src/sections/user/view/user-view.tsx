@@ -230,7 +230,7 @@ export function UserView() {
                   { id: 'fullname', label: 'Full Name' },
                   { id: 'email', label: 'Email' },
                   { id: 'phone_number', label: 'Phone Number' },
-                  { id: 'referredByName', label: 'Referred By' },
+                  { id: 'referredByName', label: 'Affiliate' },
                   { id: 'is_verified', label: 'Verified', align: 'center' },
                   { id: 'status', label: 'Status' },
                   // { id: 'is_2fa', label: '2FA' },

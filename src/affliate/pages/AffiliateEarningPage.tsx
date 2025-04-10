@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -15,11 +15,11 @@ import {
   Avatar,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify'; 
+import { Iconify } from 'src/components/iconify';
 
 // Styled components
 const EarningsHeader = styled(Box)(({ theme }) => ({
-  background: `linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%)`, // Teal gradient
+  background: `linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%)`,
   borderRadius: theme.shape.borderRadius,
   padding: theme.spacing(3),
   color: theme.palette.common.white,
@@ -28,7 +28,7 @@ const EarningsHeader = styled(Box)(({ theme }) => ({
 }));
 
 const TotalCard = styled(Card)(({ theme }) => ({
-  backgroundColor: '#F9FAFB', // Light gray-blue
+  backgroundColor: '#F9FAFB',
   color: theme.palette.text.primary,
   borderRadius: theme.shape.borderRadius * 2,
   '&:before': {
@@ -38,49 +38,116 @@ const TotalCard = styled(Card)(({ theme }) => ({
     left: 0,
     right: 0,
     height: '4px',
-    background: `linear-gradient(to right, #FF7043, #F06292)`, // Coral to pink gradient
+    background: `linear-gradient(to right, #FF7043, #F06292)`,
   },
 }));
 
-const AffiliateEarningPage = () => {
-  // Sample earnings data (replace with API data in production)
-  const earningsData = [
-    {
-      id: 1,
-      username: 'john_doe',
-      email: 'john@example.com',
-      earnings: 1500,
-      date: '2025-04-01',
-    },
-    {
-      id: 2,
-      username: 'jane_smith',
-      email: 'jane@example.com',
-      earnings: 2000,
-      date: '2025-04-02',
-    },
-    {
-      id: 3,
-      username: 'bob_jones',
-      email: 'bob@example.com',
-      earnings: 800,
-      date: '2025-04-03',
-    },
-  ];
+interface EarningData {
+  id: string;
+  username: string;
+  email: string;
+  earnings: number;
+  date: string;
+}
 
-  // Calculate total earnings
-  const totalEarnings = earningsData.reduce((sum, user) => sum + user.earnings, 0);
+interface EarningsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    earnings: EarningData[];
+    totalEarnings: number;
+  };
+  error?: string;
+}
+
+const AffiliateEarningPage = () => {
+  const [earningsData, setEarningsData] = useState<EarningData[]>([]);
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEarnings = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const token = localStorage.getItem('affiliateToken');
+        if (!token) {
+          throw new Error('No affiliate token found. Please log in.');
+        }
+
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}:${
+          import.meta.env.VITE_API_PORT
+        }/api/auth/affiliate/earnings`;
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data: EarningsResponse = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Failed to fetch earnings');
+        }
+
+        setEarningsData(data.data.earnings);
+        setTotalEarnings(data.data.totalEarnings);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEarnings();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          bgcolor: '#E0F2F1',
+          p: 4,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="h6">Loading earnings...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          bgcolor: '#E0F2F1',
+          p: 4,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="h6" color="error">
+          Error: {error}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#E0F2F1', p: 4 }}>
-      {' '}
-      {/* Light teal background */}
       {/* Header */}
       <EarningsHeader>
         <Box display="flex" alignItems="center" gap={2}>
           <Avatar sx={{ bgcolor: '#FF8A65', color: 'white', width: 48, height: 48 }}>
-            {' '}
-            {/* Coral avatar */}
             <Iconify icon="solar:wallet-bold" width={24} />
           </Avatar>
           <Box>
@@ -93,95 +160,86 @@ const AffiliateEarningPage = () => {
           </Box>
         </Box>
       </EarningsHeader>
+
       {/* Earnings Table */}
       <TableContainer component={Paper} elevation={3} sx={{ bgcolor: '#F9FAFB' }}>
-        {' '}
-        {/* Light gray-blue */}
         <Table sx={{ minWidth: 650 }} aria-label="earnings table">
           <TableHead>
             <TableRow sx={{ bgcolor: '#E0F2F1' }}>
-              {' '}
-              {/* Light teal header */}
               <TableCell>
                 <Typography variant="subtitle2" color="#26A69A">
-                  {' '}
-                  {/* Teal */}
                   User
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography variant="subtitle2" color="#26A69A">
-                  {' '}
-                  {/* Teal */}
                   Email
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography variant="subtitle2" color="#26A69A">
-                  {' '}
-                  {/* Teal */}
                   Earnings
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography variant="subtitle2" color="#26A69A">
-                  {' '}
-                  {/* Teal */}
                   Date
                 </Typography>
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {earningsData.map((user) => (
-              <TableRow
-                key={user.id}
-                sx={{
-                  '&:hover': {
-                    bgcolor: '#ECEFF1', // Slightly darker gray on hover
-                    transition: 'background-color 0.2s',
-                  },
-                }}
-              >
-                <TableCell>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#FF7043' }}>
-                      {' '}
-                      {/* Coral avatar */}
-                      {user.username[0].toUpperCase()}
-                    </Avatar>
+            {earningsData.length > 0 ? (
+              earningsData.map((user) => (
+                <TableRow
+                  key={user.id}
+                  sx={{
+                    '&:hover': {
+                      bgcolor: '#ECEFF1',
+                      transition: 'background-color 0.2s',
+                    },
+                  }}
+                >
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Avatar sx={{ width: 32, height: 32, bgcolor: '#FF7043' }}>
+                        {user.username[0].toUpperCase()}
+                      </Avatar>
+                      <Typography variant="body2" color="#37474F">
+                        {user.username}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
                     <Typography variant="body2" color="#37474F">
-                      {' '}
-                      {/* Dark gray */}
-                      {user.username}
+                      {user.email}
                     </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="#37474F">
-                    {' '}
-                    {/* Dark gray */}
-                    {user.email}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="#FF7043">
-                    {' '}
-                    {/* Coral */}₹{user.earnings.toLocaleString()}
-                  </Typography>
-                </TableCell>
-                <TableCell>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="#FF7043">
+                      ₹{user.earnings.toLocaleString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="#78909C">
+                      {user.date}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} align="center">
                   <Typography variant="body2" color="#78909C">
-                    {' '}
-                    {/* Muted gray */}
-                    {user.date}
+                    No earnings data available
                   </Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
+
       {/* Total Earnings */}
       <Box mt={4}>
         <Divider
@@ -194,16 +252,13 @@ const AffiliateEarningPage = () => {
           <CardContent>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Box display="flex" alignItems="center" gap={2}>
-                <Iconify icon="solar:card-bold" width={32} color="#FF7043" /> {/* Coral icon */}
+                <Iconify icon="solar:card-bold" width={32} color="#FF7043" />
                 <Typography variant="h6" color="#26A69A">
-                  {' '}
-                  {/* Teal */}
                   Total Earnings
                 </Typography>
               </Box>
               <Typography variant="h4" color="#FF7043">
-                {' '}
-                {/* Coral */}₹{totalEarnings.toLocaleString()}
+                ₹{totalEarnings.toLocaleString()}
               </Typography>
             </Box>
           </CardContent>

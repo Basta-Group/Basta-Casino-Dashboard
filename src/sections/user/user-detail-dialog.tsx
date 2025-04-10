@@ -63,7 +63,7 @@ export function UserDetailDialog({ open, onClose, user }: UserDetailDialogProps)
           <DetailItem label="Full Name" value={user.fullname} />
           <DetailItem label="Email" value={user.email} />
           <DetailItem label="Phone" value={user.phone_number} />
-          <DetailItem label="Referred By" value={user.referredByName || 'N/A'} />
+          <DetailItem label="Affiliate" value={user.referredByName || 'N/A'} />
 
           <DetailItem
             label="Status"

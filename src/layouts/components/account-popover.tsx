@@ -46,13 +46,14 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
     try {
       // Clear any auth tokens/state
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('affiliateToken');
       sessionStorage.clear();
       
       // Close the popover
       handleClosePopover();
       
-      // Redirect to root page (login selection)
-      router.push('/'); // Changed from '/sign-in' to '/'
+      
+      router.push('/home');
       
     } catch (error) {
       console.error('Logout failed:', error);
