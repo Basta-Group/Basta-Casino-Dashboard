@@ -12,3 +12,15 @@ export interface AffiliateProps {
   createdAt:Date;
   promotionMethod: string[]; 
 }
+
+export interface ReferredUser  {
+  _id: string;
+  username: string;
+  fullname: string;
+  email: string;
+  full_phone_number: string;
+  country_code: string;
+  referredByName: string;
+  is_verified: boolean;
+  status: number;
+};

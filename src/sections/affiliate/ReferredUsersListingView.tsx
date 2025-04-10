@@ -1,4 +1,5 @@
-import React from 'react';
+import { env } from 'src/config/env.config';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -11,11 +12,13 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Divider,
   Avatar,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { useParams } from 'react-router-dom';
+import {ReferredUser} from './types'
+
 
 // Styled components
 const EarningsHeader = styled(Box)(({ theme }) => ({
@@ -27,60 +30,44 @@ const EarningsHeader = styled(Box)(({ theme }) => ({
   boxShadow: theme.shadows[8],
 }));
 
+
+
 const ReferredUsersListingView = () => {
-  // Sample user data based on the image
-  const userData = [
-    {
-      id: 1,
-      username: 'QUser',
-      fullName: 'QA',
-      email: 'qa@yopmail.com',
-      phoneNumber: '-',
-      referredBy: 'N/A',
-      verified: 'Unverified',
-      status: 'Active',
-    },
-    {
-      id: 2,
-      username: 'QUser1',
-      fullName: 'QA1',
-      email: 'qa1@yopmail.com',
-      phoneNumber: '-',
-      referredBy: 'N/A',
-      verified: 'Unverified',
-      status: 'Active',
-    },
-    {
-      id: 3,
-      username: 'QUser2',
-      fullName: 'QA1',
-      email: 'qa2@yopmail.com',
-      phoneNumber: '-',
-      referredBy: 'N/A',
-      verified: 'Unverified',
-      status: 'Active',
-    },
-    {
-      id: 4,
-      username: 'QUser3',
-      fullName: 'QA3',
-      email: '-',
-      phoneNumber: '-',
-      referredBy: 'N/A',
-      verified: 'Verified',
-      status: 'Active',
-    },
-    {
-      id: 5,
-      username: 'QUser4',
-      fullName: 'QA4',
-      email: 'qa4@yopmail.com',
-      phoneNumber: '-',
-      referredBy: 'N/A',
-      verified: 'Unverified',
-      status: 'Active',
-    },
-  ];
+  const { id } = useParams();
+  console.log("==========id==",id)
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  const [referredPlayers, setReferredPlayers] = useState<ReferredUser[]>([]);
+
+
+
+
+  useEffect(() => {
+    const fetchReferredPlayers = async () => {
+      try {
+        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users/${id}`;
+  
+        const res = await fetch(apiUrl, {
+          method: 'GET', 
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`, 
+          },
+        });
+  
+        const data = await res.json(); 
+  
+        if (data.success && data.data?.referredPlayers) {
+          setReferredPlayers(data.data.referredPlayers);
+        }
+      } catch (error) {
+        console.error('Error fetching referred players:', error);
+      }
+    };
+  
+    
+    if (id) fetchReferredPlayers();
+  }, [token,id]);
+  
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f0f0f0', p: 4 }}>
@@ -100,60 +87,28 @@ const ReferredUsersListingView = () => {
           </Box>
         </Box>
       </EarningsHeader>
+
       {/* Users Table */}
       <TableContainer component={Paper} elevation={3} sx={{ bgcolor: '#F9FAFB' }}>
         <Table sx={{ minWidth: 650 }} aria-label="referred users table">
           <TableHead>
             <TableRow sx={{ bgcolor: '#E0F2F1' }}>
-              <TableCell>
-                <Typography variant="subtitle2" color="#26A69A">
-                  Username
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" color="#26A69A">
-                  Full Name
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" color="#26A69A">
-                  Email
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" color="#26A69A">
-                  Phone Number
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" color="#26A69A">
-                  Referred By
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" color="#26A69A">
-                  Verified
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" color="#26A69A">
-                  Status
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" color="#26A69A">
-                  Actions
-                </Typography>
-              </TableCell>
+              <TableCell><Typography variant="subtitle2" color="#26A69A">Username</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" color="#26A69A">Full Name</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" color="#26A69A">Email</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" color="#26A69A">Phone Number</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" color="#26A69A">Referred By</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" color="#26A69A">Verified</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" color="#26A69A">Status</Typography></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {userData.map((user) => (
+            {referredPlayers.map((user) => (
               <TableRow
-                key={user.id}
+                key={user._id}
                 sx={{
                   '&:hover': {
-                    bgcolor: '#ECEFF1', // Slightly darker gray on hover
+                    bgcolor: '#ECEFF1',
                     transition: 'background-color 0.2s',
                   },
                 }}
@@ -161,50 +116,45 @@ const ReferredUsersListingView = () => {
                 <TableCell>
                   <Box display="flex" alignItems="center" gap={1}>
                     <Avatar sx={{ width: 32, height: 32, bgcolor: '#FF7043' }}>
-                      {user.username[0].toUpperCase()}
+                      {user.username?.[0]?.toUpperCase() || '-'}
                     </Avatar>
                     <Typography variant="body2" color="#37474F">
-                      {user.username}
+                      {user.username || '-'}
                     </Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" color="#37474F">
-                    {user.fullName}
+                    {user.fullname || '-'}
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" color="#37474F">
-                    {user.email}
+                    {user.email || '-'}
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" color="#78909C">
-                    {user.phoneNumber}
+                    {user.full_phone_number || user.country_code || '-'}
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" color="#78909C">
-                    {user.referredBy}
+                    {user.referredByName || 'N/A'}
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography
                     variant="body2"
-                    color={user.verified === 'Verified' ? '#43A047' : '#D32F2F'}
+                    color={user.is_verified? 'success' : 'error'}
                   >
-                    {user.verified}
+                    {user.is_verified ? 'Verified' : 'Unverified'}
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography variant="body2" color="#43A047">
-                    {user.status}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="#78909C">
-                    {/* Placeholder for actions (e.g., dots menu) */}
-                    ...
+                  <Typography variant="body2"
+                   color={user.status === 0 ? 'error' : 'success'}>
+                    {user.status === 1 ? 'Active' : 'Inactive'}
                   </Typography>
                 </TableCell>
               </TableRow>
