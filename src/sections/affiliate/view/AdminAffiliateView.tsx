@@ -18,10 +18,10 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import { TableNoData } from '../../user/table-no-data';
-import { UserTableRow } from '../affiliate-table-row';
-import { UserTableHead } from '../affiliate-table-head';
+import { AffiliateTableRow } from '../affiliate-table-row';
+import { AffiliateTableHead } from '../affiliate-table-head';
 import { TableEmptyRows } from '../../user/table-empty-rows';
-import { UserTableToolbar } from '../affiliate-table-toolbar';
+import { AffiliateTableToolbar } from '../affiliate-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
 
 export interface AffiliateProps {
@@ -165,7 +165,7 @@ export function AdminAffiliateView() {
             <MenuItem value="2">Banned</MenuItem>
           </TextField>
         </Stack>
-        <UserTableToolbar
+        <AffiliateTableToolbar
           numSelected={table.selected.length}
           filterName={filterName}
           onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,7 +176,7 @@ export function AdminAffiliateView() {
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>
-              <UserTableHead
+              <AffiliateTableHead
                 order={table.order}
                 orderBy={table.orderBy}
                 rowCount={users.length}
@@ -205,7 +205,7 @@ export function AdminAffiliateView() {
                     table.page * table.rowsPerPage + table.rowsPerPage
                   )
                   .map((row) => (
-                    <UserTableRow
+                    <AffiliateTableRow
                       key={row.id}
                       row={row}
                       selected={table.selected.includes(row.id)}

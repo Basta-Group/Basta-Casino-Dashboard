@@ -13,7 +13,7 @@ import AffiliateEarningPage from 'src/affliate/pages/AffiliateEarningPage';
 import AffiliateReferralsPage from 'src/affliate/pages/AffiliateReferralsPage';
 import CommissionControlPage from 'src/pages/commissionControl';
 import { UserDetailPage } from 'src/sections/user/user-detail';
-import { ReferredUsersListing } from 'src/sections/affiliate/ReferredUsersListing';
+import ReferredUsersListingView from 'src/sections/affiliate/ReferredUsersListingView';
 
 export const HomePage = lazy(() => import('src/pages/home'));
 export const LandingPage = lazy(() => import('src/pages/landing'));
@@ -81,7 +81,7 @@ export function Router() {
       children: [
         { element: <HomePage />, index: true },
         { path: 'user', element: <UserPage /> },
-        { path: 'referred-user-listing', element: <ReferredUsersListing /> },
+        { path: 'referred-user-listing', element: <ReferredUsersListingView /> },
         { path: 'user/:userId', element: <UserDetailPage /> },
         { path: 'admin-affiliate', element: <AdminAffiliatePage /> },
         { path: 'products', element: <ProductsPage /> },
