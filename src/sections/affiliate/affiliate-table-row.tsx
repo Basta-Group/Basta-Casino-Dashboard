@@ -71,6 +71,7 @@ export function UserTableRow({
         </TableCell>
         <TableCell>{row.firstname || '-'}</TableCell>
         <TableCell>{row.lastname || '-'}</TableCell>
+        <TableCell>{}</TableCell>
         <TableCell>{row.email || '-'}</TableCell>
         <TableCell>{row.phonenumber || '-'}</TableCell>
         <TableCell>{row.referralCode || '-'}</TableCell>
