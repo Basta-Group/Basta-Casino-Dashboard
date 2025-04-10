@@ -24,4 +24,9 @@ export const affiliateNavData = [
     href: '/affiliate/forget-password',
     icon: { icon: 'solar:key-minimalistic-bold-duotone' },
   },
+   {
+    label: 'Reset Password',
+    href: '/affiliate/reset-password',
+    icon: { icon: 'solar:key-minimalistic-bold-duotone' },
+  },
 ];
