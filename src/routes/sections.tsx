@@ -14,6 +14,8 @@ import AffiliateReferralsPage from 'src/affliate/pages/AffiliateReferralsPage';
 import CommissionControlPage from 'src/pages/commissionControl';
 import { UserDetailPage } from 'src/sections/user/user-detail';
 import ReferredUsersListingView from 'src/sections/affiliate/ReferredUsersListingView';
+import AffiliatePayoutsPage from 'src/affliate/pages/AffiliatePayoutsPage';
+import AdminPayoutPage from 'src/pages/AdminPayoutPage';
 
 export const HomePage = lazy(() => import('src/pages/home'));
 export const LandingPage = lazy(() => import('src/pages/landing'));
@@ -91,6 +93,7 @@ export function Router() {
         { path: 'transactions', element: <TransactionPage /> },
         { path: 'dashboard-banner', element: <DashboardBanner /> },
         { path: 'commission-control', element: <CommissionControlPage /> },
+        { path: 'admin-payout', element: <AdminPayoutPage /> },
       ],
     },
     {
@@ -128,6 +131,7 @@ export function Router() {
             { path: 'referrals', element: <AffiliateReferralsPage /> },
             { path: 'earnings', element: <AffiliateEarningPage /> },
             { path: 'affliate-info', element: <AffiliateInfoPage /> },
+            { path: 'payouts', element: <AffiliatePayoutsPage /> },
             { index: true, element: <Navigate to="/affiliate/dashboard" replace /> },
           ],
         },

@@ -14,6 +14,11 @@ export const affiliateNavData = [
     href: '/affiliate/earnings',
     icon: { icon: 'solar:wallet-2-bold-duotone' },
   },
+  {
+    label: 'Payouts',
+    href: '/affiliate/payouts',
+    icon: { icon: 'solar:card-transfer-bold-duotone' },
+  },
   // {
   //   label: 'Login',
   //   href: '/affiliate/login',
