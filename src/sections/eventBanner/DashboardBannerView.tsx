@@ -2,26 +2,75 @@ import React, { useState, useEffect } from 'react';
 import { Box, Button, TextField, Typography, Stack, Paper } from '@mui/material';
 import casinoImg from '../../../public/assets/background/casino.png';
 import casinoBg from '../../../public/assets/background/casino-bg-full.jpg';
+import axios from 'axios';
+import { env } from 'src/config/env.config';
+
+interface BannerConfig {
+  title: string;
+  subtitle: string;
+  buttonText: string;
+  countdown: string; // Format: hh:mm:ss
+}
 
 const DashboardBannerView: React.FC = () => {
-  const [bannerData, setBannerData] = useState({
-    title: 'YOUR ULTIMATE CASINO ADVENTURE AWAITS',
-    subtitle: "DON'T MISS THE MAIN EVENT",
-    buttonText: 'PLAY',
-    countdown: '15:40:24',
+  const [bannerData, setBannerData] = useState<BannerConfig>({
+    title: '',
+    subtitle: '',
+    buttonText: '',
+    countdown: '',
   });
-  const [countdownError, setCountdownError] = useState<string | null>(null);
+  const [timeInputs, setTimeInputs] = useState({
+    hours: '',
+    minutes: '',
+    seconds: '',
+  });
+  const [timeErrors, setTimeErrors] = useState({
+    hours: null as string | null,
+    minutes: null as string | null,
+    seconds: null as string | null,
+  });
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [isRunning, setIsRunning] = useState(false);
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
 
+  // Parse countdown string (hh:mm:ss) to time object
   const parseTime = (timeString: string) => {
     const [h, m, s] = timeString.split(':').map(Number);
     return { hours: h || 0, minutes: m || 0, seconds: s || 0 };
   };
 
-  const [timeLeft, setTimeLeft] = useState(parseTime(bannerData.countdown));
-  const [isRunning, setIsRunning] = useState(false);
+  // Format time inputs to hh:mm:ss
+  const formatTimeString = () => {
+    const { hours, minutes, seconds } = timeInputs;
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}:${seconds.padStart(2, '0')}`;
+  };
 
+  // Fetch existing banner configuration on mount
   useEffect(() => {
-    if (!isRunning) return undefined;
+    const fetchBannerConfig = async () => {
+      try {
+        const response = await axios.get('/api/banner');
+        const data: BannerConfig = response.data;
+        setBannerData(data);
+        const time = parseTime(data.countdown);
+        setTimeInputs({
+          hours: String(time.hours).padStart(2, '0'),
+          minutes: String(time.minutes).padStart(2, '0'),
+          seconds: String(time.seconds).padStart(2, '0'),
+        });
+        setTimeLeft(time);
+      } catch (error) {
+        console.error('Failed to fetch banner config:', error);
+      }
+    };
+
+    fetchBannerConfig();
+  }, []);
+
+  // Countdown timer logic
+  useEffect(() => {
+    if (!isRunning) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
@@ -46,48 +95,115 @@ const DashboardBannerView: React.FC = () => {
     return () => clearInterval(timer);
   }, [isRunning]);
 
-  const validateCountdown = (value: string): boolean => {
-    const timePattern = /^(\d+):(\d+):(\d+)$/;
-    if (!timePattern.test(value)) {
-      setCountdownError('Please use format hh:mm:ss');
-      return false;
+  // Validate individual time input
+  const validateTimeInput = (name: string, value: string): string | null => {
+    if (!/^\d*$/.test(value)) {
+      return `${name.charAt(0).toUpperCase() + name.slice(1)} must be numeric`;
     }
 
-    const [hours, minutes, seconds] = value.split(':').map(Number);
+    const numValue = parseInt(value) || 0;
 
-    if (minutes > 59) {
-      setCountdownError('Minutes cannot exceed 59');
-      return false;
+    if (name === 'hours' && value && numValue < 0) {
+      return 'Hours cannot be negative';
     }
 
-    if (seconds > 59) {
-      setCountdownError('Seconds cannot exceed 59');
-      return false;
+    if (name === 'minutes' && value && (numValue < 0 || numValue > 59)) {
+      return 'Minutes must be between 0 and 59';
     }
 
-    if (hours < 0 || minutes < 0 || seconds < 0) {
-      setCountdownError('Time values cannot be negative');
-      return false;
+    if (name === 'seconds' && value && (numValue < 0 || numValue > 59)) {
+      return 'Seconds must be between 0 and 59';
     }
 
-    setCountdownError(null);
-    return true;
+    return null;
   };
 
+  // Validate all time inputs before saving
+  const validateAllTimeInputs = () => {
+    const errors = {
+      hours: validateTimeInput('hours', timeInputs.hours),
+      minutes: validateTimeInput('minutes', timeInputs.minutes),
+      seconds: validateTimeInput('seconds', timeInputs.seconds),
+    };
+    setTimeErrors(errors);
+    return !errors.hours && !errors.minutes && !errors.seconds;
+  };
+
+  // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBannerData({ ...bannerData, [e.target.name]: e.target.value });
   };
 
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setBannerData({ ...bannerData, countdown: newValue });
-    validateCountdown(newValue);
+  // Handle time input changes with dynamic validation
+  const handleTimeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTimeInputs((prev) => ({ ...prev, [name]: value }));
+
+    // Validate the changed field and update errors dynamically
+    const error = validateTimeInput(name, value);
+    setTimeErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  const handleSave = () => {
-    if (validateCountdown(bannerData.countdown)) {
-      setTimeLeft(parseTime(bannerData.countdown));
+  // Save banner configuration to backend
+  const handleSave = async () => {
+    if (!validateAllTimeInputs()) return;
+
+    if (!token) {
+      setSaveStatus('Authentication token is missing');
+      setTimeout(() => setSaveStatus(null), 3000);
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('title', bannerData.title || '');
+      formData.append('subtitle', bannerData.subtitle || '');
+      formData.append('buttonText', bannerData.buttonText || '');
+
+      // Ensure time inputs are valid numbers, default to 0 if empty
+      const hours = timeInputs.hours ? parseInt(timeInputs.hours) : 0;
+      const minutes = timeInputs.minutes ? parseInt(timeInputs.minutes) : 0;
+      const seconds = timeInputs.seconds ? parseInt(timeInputs.seconds) : 0;
+
+      // Append individual fields or countdown based on backend requirements
+      formData.append('hours', String(hours));
+      formData.append('minutes', String(minutes));
+      formData.append('seconds', String(seconds));
+      // Optionally, append countdown as a single field
+      const countdown = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      formData.append('countdown', countdown);
+
+      // Log FormData entries
+      console.log('FormData entries:');
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+      }
+
+      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/admin/banner`;
+      console.log('API URL:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to save banner configuration');
+      }
+
+      setSaveStatus('Banner configuration saved successfully!');
+      setBannerData({ ...bannerData, countdown });
+      setTimeLeft({ hours, minutes, seconds });
       setIsRunning(true);
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch (error) {
+      console.error('Error saving banner config:', error);
+      setSaveStatus(error.message || 'Failed to save banner configuration');
+      setTimeout(() => setSaveStatus(null), 3000);
     }
   };
 
@@ -166,31 +282,73 @@ const DashboardBannerView: React.FC = () => {
                 },
               }}
             />
-            <TextField
-              fullWidth
-              variant="outlined"
-              label="Countdown (hh:mm:ss)"
-              name="countdown"
-              value={bannerData.countdown}
-              onChange={handleTimeChange}
-              placeholder="hh:mm:ss"
-              size="small"
-              error={!!countdownError}
-              helperText={countdownError}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px',
-                  '&:hover fieldset': {
-                    borderColor: 'primary.main',
+            <Stack direction="row" spacing={2}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Hours"
+                name="hours"
+                value={timeInputs.hours}
+                onChange={handleTimeInputChange}
+                placeholder="hh"
+                size="small"
+                error={!!timeErrors.hours}
+                helperText={timeErrors.hours}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main',
+                    },
                   },
-                },
-              }}
-            />
+                }}
+              />
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Minutes"
+                name="minutes"
+                value={timeInputs.minutes}
+                onChange={handleTimeInputChange}
+                placeholder="mm"
+                size="small"
+                error={!!timeErrors.minutes}
+                helperText={timeErrors.minutes}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                  },
+                }}
+              />
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Seconds"
+                name="seconds"
+                value={timeInputs.seconds}
+                onChange={handleTimeInputChange}
+                placeholder="ss"
+                size="small"
+                error={!!timeErrors.seconds}
+                helperText={timeErrors.seconds}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                  },
+                }}
+              />
+            </Stack>
             <Button
               variant="contained"
               color="primary"
               onClick={handleSave}
-              disabled={!!countdownError}
+              disabled={!!timeErrors.hours || !!timeErrors.minutes || !!timeErrors.seconds}
               sx={{
                 borderRadius: '8px',
                 py: 1.2,
@@ -208,6 +366,14 @@ const DashboardBannerView: React.FC = () => {
             >
               Save & Start Countdown
             </Button>
+            {saveStatus && (
+              <Typography
+                color={saveStatus.includes('Failed') ? 'error' : 'success.main'}
+                sx={{ mt: 1, textAlign: 'center' }}
+              >
+                {saveStatus}
+              </Typography>
+            )}
           </Stack>
         </Paper>
 
@@ -215,7 +381,7 @@ const DashboardBannerView: React.FC = () => {
         <Box
           sx={{
             width: '100%',
-            backgroundImage: ` url(${casinoBg})`,
+            backgroundImage: `url(${casinoBg})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             color: 'white',
@@ -241,7 +407,7 @@ const DashboardBannerView: React.FC = () => {
               }}
             >
               <Typography variant="subtitle2" fontWeight="medium">
-                {bannerData.subtitle}
+                {bannerData.subtitle || "DON'T MISS THE MAIN EVENT"}
               </Typography>
             </Box>
             <Typography
@@ -253,7 +419,7 @@ const DashboardBannerView: React.FC = () => {
                 fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
               }}
             >
-              {bannerData.title}
+              {bannerData.title || 'YOUR ULTIMATE CASINO ADVENTURE AWAITS'}
             </Typography>
             <Stack
               direction="row"
@@ -277,10 +443,10 @@ const DashboardBannerView: React.FC = () => {
                   fontWeight: 'bold',
                 }}
               >
-                {bannerData.buttonText}
+                {bannerData.buttonText || 'PLAY'}
               </Button>
               <Typography variant="body2" fontWeight="medium">
-                DON&apos;T MISS
+                DON'T MISS
               </Typography>
               <Stack direction="row" spacing={0.5} alignItems="center">
                 {[timeLeft.hours, timeLeft.minutes, timeLeft.seconds].map((val, i) => (

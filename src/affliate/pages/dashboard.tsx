@@ -229,13 +229,17 @@ export default function AffiliateDashboardPage() {
             <DatePicker
               label="Start Date"
               value={startDate}
-              onChange={(newValue) => setStartDate(newValue)}
+              onChange={(newValue: React.SetStateAction<dayjs.Dayjs | null>) =>
+                setStartDate(newValue)
+              }
               slotProps={{ textField: { size: 'small' } }}
             />
             <DatePicker
               label="End Date"
               value={endDate}
-              onChange={(newValue) => setEndDate(newValue)}
+              onChange={(newValue: React.SetStateAction<dayjs.Dayjs | null>) =>
+                setEndDate(newValue)
+              }
               slotProps={{ textField: { size: 'small' } }}
             />
             <ActionButton

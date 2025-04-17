@@ -14,6 +14,8 @@ import Tooltip from '@mui/material/Tooltip';
 import { Iconify } from 'src/components/iconify';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 
 type PaymentMode = 'test' | 'live';
 
@@ -34,6 +36,7 @@ export function PaymentView() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  const [activeTab, setActiveTab] = useState(0);
 
   // Stripe-inspired color palette
   const colors = {
@@ -177,6 +180,20 @@ export function PaymentView() {
       return (config.mode === 'test' && isTestField) || (config.mode === 'live' && !isTestField);
     });
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
+  const filteredConfigs = () => {
+    if (activeTab === 0) {
+      return paymentConfigs.filter((config) => config.name === 'stripe');
+    } else if (activeTab === 1) {
+      return paymentConfigs.filter((config) => config.name === 'bastapay');
+    } else {
+      return paymentConfigs.filter((config) => !['stripe', 'bastapay'].includes(config.name));
+    }
+  };
+
   return (
     <>
       <Box
@@ -197,6 +214,30 @@ export function PaymentView() {
           </Typography>
         </Box>
 
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          centered
+          sx={{
+            mb: 4,
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              fontWeight: 600,
+              color: colors.textSecondary,
+              '&.Mui-selected': {
+                color: colors.primary,
+              },
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: colors.primary,
+            },
+          }}
+        >
+          <Tab label="Stripe" />
+          <Tab label="BastaPay" />
+          <Tab label="Others" />
+        </Tabs>
+
         {error && (
           <Alert severity="error" sx={{ width: '100%', mb: 3, borderRadius: 2 }}>
             {error}
@@ -214,8 +255,8 @@ export function PaymentView() {
             <Typography>Loading payment configurations...</Typography>
           </Box>
         ) : (
-          paymentConfigs.map((config) => (
-            <Box key={config.id} display="flex" flexDirection="column" sx={{ mb: 6 }}>
+          filteredConfigs().map((config) => (
+            <Box key={config.id} display="flex" flexDirection="column">
               <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h6" sx={{ fontWeight: 600, color: colors.textPrimary }}>
                   {config.name.charAt(0).toUpperCase() + config.name.slice(1)}
