@@ -24,14 +24,14 @@ export const affiliateNavData = [
   //   href: '/affiliate/login',
   //   icon: { icon: 'solar:login-bold-duotone' },
   // },
-  {
-    label: 'Forgot Password',
-    href: '/affiliate/forget-password',
-    icon: { icon: 'solar:key-minimalistic-bold-duotone' },
-  },
-   {
-    label: 'Reset Password',
-    href: '/affiliate/reset-password',
-    icon: { icon: 'solar:key-minimalistic-bold-duotone' },
-  },
+  // {
+  //   label: 'Forgot Password',
+  //   href: '/affiliate/forget-password',
+  //   icon: { icon: 'solar:key-minimalistic-bold-duotone' },
+  // },
+  //  {
+  //   label: 'Reset Password',
+  //   href: '/affiliate/reset-password',
+  //   icon: { icon: 'solar:key-minimalistic-bold-duotone' },
+  // },
 ];

@@ -1,4 +1,3 @@
-// src/affiliate/pages/forgot-password.tsx
 import { env } from 'src/config/env.config';
 import { useState, useCallback } from 'react';
 import { Box, Link, Divider, TextField, Typography, Alert } from '@mui/material';

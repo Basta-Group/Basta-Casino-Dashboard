@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -50,7 +50,7 @@ const ActionButton = styled(Button)(({ theme }) => ({
   padding: theme.spacing(1, 3),
   transition: 'all 0.3s ease',
   '&:hover': {
-    transform: 'scale(1.05)',
+    transform: 'view(1.05)',
     boxShadow: theme.shadows[4],
   },
 }));
@@ -89,7 +89,7 @@ export default function AffiliateDashboardPage() {
   const [startDate, setStartDate] = useState<dayjs.Dayjs | null>(null);
   const [endDate, setEndDate] = useState<dayjs.Dayjs | null>(null);
 
-  const fetchDashboardData = async (start?: dayjs.Dayjs, end?: dayjs.Dayjs) => {
+  const fetchDashboardData = useCallback(async (start?: dayjs.Dayjs, end?: dayjs.Dayjs) => {
     try {
       setLoading(true);
       setError(null);
@@ -136,12 +136,11 @@ export default function AffiliateDashboardPage() {
       setLoading(false);
       setDashboardData(emptyDashboardData);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     fetchDashboardData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchDashboardData]);
 
   const handleApplyFilters = () => {
     fetchDashboardData(startDate || undefined, endDate || undefined);
@@ -205,7 +204,7 @@ export default function AffiliateDashboardPage() {
                   Welcome, Affiliate!
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Here's your affiliate dashboard overview
+                  Here&apos;s your affiliate dashboard overview
                 </Typography>
               </Box>
             </Box>

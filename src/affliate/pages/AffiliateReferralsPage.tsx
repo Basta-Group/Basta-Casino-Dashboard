@@ -13,11 +13,10 @@ import {
   Avatar,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify'; // Assuming this exists in your project
+import { Iconify } from 'src/components/iconify';
 
-// Styled components
 const ReferralHeader = styled(Box)(({ theme }) => ({
-  background: `linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%)`, // Teal gradient
+  background: `linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%)`,
   borderRadius: theme.shape.borderRadius,
   padding: theme.spacing(3),
   color: theme.palette.common.white,
@@ -26,7 +25,7 @@ const ReferralHeader = styled(Box)(({ theme }) => ({
 }));
 
 const CouponCard = styled(Card)(({ theme }) => ({
-  backgroundColor: '#F9FAFB', // Light gray-blue
+  backgroundColor: '#F9FAFB',
   color: theme.palette.text.primary,
   borderRadius: theme.shape.borderRadius * 2,
   overflow: 'hidden',
@@ -38,7 +37,7 @@ const CouponCard = styled(Card)(({ theme }) => ({
     left: 0,
     right: 0,
     height: '4px',
-    background: `linear-gradient(to right, #FF7043, #F06292)`, // Coral to pink gradient
+    background: `linear-gradient(to right, #FF7043, #F06292)`,
   },
 }));
 
@@ -55,10 +54,9 @@ const ShareButton = styled(Button)(({ theme }) => ({
 const AffiliateReferralsPage = () => {
   const [copied, setCopied] = useState(false);
 
-  // Sample affiliate data (replace with API data)
   const affiliateData = {
     couponCode: 'AFFXAI2025',
-    referralLink: 'https://example.com/signup?ref=AFFXAI2025',
+    referralLink: 'http://localhost:3003/register/?ref=AFFXAI2025',
   };
 
   const handleCopy = (text: string) => {
@@ -184,7 +182,6 @@ const AffiliateReferralsPage = () => {
           Share your code or link via social media, email, or messaging apps to start earning!
         </Typography>
       </Box>
-      {/* Copy Notification */}
       <Snackbar
         open={copied}
         autoHideDuration={2000}
@@ -192,7 +189,7 @@ const AffiliateReferralsPage = () => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         sx={{
           '& .MuiSnackbarContent-root': {
-            bgcolor: '#FF7043', // Coral notification
+            bgcolor: '#FF7043', 
             color: 'white',
             borderRadius: 2,
           },

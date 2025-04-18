@@ -1,3 +1,11 @@
+/**
+ * The Tale of the Affiliate's Payout Portal:
+ * This component is the gateway for affiliates to manage their earnings.
+ * It fetches payout history from /api/auth/affiliate/payouts, displaying past requests in a table with date, amount, method, and status.
+ * It retrieves payment methods from /api/auth/payment-methods, populating a dropdown for new payout requests.
+ * Affiliates can submit requests via /api/auth/affiliate/payouts/request, specifying amount, currency (USD, INR, POUND), and payment method.
+ * With JWT authentication, Material-UI styling, Axios for API calls, and infinite scrolling, it ensures a seamless quest to claim rewards.
+ */
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -11,20 +19,19 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Divider,
   Avatar,
   TextField,
   Button,
   MenuItem,
-  Pagination,
   Alert,
   Grid,
   CircularProgress,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import axios from 'axios';
 import { Iconify } from 'src/components/iconify';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
-// Styled components - updated colors to match earnings page
 const PayoutsHeader = styled(Box)(({ theme }) => ({
   background: `linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%)`,
   borderRadius: theme.shape.borderRadius,
@@ -56,89 +63,99 @@ const StatusBadge = styled(Box)(({ status }: { status: string }) => ({
   fontSize: '0.75rem',
   fontWeight: 600,
   backgroundColor:
-    status === 'completed'
+    status === 'paid'
       ? 'rgba(76, 175, 80, 0.16)'
-      : status === 'pending'
-        ? 'rgba(255, 152, 0, 0.16)'
-        : 'rgba(244, 67, 54, 0.16)',
-  color: status === 'completed' ? '#4CAF50' : status === 'pending' ? '#FF9800' : '#F44336',
+      : status === 'approved'
+        ? 'rgba(33, 150, 243, 0.16)'
+        : status === 'pending'
+          ? 'rgba(255, 152, 0, 0.16)'
+          : 'rgba(244, 67, 54, 0.16)',
+  color:
+    status === 'paid'
+      ? '#4CAF50'
+      : status === 'approved'
+        ? '#2196F3'
+        : status === 'pending'
+          ? '#FF9800'
+          : '#F44336',
 }));
 
 interface Payout {
-  id: string;
+  _id: string;
   amount: number;
   currency: string;
-  status: 'pending' | 'completed' | 'rejected';
-  paymentMethod: string;
+  status: 'pending' | 'approved' | 'rejected' | 'paid';
+  paymentMethodId?: string;
   createdAt: string;
-  notes?: string;
+  adminNotes?: string;
 }
+
+interface PaymentMethod {
+  _id: string;
+  label: string;
+  method_type: string;
+  last4?: string;
+  brand?: string;
+}
+
+const apiUrl = `${import.meta.env.VITE_API_BASE_URL}:${import.meta.env.VITE_API_PORT}/api/auth`;
 
 const AffiliatePayoutsPage = () => {
   const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [requestLoading, setRequestLoading] = useState(false);
   const [formData, setFormData] = useState({
     amount: '',
     currency: 'USD',
-    paymentMethod: '',
+    paymentMethodId: '',
   });
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const currencies = ['USD', 'EUR', 'GBP', 'INR'];
-  const paymentMethods = [
-    { id: 'bank', label: 'Bank Transfer' },
-    { id: 'paypal', label: 'PayPal' },
-    { id: 'crypto', label: 'Cryptocurrency' },
-  ];
+  const currencies = ['USD', 'INR', 'POUND'];
 
   useEffect(() => {
-    const fetchPayouts = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        const token = localStorage.getItem('affiliateToken');
+        if (!token) {
+          throw new Error('Authentication required');
+        }
 
-        // Mock data
-        const mockPayouts: Payout[] = [
-          {
-            id: '1',
-            amount: 1000,
-            currency: 'USD',
-            status: 'completed',
-            paymentMethod: 'paypal',
-            createdAt: '2024-04-15T10:30:00Z',
-            notes: 'Paid via PayPal',
-          },
-          {
-            id: '2',
-            amount: 500,
-            currency: 'EUR',
-            status: 'pending',
-            paymentMethod: 'bank',
-            createdAt: '2024-04-14T15:45:00Z',
-            notes: 'Processing bank transfer',
-          },
-          {
-            id: '3',
-            amount: 750,
-            currency: 'GBP',
-            status: 'rejected',
-            paymentMethod: 'bank',
-            createdAt: '2024-04-13T09:20:00Z',
-            notes: 'Invalid payment details',
-          },
-        ];
+        const payoutsResponse = await axios.get(`${apiUrl}/affiliate/payouts`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { page: 1, limit: 20 },
+        });
 
-        setPayouts(mockPayouts);
-        setTotalPages(1);
+        const { payouts: fetchedPayouts, pagination } = payoutsResponse.data;
+        setPayouts(fetchedPayouts);
+        setHasMore(pagination.currentPage < pagination.totalPages);
+
+        const paymentMethodsResponse = await axios.get(`${apiUrl}/payment-methods`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { limit: 50 },
+        });
+
+        const fetchedMethods = paymentMethodsResponse.data.paymentMethods || [];
+        const formattedMethods = fetchedMethods.map((method: any) => ({
+          _id: method.id,
+          label:
+            method.method_type === 'credit_card' && method.last4 && method.brand
+              ? `${method.brand.toUpperCase()} ****${method.last4}`
+              : method.method_type.replace('_', ' ').toUpperCase(),
+          method_type: method.method_type,
+          last4: method.last4,
+          brand: method.brand,
+        }));
+        setPaymentMethods(formattedMethods);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       } finally {
@@ -146,42 +163,75 @@ const AffiliatePayoutsPage = () => {
       }
     };
 
-    fetchPayouts();
+    fetchData();
   }, []);
 
-  const handleRequestPayout = (e: React.FormEvent) => {
-    e.preventDefault();
-    setRequestLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      if (Number(formData.amount) <= 0) {
-        setErrorMessage('Amount must be greater than 0');
-        setShowError(true);
-        setShowSuccess(false);
-      } else {
-        // Add new payout to the list
-        const newPayout: Payout = {
-          id: String(payouts.length + 1),
-          amount: Number(formData.amount),
-          currency: formData.currency,
-          status: 'pending',
-          paymentMethod: formData.paymentMethod,
-          createdAt: new Date().toISOString(),
-          notes: 'Processing request',
-        };
-
-        setPayouts([newPayout, ...payouts]);
-        setFormData({ amount: '', currency: 'USD', paymentMethod: '' });
-        setShowSuccess(true);
-        setShowError(false);
+  const fetchMorePayouts = async () => {
+    try {
+      const token = localStorage.getItem('affiliateToken');
+      if (!token) {
+        throw new Error('Authentication required');
       }
-      setRequestLoading(false);
-    }, 1000);
+
+      const nextPage = page + 1;
+      const response = await axios.get(`${apiUrl}/affiliate/payouts`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { page: nextPage, limit: 20 },
+      });
+
+      const { payouts: newPayouts, pagination } = response.data;
+      setPayouts((prev) => [...prev, ...newPayouts]);
+      setPage(nextPage);
+      setHasMore(pagination.currentPage < pagination.totalPages);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load more payouts');
+    }
   };
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
+  const handleRequestPayout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRequestLoading(true);
+    setShowSuccess(false);
+    setShowError(false);
+
+    try {
+      const token = localStorage.getItem('affiliateToken');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      if (Number(formData.amount) <= 0) {
+        throw new Error('Amount must be greater than 0');
+      }
+
+      const response = await axios.post(
+        `${apiUrl}/affiliate/payouts/request`,
+        {
+          amount: Number(formData.amount),
+          currency: formData.currency,
+          paymentMethodId: formData.paymentMethodId,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const newPayout: Payout = {
+        _id: response.data.payoutId,
+        amount: response.data.amount,
+        currency: formData.currency,
+        status: response.data.status,
+        paymentMethodId: formData.paymentMethodId,
+        createdAt: response.data.requestedAt,
+      };
+
+      setPayouts([newPayout, ...payouts]);
+      setFormData({ amount: '', currency: 'USD', paymentMethodId: '' });
+      setShowSuccess(true);
+    } catch (err: any) {
+      setErrorMessage(err.response?.data?.error || err.message || 'Failed to request payout');
+      setShowError(true);
+    } finally {
+      setRequestLoading(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -316,16 +366,23 @@ const AffiliatePayoutsPage = () => {
                   fullWidth
                   select
                   label="Payment Method"
-                  value={formData.paymentMethod}
-                  onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                  value={formData.paymentMethodId}
+                  onChange={(e) => setFormData({ ...formData, paymentMethodId: e.target.value })}
                   margin="normal"
                   required
+                  disabled={paymentMethods.length === 0}
                 >
-                  {paymentMethods.map((method) => (
-                    <MenuItem key={method.id} value={method.id}>
-                      {method.label}
+                  {paymentMethods.length > 0 ? (
+                    paymentMethods.map((method) => (
+                      <MenuItem key={method._id} value={method._id}>
+                        {method.label}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem value="" disabled>
+                      No payment methods available
                     </MenuItem>
-                  ))}
+                  )}
                 </TextField>
 
                 <Button
@@ -333,7 +390,7 @@ const AffiliatePayoutsPage = () => {
                   variant="contained"
                   color="primary"
                   type="submit"
-                  disabled={requestLoading}
+                  disabled={requestLoading || paymentMethods.length === 0}
                   sx={{ mt: 3, bgcolor: '#26A69A', '&:hover': { bgcolor: '#00897B' } }}
                   startIcon={
                     requestLoading ? (
@@ -360,90 +417,95 @@ const AffiliatePayoutsPage = () => {
                 </Typography>
               </Box>
 
-              <TableContainer component={Paper} elevation={0}>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: '#E0F2F1' }}>
-                      <TableCell>
-                        <Typography variant="subtitle2" color="#26A69A">
-                          Date
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="subtitle2" color="#26A69A">
-                          Amount
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="subtitle2" color="#26A69A">
-                          Method
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="subtitle2" color="#26A69A">
-                          Status
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {payouts.length > 0 ? (
-                      payouts.map((payout) => (
-                        <TableRow
-                          key={payout.id}
-                          sx={{
-                            '&:hover': {
-                              bgcolor: '#ECEFF1',
-                              transition: 'background-color 0.2s',
-                            },
-                          }}
-                        >
-                          <TableCell>
-                            <Typography variant="body2" color="#37474F">
-                              {formatDate(payout.createdAt)}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight={600} color="#FF7043">
-                              {formatCurrency(payout.amount, payout.currency)}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="#78909C">
-                              {paymentMethods.find((m) => m.id === payout.paymentMethod)?.label ||
-                                'Unknown'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge status={payout.status}>
-                              {payout.status.charAt(0).toUpperCase() + payout.status.slice(1)}
-                            </StatusBadge>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={4} align="center">
-                          <Typography variant="body2" color="#78909C">
-                            No payout history available
+              <InfiniteScroll
+                dataLength={payouts.length}
+                next={fetchMorePayouts}
+                hasMore={hasMore}
+                loader={
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                    <CircularProgress size={24} color="primary" />
+                  </Box>
+                }
+                endMessage={
+                  <Typography variant="body2" color="#78909C" align="center" sx={{ py: 2 }}>
+                    No more payouts to display
+                  </Typography>
+                }
+              >
+                <TableContainer component={Paper} elevation={0}>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: '#E0F2F1' }}>
+                        <TableCell>
+                          <Typography variant="subtitle2" color="#26A69A">
+                            Date
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="subtitle2" color="#26A69A">
+                            Amount
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="subtitle2" color="#26A69A">
+                            Method
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="subtitle2" color="#26A69A">
+                            Status
                           </Typography>
                         </TableCell>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              {payouts.length > 0 && (
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-                  <Pagination
-                    count={totalPages}
-                    page={page}
-                    onChange={handlePageChange}
-                    color="primary"
-                  />
-                </Box>
-              )}
+                    </TableHead>
+                    <TableBody>
+                      {payouts.length > 0 ? (
+                        payouts.map((payout) => (
+                          <TableRow
+                            key={payout._id}
+                            sx={{
+                              '&:hover': {
+                                bgcolor: '#ECEFF1',
+                                transition: 'background-color 0.2s',
+                              },
+                            }}
+                          >
+                            <TableCell>
+                              <Typography variant="body2" color="#37474F">
+                                {formatDate(payout.createdAt)}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight={600} color="#FF7043">
+                                {formatCurrency(payout.amount, payout.currency)}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" color="#78909C">
+                                {paymentMethods.find((m) => m._id === payout.paymentMethodId)
+                                  ?.label || 'Unknown'}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <StatusBadge status={payout.status}>
+                                {payout.status.charAt(0).toUpperCase() + payout.status.slice(1)}
+                              </StatusBadge>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center">
+                            <Typography variant="body2" color="#78909C">
+                              No payout history available
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </InfiniteScroll>
             </CardContent>
           </Card>
         </Grid>
