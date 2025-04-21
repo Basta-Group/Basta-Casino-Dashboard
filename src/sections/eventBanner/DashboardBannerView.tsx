@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { env } from 'src/config/env.config';
 import { Box, Button, TextField, Typography, Stack, Paper } from '@mui/material';
 import casinoImg from '../../../public/assets/background/casino.png';
 import casinoBg from '../../../public/assets/background/casino-bg-full.jpg';
-import axios from 'axios';
-import { env } from 'src/config/env.config';
 
 interface BannerConfig {
   title: string;
@@ -32,7 +32,7 @@ const DashboardBannerView: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [isRunning, setIsRunning] = useState(false);
-  const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  const [token] = useState(localStorage.getItem('accessToken')); // Removed setToken as it's unused
 
   // Parse countdown string (hh:mm:ss) to time object
   const parseTime = (timeString: string) => {
@@ -50,8 +50,8 @@ const DashboardBannerView: React.FC = () => {
   useEffect(() => {
     const fetchBannerConfig = async () => {
       try {
-        const response = await axios.get('/api/banner');
-        const data: BannerConfig = response.data;
+        const response = await axios.get<BannerConfig>('/api/banner');
+        const data = response.data;
         setBannerData(data);
         const time = parseTime(data.countdown);
         setTimeInputs({
@@ -70,7 +70,7 @@ const DashboardBannerView: React.FC = () => {
 
   // Countdown timer logic
   useEffect(() => {
-    if (!isRunning) return;
+    if (!isRunning) return undefined; // Explicitly return undefined for consistent return
 
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
@@ -92,7 +92,9 @@ const DashboardBannerView: React.FC = () => {
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer); // Cleanup without explicit return
+    };
   }, [isRunning]);
 
   // Validate individual time input
@@ -101,7 +103,7 @@ const DashboardBannerView: React.FC = () => {
       return `${name.charAt(0).toUpperCase() + name.slice(1)} must be numeric`;
     }
 
-    const numValue = parseInt(value) || 0;
+    const numValue = parseInt(value, 10) || 0;
 
     if (name === 'hours' && value && numValue < 0) {
       return 'Hours cannot be negative';
@@ -161,9 +163,9 @@ const DashboardBannerView: React.FC = () => {
       formData.append('buttonText', bannerData.buttonText || '');
 
       // Ensure time inputs are valid numbers, default to 0 if empty
-      const hours = timeInputs.hours ? parseInt(timeInputs.hours) : 0;
-      const minutes = timeInputs.minutes ? parseInt(timeInputs.minutes) : 0;
-      const seconds = timeInputs.seconds ? parseInt(timeInputs.seconds) : 0;
+      const hours = timeInputs.hours ? parseInt(timeInputs.hours, 10) : 0;
+      const minutes = timeInputs.minutes ? parseInt(timeInputs.minutes, 10) : 0;
+      const seconds = timeInputs.seconds ? parseInt(timeInputs.seconds, 10) : 0;
 
       // Append individual fields or countdown based on backend requirements
       formData.append('hours', String(hours));
@@ -173,14 +175,7 @@ const DashboardBannerView: React.FC = () => {
       const countdown = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
       formData.append('countdown', countdown);
 
-      // Log FormData entries
-      console.log('FormData entries:');
-      for (const [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
-      }
-
       const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/admin/banner`;
-      console.log('API URL:', apiUrl);
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -202,7 +197,7 @@ const DashboardBannerView: React.FC = () => {
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (error) {
       console.error('Error saving banner config:', error);
-      setSaveStatus(error.message || 'Failed to save banner configuration');
+      setSaveStatus((error as Error).message || 'Failed to save banner configuration');
       setTimeout(() => setSaveStatus(null), 3000);
     }
   };
@@ -446,7 +441,7 @@ const DashboardBannerView: React.FC = () => {
                 {bannerData.buttonText || 'PLAY'}
               </Button>
               <Typography variant="body2" fontWeight="medium">
-                DON'T MISS
+                DON&apos;T MISS
               </Typography>
               <Stack direction="row" spacing={0.5} alignItems="center">
                 {[timeLeft.hours, timeLeft.minutes, timeLeft.seconds].map((val, i) => (

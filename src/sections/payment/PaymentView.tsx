@@ -35,7 +35,7 @@ export function PaymentView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  const [token] = useState(localStorage.getItem('accessToken'));
   const [activeTab, setActiveTab] = useState(0);
 
   // Stripe-inspired color palette
@@ -63,7 +63,7 @@ export function PaymentView() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -99,7 +99,7 @@ export function PaymentView() {
     };
 
     fetchPaymentConfigs();
-  }, []);
+  }, [token]);
 
   const handleCopy = (configId: string, key: string) => {
     const config = paymentConfigs.find((c) => c.id === configId);
@@ -140,7 +140,7 @@ export function PaymentView() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           mode: configToUpdate.mode,
@@ -187,11 +187,11 @@ export function PaymentView() {
   const filteredConfigs = () => {
     if (activeTab === 0) {
       return paymentConfigs.filter((config) => config.name === 'stripe');
-    } else if (activeTab === 1) {
-      return paymentConfigs.filter((config) => config.name === 'bastapay');
-    } else {
-      return paymentConfigs.filter((config) => !['stripe', 'bastapay'].includes(config.name));
     }
+    if (activeTab === 1) {
+      return paymentConfigs.filter((config) => config.name === 'bastapay');
+    }
+    return paymentConfigs.filter((config) => !['stripe', 'bastapay'].includes(config.name));
   };
 
   return (

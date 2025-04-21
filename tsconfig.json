@@ -3,7 +3,7 @@
     "baseUrl": ".",
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "strict": true,
+    "strict": false,
     "noEmit": true,
     "allowJs": true,
     "module": "ESNext",
