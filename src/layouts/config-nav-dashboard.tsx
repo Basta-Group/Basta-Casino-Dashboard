@@ -88,6 +88,16 @@ export const navData = [
       { title: 'Refunds', path: '/payments/refunds' },
     ],
   },
+  {
+    title: 'Banner Management',
+    path: '/dashboard-banner',
+    icon: <Icon icon="mdi:credit-card" fontSize="22px" />,
+  },
+  {
+    title: 'Payout-Approval',
+    path: '/admin-payout',
+    icon: <Icon icon="mdi:credit-card" fontSize="22px" />,
+  },
 ];
 
 export type NavItem = {

@@ -15,7 +15,6 @@ import {
   Button,
   Pagination,
   Alert,
-  Grid,
   CircularProgress,
   Dialog,
   DialogTitle,
@@ -24,9 +23,10 @@ import {
   TextField,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import axios from 'axios';
 import { Iconify } from 'src/components/iconify';
 
-// Styled components - updated for white and black theme
+// Styled components
 const PayoutsHeader = styled(Box)(({ theme }) => ({
   background: theme.palette.background.paper,
   border: `1px solid ${theme.palette.divider}`,
@@ -37,21 +37,6 @@ const PayoutsHeader = styled(Box)(({ theme }) => ({
   boxShadow: theme.shadows[1],
 }));
 
-const RequestCard = styled(Card)(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: theme.shape.borderRadius * 2,
-  border: `1px solid ${theme.palette.divider}`,
-  '&:before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '4px',
-    background: theme.palette.text.primary,
-  },
-}));
-
 const StatusBadge = styled(Box)(({ status }: { status: string }) => ({
   display: 'inline-flex',
   alignItems: 'center',
@@ -60,24 +45,36 @@ const StatusBadge = styled(Box)(({ status }: { status: string }) => ({
   fontSize: '0.75rem',
   fontWeight: 600,
   backgroundColor:
-    status === 'completed'
+    status === 'paid'
       ? 'rgba(0, 200, 83, 0.1)'
       : status === 'pending'
         ? 'rgba(255, 171, 0, 0.1)'
-        : 'rgba(255, 82, 82, 0.1)',
-  color: status === 'completed' ? '#00C853' : status === 'pending' ? '#FFAB00' : '#FF5252',
+        : status === 'approved'
+          ? 'rgba(0, 150, 136, 0.1)'
+          : 'rgba(255, 82, 82, 0.1)',
+  color:
+    status === 'paid'
+      ? '#00C853'
+      : status === 'pending'
+        ? '#FFAB00'
+        : status === 'approved'
+          ? '#009688'
+          : '#FF5252',
 }));
 
 interface PayoutRequest {
-  id: string;
-  affiliateId: string;
-  affiliateName: string;
+  payoutId: string;
+  affiliate: {
+    id: string;
+    email: string;
+    name: string;
+  };
   amount: number;
   currency: string;
-  status: 'pending' | 'completed' | 'rejected';
-  paymentMethod: string;
-  createdAt: string;
-  notes?: string;
+  status: 'pending' | 'approved' | 'rejected' | 'paid';
+  paymentMethodId?: string;
+  requestedAt: string;
+  adminNotes?: string;
 }
 
 const AdminPayoutPageView = () => {
@@ -93,66 +90,44 @@ const AdminPayoutPageView = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  useEffect(() => {
-    const fetchPayoutRequests = async () => {
-      setLoading(true);
-      setError(null);
+  const fetchPayoutRequests = async (pageNum: number = 1) => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 800));
-
-        // Mock data
-        const mockRequests: PayoutRequest[] = [
-          {
-            id: '1',
-            affiliateId: 'AFF001',
-            affiliateName: 'John Doe',
-            amount: 1000,
-            currency: 'USD',
-            status: 'pending',
-            paymentMethod: 'paypal',
-            createdAt: '2024-04-15T10:30:00Z',
-            notes: 'Requesting payout for March earnings',
-          },
-          {
-            id: '2',
-            affiliateId: 'AFF002',
-            affiliateName: 'Jane Smith',
-            amount: 500,
-            currency: 'EUR',
-            status: 'pending',
-            paymentMethod: 'bank',
-            createdAt: '2024-04-14T15:45:00Z',
-            notes: 'Monthly payout request',
-          },
-          {
-            id: '3',
-            affiliateId: 'AFF003',
-            affiliateName: 'Mike Johnson',
-            amount: 750,
-            currency: 'GBP',
-            status: 'completed',
-            paymentMethod: 'bank',
-            createdAt: '2024-04-13T09:20:00Z',
-            notes: 'Processed successfully',
-          },
-        ];
-
-        setPayoutRequests(mockRequests);
-        setTotalPages(1);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unexpected error occurred');
-      } finally {
-        setLoading(false);
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('Authentication token not found');
       }
-    };
 
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}:${
+        import.meta.env.VITE_API_PORT
+      }/api/auth/admin/affiliate/payouts?page=${pageNum}&limit=20`;
+
+      const response = await axios.get(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const { payouts, pagination } = response.data;
+      setPayoutRequests(payouts);
+      setTotalPages(pagination.totalPages);
+      setPage(pagination.page);
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchPayoutRequests();
   }, []);
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
+    fetchPayoutRequests(value);
   };
 
   const formatDate = (dateString: string) => {
@@ -174,6 +149,7 @@ const AdminPayoutPageView = () => {
 
   const handleActionClick = (request: PayoutRequest) => {
     setSelectedRequest(request);
+    setAdminNotes(request.adminNotes || '');
     setDialogOpen(true);
   };
 
@@ -183,36 +159,40 @@ const AdminPayoutPageView = () => {
     setAdminNotes('');
   };
 
-  const handleProcessRequest = async (action: 'completed' | 'rejected') => {
+  const handleProcessRequest = async (action: 'approved' | 'rejected' | 'paid') => {
     if (!selectedRequest) return;
 
     setProcessingAction(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
 
-      // Update the request status
-      const updatedRequests = payoutRequests.map((request) =>
-        request.id === selectedRequest.id
-          ? {
-              ...request,
-              status: action,
-              notes: adminNotes || request.notes,
-            }
-          : request
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}:${
+        import.meta.env.VITE_API_PORT
+      }/api/auth/admin/affiliate/payouts/${selectedRequest.payoutId}`;
+
+      await axios.patch(
+        apiUrl,
+        { status: action, adminNotes },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
-      setPayoutRequests(updatedRequests);
       setSuccessMessage(`Payout request ${action} successfully`);
       setShowSuccess(true);
       handleCloseDialog();
+      fetchPayoutRequests(page); // Refresh the list
 
-      // Hide success message after 3 seconds
       setTimeout(() => {
         setShowSuccess(false);
       }, 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process request');
+    } catch (err: any) {
+      setError(err.message || 'Failed to process request');
     } finally {
       setProcessingAction(false);
     }
@@ -323,7 +303,7 @@ const AdminPayoutPageView = () => {
                 {payoutRequests.length > 0 ? (
                   payoutRequests.map((request) => (
                     <TableRow
-                      key={request.id}
+                      key={request.payoutId}
                       sx={{
                         '&:hover': {
                           bgcolor: 'action.hover',
@@ -332,12 +312,12 @@ const AdminPayoutPageView = () => {
                       }}
                     >
                       <TableCell>
-                        <Typography variant="body2">{formatDate(request.createdAt)}</Typography>
+                        <Typography variant="body2">{formatDate(request.requestedAt)}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2">{request.affiliateName}</Typography>
+                        <Typography variant="body2">{request.affiliate.name}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          ID: {request.affiliateId}
+                          ID: {request.affiliate.id}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -347,7 +327,7 @@ const AdminPayoutPageView = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {request.paymentMethod.toUpperCase()}
+                          {request.paymentMethodId || 'N/A'}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -365,7 +345,7 @@ const AdminPayoutPageView = () => {
                               onClick={() => handleActionClick(request)}
                               startIcon={<Iconify icon="solar:check-circle-bold" width={16} />}
                             >
-                              Accept
+                              Approve
                             </Button>
                             <Button
                               size="small"
@@ -377,6 +357,17 @@ const AdminPayoutPageView = () => {
                               Reject
                             </Button>
                           </Box>
+                        )}
+                        {request.status === 'approved' && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleActionClick(request)}
+                            startIcon={<Iconify icon="solar:wallet-money-bold" width={16} />}
+                          >
+                            Mark as Paid
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>
@@ -413,7 +404,7 @@ const AdminPayoutPageView = () => {
           Process Payout Request
           {selectedRequest && (
             <Typography variant="subtitle2" color="text.secondary">
-              {selectedRequest.affiliateName} -{' '}
+              {selectedRequest.affiliate.name} -{' '}
               {formatCurrency(selectedRequest.amount, selectedRequest.currency)}
             </Typography>
           )}
@@ -434,36 +425,57 @@ const AdminPayoutPageView = () => {
           <Button onClick={handleCloseDialog} disabled={processingAction}>
             Cancel
           </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => handleProcessRequest('rejected')}
-            disabled={processingAction}
-            startIcon={
-              processingAction ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : (
-                <Iconify icon="solar:close-circle-bold" width={20} />
-              )
-            }
-          >
-            Reject
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={() => handleProcessRequest('completed')}
-            disabled={processingAction}
-            startIcon={
-              processingAction ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : (
-                <Iconify icon="solar:check-circle-bold" width={20} />
-              )
-            }
-          >
-            Accept
-          </Button>
+          {selectedRequest?.status === 'pending' && (
+            <>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={() => handleProcessRequest('rejected')}
+                disabled={processingAction}
+                startIcon={
+                  processingAction ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <Iconify icon="solar:close-circle-bold" width={20} />
+                  )
+                }
+              >
+                Reject
+              </Button>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={() => handleProcessRequest('approved')}
+                disabled={processingAction}
+                startIcon={
+                  processingAction ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <Iconify icon="solar:check-circle-bold" width={20} />
+                  )
+                }
+              >
+                Approve
+              </Button>
+            </>
+          )}
+          {selectedRequest?.status === 'approved' && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => handleProcessRequest('paid')}
+              disabled={processingAction}
+              startIcon={
+                processingAction ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  <Iconify icon="solar:wallet-money-bold" width={20} />
+                )
+              }
+            >
+              Mark as Paid
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

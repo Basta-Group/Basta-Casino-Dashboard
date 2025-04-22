@@ -68,9 +68,8 @@ const DashboardBannerView: React.FC = () => {
     fetchBannerConfig();
   }, []);
 
-  // Countdown timer logic
   useEffect(() => {
-    if (!isRunning) return undefined; // Explicitly return undefined for consistent return
+    if (!isRunning) return undefined; 
 
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
