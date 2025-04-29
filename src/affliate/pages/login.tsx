@@ -83,7 +83,7 @@ export default function AffiliateLoginPage() {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData), // No role_id needed for this endpoint
+        body: JSON.stringify(formData),
       });
 
       const data: LoginResponse = await response.json();
@@ -113,7 +113,6 @@ export default function AffiliateLoginPage() {
 
       localStorage.setItem('affiliateToken', data.data.token);
 
-      // Redirect based on backend response (no 2FA in this API, so straight to dashboard)
       router.push('/affiliate/dashboard');
     } catch (err) {
       console.error('Login error:', err);

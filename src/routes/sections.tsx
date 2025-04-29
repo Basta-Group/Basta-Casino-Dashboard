@@ -16,6 +16,7 @@ import { UserDetailPage } from 'src/sections/user/user-detail';
 import ReferredUsersListingView from 'src/sections/affiliate/ReferredUsersListingView';
 import AffiliatePayoutsPage from 'src/affliate/pages/AffiliatePayoutsPage';
 import AdminPayoutPage from 'src/pages/AdminPayoutPage';
+import AffiliateVerifyEmailPage from 'src/affliate/pages/AffiliateVerifyEmailPage';
 
 export const HomePage = lazy(() => import('src/pages/home'));
 export const LandingPage = lazy(() => import('src/pages/landing'));
@@ -118,6 +119,7 @@ export function Router() {
             { path: 'reset-password', element: <AffiliateResetPasswordPage /> },
             { path: 'register', element: <AffiliateRegisterPage /> },
             // { path: 'affliate-info', element: <AffiliateInfoPage /> },
+            { path: 'verify-affiliate-email', element: <AffiliateVerifyEmailPage /> },
           ],
         },
         {

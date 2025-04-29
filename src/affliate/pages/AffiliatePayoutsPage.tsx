@@ -143,6 +143,7 @@ const AffiliatePayoutsPage = () => {
           headers: { Authorization: `Bearer ${token}` },
           params: { limit: 50 },
         });
+        // console.log('paymentMethodsResponse :>> ', paymentMethodsResponse);
 
         const fetchedMethods = paymentMethodsResponse.data.paymentMethods || [];
         const formattedMethods = fetchedMethods.map((method: any) => ({
