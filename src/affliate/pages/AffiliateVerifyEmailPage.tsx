@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -52,22 +52,8 @@ export default function AffiliateVerifyEmailPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Extract token and fetch email on mount
-  useEffect(() => {
-    const query = new URLSearchParams(location.search);
-    const token = query.get('token');
-
-    if (!token) {
-      setMessage('Invalid or missing verification token. Please check the link or request a new one.');
-      return;
-    }
-
-    // Verify the token
-    verifyEmailToken(token);
-  }, [location]);
-
   // Function to verify the email token
-  const verifyEmailToken = async (token: string) => {
+  const verifyEmailToken = useCallback(async (token: string) => {
     setIsVerifying(true);
     setMessage('');
 
@@ -87,12 +73,27 @@ export default function AffiliateVerifyEmailPage() {
       setEmail(data.email || 'your email'); // Fallback if email not returned
       setMessage('Email verified successfully! Redirecting to dashboard...');
       setTimeout(() => navigate('/affiliate/dashboard'), 2000);
-    } catch (error: any) {
-      setMessage(error.message || 'Failed to verify email. The token may be invalid or expired.');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to verify email. The token may be invalid or expired.';
+      setMessage(errorMessage);
     } finally {
       setIsVerifying(false);
     }
-  };
+  }, [navigate]);
+
+  // Extract token and fetch email on mount
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    const token = query.get('token');
+
+    if (!token) {
+      setMessage('Invalid or missing verification token. Please check the link or request a new one.');
+      return;
+    }
+
+    // Verify the token
+    verifyEmailToken(token);
+  }, [location, verifyEmailToken]);
 
   const handleResendEmail = async () => {
     if (!email) {
@@ -116,8 +117,9 @@ export default function AffiliateVerifyEmailPage() {
       }
 
       setMessage('Verification email resent successfully. Please check your inbox and spam/junk folder.');
-    } catch (error: any) {
-      setMessage(error.message || 'Failed to resend email. Please try again later.');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to resend email. Please try again later.';
+      setMessage(errorMessage);
     } finally {
       setIsResending(false);
     }
@@ -138,7 +140,7 @@ export default function AffiliateVerifyEmailPage() {
             <Typography variant="body1" color="text.secondary" gutterBottom>
               {email ? (
                 <>
-                  We’ve sent a verification link to <strong>{email}</strong>. Please check your inbox
+                  We&apos;ve sent a verification link to <strong>{email}</strong>. Please check your inbox
                   (and spam/junk folder) to verify your email address.
                 </>
               ) : (
@@ -146,7 +148,7 @@ export default function AffiliateVerifyEmailPage() {
               )}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Didn’t receive the email?
+              Didn&apos;t receive the email?
             </Typography>
             <ResendButton
               variant="contained"

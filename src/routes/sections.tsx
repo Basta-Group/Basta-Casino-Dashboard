@@ -65,6 +65,10 @@ const PublicAffiliateRoutesGuard = ({ children }: { children: React.ReactNode })
 export function Router() {
   return useRoutes([
     {
+      path: '/',
+      element: <Navigate to="/home" replace />,
+    },
+    {
       path: '/home',
       element: (
         <Suspense fallback={renderFallback}>
