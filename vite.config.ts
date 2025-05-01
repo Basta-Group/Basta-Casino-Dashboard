@@ -34,6 +34,20 @@ export default defineConfig({
       },
     ],
   },
-  server: { port: PORT, host: true },
-  preview: { port: PORT, host: true },
+  server: { 
+    port: PORT, 
+    host: '0.0.0.0', // Listen on all network interfaces
+    strictPort: true,
+    hmr: {
+      host: 'bastaxcasino.com' // Set this for HMR in development
+    },
+    proxy: {
+      // Add proxy rules if needed
+    }
+  },
+  preview: {
+    port: PORT,
+    host: '0.0.0.0',
+    strictPort: true
+  }
 });
