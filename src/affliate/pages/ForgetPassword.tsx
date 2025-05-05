@@ -17,6 +17,12 @@ export default function AffiliateForgotPasswordPage() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+    setError('Please enter a valid email address');
+    return;
+    }
+
     try {
       setLoading(true);
       setError('');    
@@ -30,7 +36,7 @@ export default function AffiliateForgotPasswordPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to send reset link');
+        throw new Error(data.message || 'Enter the email address associated with your account, and we will send you a link to reset your password.');
       }
 
       setSubmitted(true);
@@ -81,7 +87,11 @@ export default function AffiliateForgotPasswordPage() {
 
           {submitted ? (
             <Alert severity="success" sx={{ width: '100%', mb: 2 }}>
-              If your email is registered, you will receive a reset link.
+              <p>
+  Thanks! If {email} matches an email address we have on file, then we&apos;ve sent you an email containing further instructions for resetting your password.
+  If you haven&apos;t received an email in 5 minutes, check your spam, resend or try a different email address.
+</p>
+
             </Alert>
           ) : (
             <>
