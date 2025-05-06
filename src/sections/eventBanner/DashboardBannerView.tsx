@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { env } from 'src/config/env.config';
 import { Box, Button, TextField, Typography, Stack, Paper } from '@mui/material';
 import casinoImg from '../../../public/assets/background/casino.png';
@@ -11,6 +11,17 @@ interface BannerConfig {
   buttonText: string;
   countdown: string; // Format: hh:mm:ss
 }
+
+interface ApiSuccessResponse<T> {
+  message: string;
+  data: T;
+}
+
+interface ApiErrorResponse {
+  message: string;
+}
+
+type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 const DashboardBannerView: React.FC = () => {
   const [bannerData, setBannerData] = useState<BannerConfig>({
@@ -29,10 +40,15 @@ const DashboardBannerView: React.FC = () => {
     minutes: null as string | null,
     seconds: null as string | null,
   });
+  const [formErrors, setFormErrors] = useState({
+    title: null as string | null,
+    subtitle: null as string | null,
+    buttonText: null as string | null,
+  });
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [isRunning, setIsRunning] = useState(false);
-  const [token] = useState(localStorage.getItem('accessToken')); // Removed setToken as it's unused
+  const [token] = useState(localStorage.getItem('accessToken'));
 
   // Parse countdown string (hh:mm:ss) to time object
   const parseTime = (timeString: string) => {
@@ -46,37 +62,47 @@ const DashboardBannerView: React.FC = () => {
     return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}:${seconds.padStart(2, '0')}`;
   };
 
-  // Fetch existing banner configuration on mount
   useEffect(() => {
     const fetchBannerConfig = async () => {
       try {
-        const response = await axios.get<BannerConfig>('/api/banner');
-        const data = response.data;
-        setBannerData(data);
-        const time = parseTime(data.countdown);
-        setTimeInputs({
-          hours: String(time.hours).padStart(2, '0'),
-          minutes: String(time.minutes).padStart(2, '0'),
-          seconds: String(time.seconds).padStart(2, '0'),
-        });
-        setTimeLeft(time);
+        const response = await axios.get<ApiResponse<BannerConfig>>(
+          `${env.api.baseUrl}:${env.api.port}/api/banner`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        console.log('Fetch response:', response.data);
+        if ('data' in response.data) {
+          const data = response.data.data;
+          setBannerData(data);
+          const time = parseTime(data.countdown);
+          setTimeInputs({
+            hours: String(time.hours).padStart(2, '0'),
+            minutes: String(time.minutes).padStart(2, '0'),
+            seconds: String(time.seconds).padStart(2, '0'),
+          });
+          setTimeLeft(time);
+        } else {
+          setSaveStatus(response.data.message || 'Failed to fetch banner configuration');
+        }
       } catch (error) {
+        const err = error as AxiosError<ApiErrorResponse>;
+        setSaveStatus(err.response?.data?.message || 'Failed to fetch banner configuration');
         console.error('Failed to fetch banner config:', error);
       }
     };
 
     fetchBannerConfig();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
-    if (!isRunning) return undefined; 
+    if (!isRunning) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
         const { hours, minutes, seconds } = prevTime;
 
         if (hours === 0 && minutes === 0 && seconds === 0) {
-          clearInterval(timer);
           setIsRunning(false);
           return { hours: 0, minutes: 0, seconds: 0 };
         }
@@ -91,12 +117,9 @@ const DashboardBannerView: React.FC = () => {
       });
     }, 1000);
 
-    return () => {
-      clearInterval(timer); // Cleanup without explicit return
-    };
+    return () => clearInterval(timer);
   }, [isRunning]);
 
-  // Validate individual time input
   const validateTimeInput = (name: string, value: string): string | null => {
     if (!/^\d*$/.test(value)) {
       return `${name.charAt(0).toUpperCase() + name.slice(1)} must be numeric`;
@@ -119,35 +142,52 @@ const DashboardBannerView: React.FC = () => {
     return null;
   };
 
-  // Validate all time inputs before saving
-  const validateAllTimeInputs = () => {
-    const errors = {
+  const validateTextInput = (name: string, value: string): string | null => {
+    if (!value.trim()) {
+      return `${name.charAt(0).toUpperCase() + name.slice(1)} is required and cannot be empty`;
+    }
+    return null;
+  };
+
+  const validateAllInputs = () => {
+    const textErrors = {
+      title: validateTextInput('title', bannerData.title),
+      subtitle: validateTextInput('subtitle', bannerData.subtitle),
+      buttonText: validateTextInput('buttonText', bannerData.buttonText),
+    };
+    const timeErrors = {
       hours: validateTimeInput('hours', timeInputs.hours),
       minutes: validateTimeInput('minutes', timeInputs.minutes),
       seconds: validateTimeInput('seconds', timeInputs.seconds),
     };
-    setTimeErrors(errors);
-    return !errors.hours && !errors.minutes && !errors.seconds;
+    setFormErrors(textErrors);
+    setTimeErrors(timeErrors);
+    return (
+      !textErrors.title &&
+      !textErrors.subtitle &&
+      !textErrors.buttonText &&
+      !timeErrors.hours &&
+      !timeErrors.minutes &&
+      !timeErrors.seconds
+    );
   };
 
-  // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBannerData({ ...bannerData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setBannerData({ ...bannerData, [name]: value });
+    const error = validateTextInput(name, value);
+    setFormErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  // Handle time input changes with dynamic validation
   const handleTimeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setTimeInputs((prev) => ({ ...prev, [name]: value }));
-
-    // Validate the changed field and update errors dynamically
     const error = validateTimeInput(name, value);
     setTimeErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  // Save banner configuration to backend
   const handleSave = async () => {
-    if (!validateAllTimeInputs()) return;
+    if (!validateAllInputs()) return;
 
     if (!token) {
       setSaveStatus('Authentication token is missing');
@@ -156,47 +196,51 @@ const DashboardBannerView: React.FC = () => {
     }
 
     try {
-      const formData = new FormData();
-      formData.append('title', bannerData.title || '');
-      formData.append('subtitle', bannerData.subtitle || '');
-      formData.append('buttonText', bannerData.buttonText || '');
+      const hours = timeInputs.hours ? timeInputs.hours : '0';
+      const minutes = timeInputs.minutes ? timeInputs.minutes : '0';
+      const seconds = timeInputs.seconds ? timeInputs.seconds : '0';
 
-      // Ensure time inputs are valid numbers, default to 0 if empty
-      const hours = timeInputs.hours ? parseInt(timeInputs.hours, 10) : 0;
-      const minutes = timeInputs.minutes ? parseInt(timeInputs.minutes, 10) : 0;
-      const seconds = timeInputs.seconds ? parseInt(timeInputs.seconds, 10) : 0;
+      const payload = {
+        title: bannerData.title,
+        subtitle: bannerData.subtitle,
+        buttonText: bannerData.buttonText,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+      };
 
-      // Append individual fields or countdown based on backend requirements
-      formData.append('hours', String(hours));
-      formData.append('minutes', String(minutes));
-      formData.append('seconds', String(seconds));
-      // Optionally, append countdown as a single field
-      const countdown = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      formData.append('countdown', countdown);
+      console.log('Saving payload:', payload);
 
-      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/admin/banner`;
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
+      const response = await axios({
+        method: 'post',
+        url: `${env.api.baseUrl}:${env.api.port}/api/auth/admin/banner`,
+        data: payload,
         headers: {
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: formData,
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to save banner configuration');
-      }
+      console.log('Save response:', response.data);
 
-      setSaveStatus('Banner configuration saved successfully!');
-      setBannerData({ ...bannerData, countdown });
-      setTimeLeft({ hours, minutes, seconds });
-      setIsRunning(true);
-      setTimeout(() => setSaveStatus(null), 3000);
+      if ('data' in response.data) {
+        const countdown = formatTimeString();
+        setBannerData({ ...bannerData, countdown });
+        setTimeLeft({
+          hours: parseInt(hours, 10),
+          minutes: parseInt(minutes, 10),
+          seconds: parseInt(seconds, 10),
+        });
+        setIsRunning(true);
+        setSaveStatus(response.data.message);
+        setTimeout(() => setSaveStatus(null), 3000);
+      } else {
+        throw new Error(response.data.message || 'Failed to save banner configuration');
+      }
     } catch (error) {
       console.error('Error saving banner config:', error);
-      setSaveStatus((error as Error).message || 'Failed to save banner configuration');
+      const err = error as AxiosError<ApiErrorResponse>;
+      setSaveStatus(err.response?.data?.message || 'Failed to save banner configuration');
       setTimeout(() => setSaveStatus(null), 3000);
     }
   };
@@ -233,6 +277,8 @@ const DashboardBannerView: React.FC = () => {
               value={bannerData.title}
               onChange={handleChange}
               size="small"
+              error={!!formErrors.title}
+              helperText={formErrors.title}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
@@ -250,6 +296,8 @@ const DashboardBannerView: React.FC = () => {
               value={bannerData.subtitle}
               onChange={handleChange}
               size="small"
+              error={!!formErrors.subtitle}
+              helperText={formErrors.subtitle}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
@@ -267,6 +315,8 @@ const DashboardBannerView: React.FC = () => {
               value={bannerData.buttonText}
               onChange={handleChange}
               size="small"
+              error={!!formErrors.buttonText}
+              helperText={formErrors.buttonText}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
@@ -342,7 +392,14 @@ const DashboardBannerView: React.FC = () => {
               variant="contained"
               color="primary"
               onClick={handleSave}
-              disabled={!!timeErrors.hours || !!timeErrors.minutes || !!timeErrors.seconds}
+              disabled={
+                !!formErrors.title ||
+                !!formErrors.subtitle ||
+                !!formErrors.buttonText ||
+                !!timeErrors.hours ||
+                !!timeErrors.minutes ||
+                !!timeErrors.seconds
+              }
               sx={{
                 borderRadius: '8px',
                 py: 1.2,
@@ -440,7 +497,7 @@ const DashboardBannerView: React.FC = () => {
                 {bannerData.buttonText || 'PLAY'}
               </Button>
               <Typography variant="body2" fontWeight="medium">
-                DON&apos;T MISS
+                DON'T MISS
               </Typography>
               <Stack direction="row" spacing={0.5} alignItems="center">
                 {[timeLeft.hours, timeLeft.minutes, timeLeft.seconds].map((val, i) => (
