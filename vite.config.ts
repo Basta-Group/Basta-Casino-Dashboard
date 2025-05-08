@@ -41,6 +41,9 @@ export default defineConfig({
     hmr: {
       host: 'bastaxcasino.com' // Set this for HMR in development
     },
+    allowedHosts: [
+      'admin.bastaxcasino.com' // Added to allow this host
+    ],
     proxy: {
       // Add proxy rules if needed
     }
