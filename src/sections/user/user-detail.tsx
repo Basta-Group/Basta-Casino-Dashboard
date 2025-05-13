@@ -111,8 +111,8 @@ export function UserDetailPage() {
           User Details
         </Typography>
         <Typography color="error">{error || 'User not found'}</Typography>
-        <Button variant="contained" onClick={() => navigate('/user')} sx={{ mt: 2 }}>
-          Back to Users
+        <Button variant="contained" onClick={() => navigate('/playerListing')} sx={{ mt: 2 }}>
+          Back to Players
         </Button>
       </DashboardContent>
     );
@@ -126,10 +126,10 @@ export function UserDetailPage() {
         </Typography>
         <Button
           variant="contained"
-          onClick={() => navigate('/user')}
+          onClick={() => navigate('/playerListing')}
           startIcon={<Iconify icon="eva:arrow-back-fill" />}
         >
-          Back to Users
+          Back to Players
         </Button>
       </Box>
 

@@ -19,7 +19,7 @@ export const navData = [
   },
   {
     title: 'Player Management',
-    path: '/user',
+    path: '/playerListing',
     icon: icon('ic-user'),
     children: [
       { title: 'Player List', path: '/players/list' },
@@ -29,13 +29,13 @@ export const navData = [
   },
   {
     title: 'Affiliate Management',
-    path: '/admin-affiliate',
+    path: '/affiliateListing',
     icon: icon('ic-user'),
-    children: [{ title: 'Affiliate List', path: '/admin-affiliate' }],
+    children: [{ title: 'Affiliate List', path: '/affiliateListing' }],
   },
   {
     title: 'Game Management',
-    path: '/products',
+    path: '/gameListing',
     icon: icon('ic-cart'),
     children: [
       { title: 'Game Catalog', path: '/games/catalog' },
@@ -45,7 +45,7 @@ export const navData = [
   },
   {
     title: 'Transactions',
-    path: '/transactions',
+    path: '/transactionListing',
     icon: <Icon icon="mdi:account-balance" fontSize="22px" />,
     children: [
       { title: 'Transaction History', path: '/transactions/history' },
@@ -55,7 +55,7 @@ export const navData = [
   },
   {
     title: 'Affliate Commission Control',
-    path: '/commission-control',
+    path: '/commissionControl',
     icon: <Icon icon="mdi:file-chart" fontSize="22px" />,
   },
   {
@@ -81,7 +81,7 @@ export const navData = [
   },
   {
     title: 'Payment Management',
-    path: '/payment-details',
+    path: '/paymentDetails',
     icon: <Icon icon="mdi:credit-card" fontSize="22px" />,
     children: [
       { title: 'Invoices', path: '/payments/invoices' },
@@ -90,12 +90,12 @@ export const navData = [
   },
   {
     title: 'Banner Management',
-    path: '/dashboard-banner',
+    path: '/dashboardBanner',
     icon: <Icon icon="mdi:credit-card" fontSize="22px" />,
   },
   {
     title: 'Payout-Approval',
-    path: '/admin-payout',
+    path: '/adminPayout',
     icon: <Icon icon="mdi:credit-card" fontSize="22px" />,
   },
 ];

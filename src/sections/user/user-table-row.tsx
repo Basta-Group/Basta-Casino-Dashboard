@@ -48,7 +48,7 @@ export function UserTableRow({
   }, []);
 
   const handleViewDetails = useCallback(() => {
-    navigate(`/user/${row.id}`);
+    navigate(`/playerDetails/${row.id}`);
     handleClosePopover();
   }, [navigate, row.id, handleClosePopover]);
 

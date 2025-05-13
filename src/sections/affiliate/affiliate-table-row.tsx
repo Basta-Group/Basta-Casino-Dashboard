@@ -62,7 +62,7 @@ export function AffiliateTableRow({
 
 
   const handleOpenUsers = () => {
-    navigate(`/referred-user-listing/${row.id}`);
+    navigate(`/referredUserListing/${row.id}`);
   };
   
 
