@@ -13,6 +13,7 @@ import AffiliateEarningPage from 'src/affliate/pages/AffiliateEarningPage';
 import AffiliateReferralsPage from 'src/affliate/pages/AffiliateReferralsPage';
 import CommissionControlPage from 'src/pages/commissionControl';
 import { UserDetailPage } from 'src/sections/user/user-detail';
+import { AffiliateDetailPage } from 'src/sections/affiliate/affiliate-detail';
 import ReferredUsersListingView from 'src/sections/affiliate/ReferredUsersListingView';
 import AffiliatePayoutsPage from 'src/affliate/pages/AffiliatePayoutsPage';
 import AdminPayoutPage from 'src/pages/AdminPayoutPage';
@@ -91,6 +92,7 @@ export function Router() {
         { path: 'playerListing', element: <UserPage /> },
         { path: 'referredUserListing/:id', element: <ReferredUsersListingView /> },
         { path: 'playerDetails/:userId', element: <UserDetailPage /> },
+        { path: 'affilateDetails/:userId', element: <AffiliateDetailPage /> },
         { path: 'affiliateListing', element: <AdminAffiliatePage /> },
         { path: 'gameListing', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
