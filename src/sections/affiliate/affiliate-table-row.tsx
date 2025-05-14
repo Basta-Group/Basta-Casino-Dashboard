@@ -29,6 +29,7 @@ export function AffiliateTableRow({
 }: AffialiteTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
+    const navigate = useNavigate();
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -57,9 +58,14 @@ export function AffiliateTableRow({
   //   onDeleteUser(row.id);
   //   handleClosePopover();
   // }, [row.id, onDeleteUser, handleClosePopover]);
-  const navigate = useNavigate();
 
+  
+    const handleViewDetails = useCallback(() => {
+      navigate(`/affilateDetails/${row.id}`);
+      handleClosePopover();
+    }, [navigate, row.id, handleClosePopover]);
 
+  
 
   const handleOpenUsers = () => {
     navigate(`/referredUserListing/${row.id}`);
@@ -115,7 +121,7 @@ export function AffiliateTableRow({
             },
           }}
         >
-          <MenuItem onClick={handleOpenDialog}>
+          <MenuItem onClick={handleViewDetails}>
             <Iconify icon="solar:eye-bold" />
             View Details
           </MenuItem>

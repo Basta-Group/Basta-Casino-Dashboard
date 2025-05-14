@@ -5,15 +5,21 @@ export interface AffiliateProps {
   email: string;
   phonenumber: string;
   status: number;
-  referralCode:string;
-  country:string;
-  marketingEmailsOptIn:boolean;
-  hearAboutUs:string;
-  createdAt:Date;
-  promotionMethod: string[]; 
+  referralCode: string;
+  country: string;
+  marketingEmailsOptIn: boolean;
+  hearAboutUs: string;
+  createdAt: Date;
+  promotionMethod: string[];
+  totalSignups?: number;
+  totalClicks?: number;
+  pendingEarnings?: number;
+  commissionRate?: number;
+  paidEarnings?: number;
+  totalEarnings?: number;
 }
 
-export interface ReferredUser  {
+export interface ReferredUser {
   _id: string;
   username: string;
   fullname: string;
@@ -23,4 +29,4 @@ export interface ReferredUser  {
   referredByName: string;
   is_verified: boolean;
   status: number;
-};
+}
