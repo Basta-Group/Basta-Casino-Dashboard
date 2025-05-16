@@ -30,11 +30,13 @@ const EarningsHeader = styled(Box)(({ theme }) => ({
   boxShadow: theme.shadows[8],
 }));
 
+interface Props {
+  userId: string | undefined;
+}
 
 
-const ReferredUsersListingView = () => {
+  const ReferredUsersListingView: React.FC<Props> = ({ userId }) => {
   const { id } = useParams();
-  console.log("==========id==",id)
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
   const [referredPlayers, setReferredPlayers] = useState<ReferredUser[]>([]);
 
@@ -44,7 +46,7 @@ const ReferredUsersListingView = () => {
   useEffect(() => {
     const fetchReferredPlayers = async () => {
       try {
-        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users/${id}`;
+        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users/${userId}`;
   
         const res = await fetch(apiUrl, {
           method: 'GET', 
@@ -65,8 +67,8 @@ const ReferredUsersListingView = () => {
     };
   
     
-    if (id) fetchReferredPlayers();
-  }, [token,id]);
+    if (userId) fetchReferredPlayers();
+  }, [token,userId]);
   
 
   return (
@@ -93,13 +95,13 @@ const ReferredUsersListingView = () => {
         <Table sx={{ minWidth: 650 }} aria-label="referred users table">
           <TableHead>
             <TableRow sx={{ bgcolor: '#E0F2F1' }}>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Username</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Full Name</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Email</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Phone Number</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Referred By</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Verified</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Status</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Username</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Full Name</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Email</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Phone Number</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Referred By</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Verified</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Status</Typography></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -135,7 +137,7 @@ const ReferredUsersListingView = () => {
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" color="#78909C">
-                    {user.full_phone_number || user.country_code || '-'}
+                    {user.phone_number || '-'}
                   </Typography>
                 </TableCell>
                 <TableCell>

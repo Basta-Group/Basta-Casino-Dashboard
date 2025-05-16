@@ -125,10 +125,10 @@ export function AffiliateTableRow({
             <Iconify icon="solar:eye-bold" />
             View Details
           </MenuItem>
-          <MenuItem onClick={handleOpenUsers}>
+          {/* <MenuItem onClick={handleOpenUsers}>
             <Iconify icon="solar:eye-bold" />
             Referred Users
-          </MenuItem>
+          </MenuItem> */}
 
           <MenuItem onClick={handleStatusChange}>
             <Iconify icon="solar:user-block-bold" />

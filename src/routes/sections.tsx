@@ -90,7 +90,7 @@ export function Router() {
       children: [
         { element: <HomePage />, index: true },
         { path: 'playerListing', element: <UserPage /> },
-        { path: 'referredUserListing/:id', element: <ReferredUsersListingView /> },
+        // { path: 'referredUserListing/:id', element: <ReferredUsersListingView /> },
         { path: 'playerDetails/:userId', element: <UserDetailPage /> },
         { path: 'affilateDetails/:userId', element: <AffiliateDetailPage /> },
         { path: 'affiliateListing', element: <AdminAffiliatePage /> },
