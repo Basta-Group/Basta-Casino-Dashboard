@@ -14,6 +14,7 @@ import {
   Paper,
   Avatar,
   TablePagination,
+  Checkbox,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -44,22 +45,25 @@ const ReferredUsersListingView: React.FC<Props> = ({ userId }) => {
     table.page * table.rowsPerPage,
     table.page * table.rowsPerPage + table.rowsPerPage
   );
+  const selectedAll = table.selected.length === paginatedUsers.length && paginatedUsers.length > 0;
+  const someSelected = table.selected.length > 0 && !selectedAll;
+  const allIdsOnPage = paginatedUsers.map((user) => user._id);
 
   useEffect(() => {
     const fetchReferredPlayers = async () => {
       try {
         const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users/${userId}`;
-  
+
         const res = await fetch(apiUrl, {
-          method: 'GET', 
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`, 
+            Authorization: `Bearer ${token}`,
           },
         });
-  
-        const data = await res.json(); 
-  
+
+        const data = await res.json();
+
         if (data.success && data.data?.referredPlayers) {
           setReferredPlayers(data.data.referredPlayers);
         }
@@ -67,8 +71,7 @@ const ReferredUsersListingView: React.FC<Props> = ({ userId }) => {
         console.error('Error fetching referred players:', error);
       }
     };
-  
-    
+
     if (userId) fetchReferredPlayers();
   }, [token, userId]);
 
@@ -96,72 +99,89 @@ const ReferredUsersListingView: React.FC<Props> = ({ userId }) => {
         <Table sx={{ minWidth: 650 }} aria-label="referred users table">
           <TableHead>
             <TableRow sx={{ bgcolor: '#E0F2F1' }}>
-              <TableCell><Typography variant="subtitle2" >Username</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" >Full Name</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" >Email</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" >Phone Number</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" >Referred By</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" >Verified</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" >Status</Typography></TableCell>
+              <TableCell padding="checkbox">
+                <Checkbox
+                  checked={selectedAll}
+                  indeterminate={someSelected}
+                  onChange={(e) => table.onSelectAll(e.target.checked, allIdsOnPage)}
+                />
+              </TableCell>
+              <TableCell>
+                <Typography variant="subtitle2">Username</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography variant="subtitle2">Full Name</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography variant="subtitle2">Email</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography variant="subtitle2">Phone Number</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography variant="subtitle2">Referred By</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography variant="subtitle2">Verified</Typography>
+              </TableCell>
+              <TableCell>
+                <Typography variant="subtitle2">Status</Typography>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedUsers.map((user) => (
-              <TableRow
-                key={user._id}
-                sx={{
-                  '&:hover': {
-                    bgcolor: '#ECEFF1',
-                    transition: 'background-color 0.2s',
-                  },
-                }}
-              >
-                <TableCell>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#FF7043' }}>
-                      {user.username?.[0]?.toUpperCase() || '-'}
-                    </Avatar>
-                    <Typography variant="body2" color="#37474F">
-                      {user.username || '-'}
+            {paginatedUsers.map((user) => {
+              const isSelected = table.selected.includes(user._id);
+
+              return (
+                <TableRow
+                  key={user._id}
+                  selected={isSelected}
+                  sx={{
+                    '&:hover': {
+                      bgcolor: '#ECEFF1',
+                      transition: 'background-color 0.2s',
+                    },
+                  }}
+                >
+                  <TableCell padding="checkbox">
+                    <Checkbox checked={isSelected} onChange={() => table.onSelectRow(user._id)} />
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Avatar sx={{ width: 32, height: 32, bgcolor: '#FF7043' }}>
+                        {user.username?.[0]?.toUpperCase() || '-'}
+                      </Avatar>
+                      <Typography variant="body2" color="#37474F">
+                        {user.username || '-'}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{user.fullname || '-'}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{user.email || '-'}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{user.phone_number || '-'}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{user.referredByName || 'N/A'}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color={user.is_verified ? 'success' : 'error'}>
+                      {user.is_verified ? 'Verified' : 'Unverified'}
                     </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="#37474F">
-                    {user.fullname || '-'}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="#37474F">
-                    {user.email || '-'}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="#78909C">
-                    {user.phone_number || '-'}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="#78909C">
-                    {user.referredByName || 'N/A'}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography
-                    variant="body2"
-                    color={user.is_verified? 'success' : 'error'}
-                  >
-                    {user.is_verified ? 'Verified' : 'Unverified'}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2"
-                   color={user.status === 0 ? 'error' : 'success'}>
-                    {user.status === 1 ? 'Active' : 'Inactive'}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color={user.status === 0 ? 'error' : 'success'}>
+                      {user.status === 1 ? 'Active' : 'Inactive'}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
@@ -202,6 +222,14 @@ function useTable() {
     setPage(0);
   }, []);
 
+  const onSelectAll = useCallback((checked: boolean, allIds: string[]) => {
+    setSelected(checked ? allIds : []);
+  }, []);
+
+  const onSelectRow = useCallback((id: string) => {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  }, []);
+
   return {
     page,
     order,
@@ -211,6 +239,8 @@ function useTable() {
     onSort,
     onChangePage,
     onChangeRowsPerPage,
+    onSelectAll,
+    onSelectRow,
   };
 }
 
