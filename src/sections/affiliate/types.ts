@@ -20,6 +20,7 @@ export interface AffiliateProps {
 }
 
 export interface ReferredUser {
+  phone_number: string;
   _id: string;
   username: string;
   fullname: string;

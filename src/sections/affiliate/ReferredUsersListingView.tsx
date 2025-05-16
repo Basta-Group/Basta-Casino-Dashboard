@@ -1,5 +1,5 @@
 import { env } from 'src/config/env.config';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -13,12 +13,12 @@ import {
   TableRow,
   Paper,
   Avatar,
+  TablePagination,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useParams } from 'react-router-dom';
-import {ReferredUser} from './types'
-
+import { ReferredUser } from './types';
 
 // Styled components
 const EarningsHeader = styled(Box)(({ theme }) => ({
@@ -30,21 +30,25 @@ const EarningsHeader = styled(Box)(({ theme }) => ({
   boxShadow: theme.shadows[8],
 }));
 
+interface Props {
+  userId: string | undefined;
+}
 
-
-const ReferredUsersListingView = () => {
+const ReferredUsersListingView: React.FC<Props> = ({ userId }) => {
   const { id } = useParams();
-  console.log("==========id==",id)
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
   const [referredPlayers, setReferredPlayers] = useState<ReferredUser[]>([]);
+  const table = useTable();
 
-
-
+  const paginatedUsers = referredPlayers.slice(
+    table.page * table.rowsPerPage,
+    table.page * table.rowsPerPage + table.rowsPerPage
+  );
 
   useEffect(() => {
     const fetchReferredPlayers = async () => {
       try {
-        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users/${id}`;
+        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/affiliate-users/${userId}`;
   
         const res = await fetch(apiUrl, {
           method: 'GET', 
@@ -65,9 +69,8 @@ const ReferredUsersListingView = () => {
     };
   
     
-    if (id) fetchReferredPlayers();
-  }, [token,id]);
-  
+    if (userId) fetchReferredPlayers();
+  }, [token, userId]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f0f0f0', p: 4 }}>
@@ -93,17 +96,17 @@ const ReferredUsersListingView = () => {
         <Table sx={{ minWidth: 650 }} aria-label="referred users table">
           <TableHead>
             <TableRow sx={{ bgcolor: '#E0F2F1' }}>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Username</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Full Name</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Email</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Phone Number</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Referred By</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Verified</Typography></TableCell>
-              <TableCell><Typography variant="subtitle2" color="#26A69A">Status</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Username</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Full Name</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Email</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Phone Number</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Referred By</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Verified</Typography></TableCell>
+              <TableCell><Typography variant="subtitle2" >Status</Typography></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {referredPlayers.map((user) => (
+            {paginatedUsers.map((user) => (
               <TableRow
                 key={user._id}
                 sx={{
@@ -135,7 +138,7 @@ const ReferredUsersListingView = () => {
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" color="#78909C">
-                    {user.full_phone_number || user.country_code || '-'}
+                    {user.phone_number || '-'}
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -162,8 +165,53 @@ const ReferredUsersListingView = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      {referredPlayers.length > 0 && (
+        <TablePagination
+          component="div"
+          page={table.page}
+          count={referredPlayers.length}
+          rowsPerPage={table.rowsPerPage}
+          onPageChange={table.onChangePage}
+          rowsPerPageOptions={[5, 10, 25]}
+          onRowsPerPageChange={table.onChangeRowsPerPage}
+        />
+      )}
     </Box>
   );
 };
+
+function useTable() {
+  const [page, setPage] = useState(0);
+  const [orderBy, setOrderBy] = useState('username');
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
+
+  const onSort = useCallback(
+    (id: string) => {
+      const isAsc = orderBy === id && order === 'asc';
+      setOrder(isAsc ? 'desc' : 'asc');
+      setOrderBy(id);
+    },
+    [order, orderBy]
+  );
+
+  const onChangePage = useCallback((_: any, newPage: number) => setPage(newPage), []);
+  const onChangeRowsPerPage = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  }, []);
+
+  return {
+    page,
+    order,
+    orderBy,
+    selected,
+    rowsPerPage,
+    onSort,
+    onChangePage,
+    onChangeRowsPerPage,
+  };
+}
 
 export default ReferredUsersListingView;

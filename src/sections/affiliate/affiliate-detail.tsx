@@ -11,6 +11,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Box } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { AffiliateProps } from './types';
+import ReferredUsersListingView from "../affiliate/ReferredUsersListingView"
 
 export function AffiliateDetailPage() {
   const { userId } = useParams();
@@ -149,6 +150,9 @@ export function AffiliateDetailPage() {
           <DetailItem label="Total Signups" value={user.totalSignups ? user.totalSignups : 0} />
         </Grid>
       </Container>
+     <Box mt={5}>
+     <ReferredUsersListingView userId={userId} />
+  </Box>
     </DashboardContent>
   );
 }
