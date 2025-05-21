@@ -15,11 +15,15 @@ import {
   Avatar,
   TablePagination,
   Checkbox,
+  TextField,
+  MenuItem,
+  Stack,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useParams } from 'react-router-dom';
 import { ReferredUser } from './types';
+import { AffiliateTableToolbar } from './affiliate-table-toolbar';
 
 // Styled components
 const EarningsHeader = styled(Box)(({ theme }) => ({
@@ -37,14 +41,24 @@ interface Props {
 
 const ReferredUsersListingView: React.FC<Props> = ({ userId }) => {
   const { id } = useParams();
+  const [filterName, setFilterName] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
   const [referredPlayers, setReferredPlayers] = useState<ReferredUser[]>([]);
   const table = useTable();
 
-  const paginatedUsers = referredPlayers.slice(
+  const filteredUsers = referredPlayers.filter((user) => {
+    const matchesName = user.username?.toLowerCase().includes(filterName.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || String(user.status) === filterStatus;
+
+    return matchesName && matchesStatus;
+  });
+
+  const paginatedUsers = filteredUsers.slice(
     table.page * table.rowsPerPage,
     table.page * table.rowsPerPage + table.rowsPerPage
   );
+
   const selectedAll = table.selected.length === paginatedUsers.length && paginatedUsers.length > 0;
   const someSelected = table.selected.length > 0 && !selectedAll;
   const allIdsOnPage = paginatedUsers.map((user) => user._id);
@@ -94,8 +108,29 @@ const ReferredUsersListingView: React.FC<Props> = ({ userId }) => {
         </Box>
       </EarningsHeader>
 
-      {/* Users Table */}
+     
       <TableContainer component={Paper} elevation={3} sx={{ bgcolor: '#F9FAFB' }}>
+         <Stack direction="row" spacing={2} sx={{ p: 2 }}>
+          <TextField
+            select
+            label="Status"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            sx={{ width: 200 }}
+          >
+            <MenuItem value="all">All Status</MenuItem>
+            <MenuItem value="1">Active</MenuItem>
+            <MenuItem value="0">Inactive</MenuItem>
+          </TextField>
+        </Stack>
+        <AffiliateTableToolbar
+          numSelected={table.selected.length}
+          filterName={filterName}
+          onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setFilterName(event.target.value);
+            table.onChangePage({}, 0);
+          }}
+        />
         <Table sx={{ minWidth: 650 }} aria-label="referred users table">
           <TableHead>
             <TableRow sx={{ bgcolor: '#E0F2F1' }}>
