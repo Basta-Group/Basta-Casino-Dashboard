@@ -11,7 +11,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Box } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { AffiliateProps } from './types';
-import ReferredUsersListingView from "../affiliate/ReferredUsersListingView"
+import ReferredUsersListingView from './ReferredUsersListingView';
 
 export function AffiliateDetailPage() {
   const { userId } = useParams();
