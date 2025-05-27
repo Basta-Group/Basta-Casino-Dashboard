@@ -11,6 +11,8 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 import { useRouter, usePathname } from 'src/routes/hooks';
 import { _myAccount } from 'src/_mock';
+import { jwtDecode } from 'jwt-decode';
+
 
 export type AccountPopoverProps = IconButtonProps & {
   data?: {
@@ -25,6 +27,27 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
   const router = useRouter();
   const pathname = usePathname();
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
+  const accessToken = localStorage.getItem('accessToken');
+  const affiliateToken = localStorage.getItem('affiliateToken');
+  type TokenPayload = {
+    email?: string;
+    displayName?: string;
+    [key: string]: any;
+  };
+
+  let email = '';
+  let displayName = '';
+  try {
+    const tokenToUse = accessToken || affiliateToken;
+    if (tokenToUse) {
+     const decoded = jwtDecode<TokenPayload>(tokenToUse);
+
+      email = decoded.email || '';
+      displayName = decoded.displayName || '';
+    }
+  } catch (err) {
+    console.error('Failed to decode token', err);
+  }
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -48,13 +71,11 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
       localStorage.removeItem('accessToken');
       localStorage.removeItem('affiliateToken');
       sessionStorage.clear();
-      
+
       // Close the popover
       handleClosePopover();
-      
-      
+
       router.push('/home');
-      
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -93,11 +114,11 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
       >
         <Box sx={{ p: 2, pb: 1.5 }}>
           <Typography variant="subtitle2" noWrap>
-            {_myAccount?.displayName}
+            {displayName || _myAccount?.displayName}
           </Typography>
 
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {_myAccount?.email}
+            {email || _myAccount?.email}
           </Typography>
         </Box>
 
@@ -139,13 +160,7 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
         <Divider sx={{ borderStyle: 'dashed' }} />
 
         <Box sx={{ p: 1 }}>
-          <Button 
-            fullWidth 
-            color="error" 
-            size="medium" 
-            variant="text"
-            onClick={handleLogout}
-          >
+          <Button fullWidth color="error" size="medium" variant="text" onClick={handleLogout}>
             Logout
           </Button>
         </Box>

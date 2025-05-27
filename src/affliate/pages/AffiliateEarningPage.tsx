@@ -43,6 +43,7 @@ const TotalCard = styled(Card)(({ theme }) => ({
 }));
 
 interface EarningData {
+  phone_number: number;
   id: string;
   username: string;
   email: string;
@@ -175,6 +176,11 @@ const AffiliateEarningPage = () => {
                 <Typography variant="subtitle2" color="#26A69A">
                   Email
                 </Typography>
+              </TableCell>  
+              <TableCell>
+                <Typography variant="subtitle2" color="#26A69A">
+                  Phone Number
+                </Typography>
               </TableCell>
               <TableCell>
                 <Typography variant="subtitle2" color="#26A69A">
@@ -213,6 +219,11 @@ const AffiliateEarningPage = () => {
                   <TableCell>
                     <Typography variant="body2" color="#37474F">
                       {user.email}
+                    </Typography>
+                  </TableCell> 
+                  <TableCell>
+                    <Typography variant="body2" color="#37474F">
+                      {user.phone_number}
                     </Typography>
                   </TableCell>
                   <TableCell>
