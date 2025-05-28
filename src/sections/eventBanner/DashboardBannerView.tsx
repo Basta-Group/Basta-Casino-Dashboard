@@ -96,7 +96,9 @@ const DashboardBannerView: React.FC = () => {
   }, [token]);
 
   useEffect(() => {
-    if (!isRunning) return;
+    if (!isRunning) {
+      return () => {};
+    }
 
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
@@ -155,20 +157,20 @@ const DashboardBannerView: React.FC = () => {
       subtitle: validateTextInput('subtitle', bannerData.subtitle),
       buttonText: validateTextInput('buttonText', bannerData.buttonText),
     };
-    const timeErrors = {
+    const newTimeErrors = {
       hours: validateTimeInput('hours', timeInputs.hours),
       minutes: validateTimeInput('minutes', timeInputs.minutes),
       seconds: validateTimeInput('seconds', timeInputs.seconds),
     };
     setFormErrors(textErrors);
-    setTimeErrors(timeErrors);
+    setTimeErrors(newTimeErrors);
     return (
       !textErrors.title &&
       !textErrors.subtitle &&
       !textErrors.buttonText &&
-      !timeErrors.hours &&
-      !timeErrors.minutes &&
-      !timeErrors.seconds
+      !newTimeErrors.hours &&
+      !newTimeErrors.minutes &&
+      !newTimeErrors.seconds
     );
   };
 
@@ -204,9 +206,9 @@ const DashboardBannerView: React.FC = () => {
         title: bannerData.title,
         subtitle: bannerData.subtitle,
         buttonText: bannerData.buttonText,
-        hours: hours,
-        minutes: minutes,
-        seconds: seconds,
+        hours,
+        minutes,
+        seconds,
       };
 
       console.log('Saving payload:', payload);
@@ -497,7 +499,7 @@ const DashboardBannerView: React.FC = () => {
                 {bannerData.buttonText || 'PLAY'}
               </Button>
               <Typography variant="body2" fontWeight="medium">
-                DON'T MISS
+                <Typography>Don&apos;t miss out</Typography>
               </Typography>
               <Stack direction="row" spacing={0.5} alignItems="center">
                 {[timeLeft.hours, timeLeft.minutes, timeLeft.seconds].map((val, i) => (

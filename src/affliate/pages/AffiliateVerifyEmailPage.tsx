@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { styled } from '@mui/material/styles';
+import { env } from 'src/config/env.config';
 
 const VerifyContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -45,6 +46,7 @@ const BackButton = styled(Button)(({ theme }) => ({
 }));
 
 export default function AffiliateVerifyEmailPage() {
+  const [isVerified, setIsVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
@@ -54,32 +56,40 @@ export default function AffiliateVerifyEmailPage() {
 
   // Function to verify the email token
   const verifyEmailToken = useCallback(async (token: string) => {
-    setIsVerifying(true);
-    setMessage('');
+      setIsVerifying(true);
+      setMessage('');
+      try {
+        const response = await fetch(
+          `${env.api.baseUrl}:${env.api.port}/api/auth/verify-affiliate-email?token=${encodeURIComponent(token)}`,
+          {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
 
-    try {
-      const response = await fetch('/api/auth/verify-affiliate-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Invalid or expired token');
+        }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Invalid or expired token');
+        const data = await response.json();
+        setEmail(data.email|| 'your email');
+        setIsVerified(true);
+        setMessage('Email verified successfully! Redirecting to dashboard...');
+        setTimeout(() => navigate('/affiliate/dashboard'), 2000);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to verify email. The token may be invalid or expired.';
+        setMessage(errorMessage);
+      } finally {
+        setIsVerifying(false);
       }
-
-      const data = await response.json();
-      setEmail(data.email || 'your email'); // Fallback if email not returned
-      setMessage('Email verified successfully! Redirecting to dashboard...');
-      setTimeout(() => navigate('/affiliate/dashboard'), 2000);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to verify email. The token may be invalid or expired.';
-      setMessage(errorMessage);
-    } finally {
-      setIsVerifying(false);
-    }
-  }, [navigate]);
+    },
+    [navigate]
+  );
+  const hasVerified = useRef(false);
 
   // Extract token and fetch email on mount
   useEffect(() => {
@@ -87,12 +97,17 @@ export default function AffiliateVerifyEmailPage() {
     const token = query.get('token');
 
     if (!token) {
-      setMessage('Invalid or missing verification token. Please check the link or request a new one.');
+      setMessage(
+        'Invalid or missing verification token. Please check the link or request a new one.'
+      );
       return;
     }
 
-    // Verify the token
-    verifyEmailToken(token);
+    // Prevent duplicate API calls
+    if (!hasVerified.current) {
+      hasVerified.current = true;
+      verifyEmailToken(token);
+    }
   }, [location, verifyEmailToken]);
 
   const handleResendEmail = async () => {
@@ -116,9 +131,12 @@ export default function AffiliateVerifyEmailPage() {
         throw new Error(errorData.message || 'Failed to resend email');
       }
 
-      setMessage('Verification email resent successfully. Please check your inbox and spam/junk folder.');
+      setMessage(
+        'Verification email resent successfully. Please check your inbox and spam/junk folder.'
+      );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to resend email. Please try again later.';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to resend email. Please try again later.';
       setMessage(errorMessage);
     } finally {
       setIsResending(false);
@@ -138,27 +156,34 @@ export default function AffiliateVerifyEmailPage() {
         ) : (
           <>
             <Typography variant="body1" color="text.secondary" gutterBottom>
-              {email ? (
+              {isVerified ? (
+                'Email verified successfully! Redirecting...'
+              ) : email ? (
                 <>
-                  We&apos;ve sent a verification link to <strong>{email}</strong>. Please check your inbox
-                  (and spam/junk folder) to verify your email address.
+                  We&apos;ve sent a verification link to <strong>{email}</strong>. Please check your
+                  inbox (and spam/junk folder) to verify your email address.
                 </>
               ) : (
                 'Verifying your email address...'
               )}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Didn&apos;t receive the email?
-            </Typography>
-            <ResendButton
-              variant="contained"
-              onClick={handleResendEmail}
-              disabled={isResending || !email}
-              startIcon={isResending ? <CircularProgress size={20} /> : null}
-              aria-label="Resend verification email"
-            >
-              {isResending ? 'Resending...' : 'Resend Email'}
-            </ResendButton>
+            {!isVerified && (
+              <>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  Didn&apos;t receive the email?
+                </Typography>
+                <ResendButton
+                  variant="contained"
+                  onClick={handleResendEmail}
+                  disabled={isResending || !email}
+                  startIcon={isResending ? <CircularProgress size={20} /> : null}
+                  aria-label="Resend verification email"
+                >
+                  {isResending ? 'Resending...' : 'Resend Email'}
+                </ResendButton>
+              </>
+            )}
+
             {message && (
               <Typography
                 variant="body2"
