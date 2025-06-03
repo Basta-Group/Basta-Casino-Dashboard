@@ -66,7 +66,7 @@ const DashboardBannerView: React.FC = () => {
     const fetchBannerConfig = async () => {
       try {
         const response = await axios.get<ApiResponse<BannerConfig>>(
-          `${env.api.baseUrl}:${env.api.port}/api/banner`,
+          `${import.meta.env.VITE_API_BASE_URL}:${import.meta.env.VITE_API_PORT}/api/banner`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -213,7 +213,9 @@ const DashboardBannerView: React.FC = () => {
 
       const response = await axios({
         method: 'post',
-        url: `${env.api.baseUrl}:${env.api.port}/api/auth/admin/banner`,
+        url: `${import.meta.env.VITE_API_BASE_URL}:${
+          import.meta.env.VITE_API_PORT
+        }/api/auth/admin/banner`,
         data: payload,
         headers: {
           Authorization: `Bearer ${token}`,

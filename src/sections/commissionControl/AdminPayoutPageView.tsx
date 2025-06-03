@@ -75,6 +75,7 @@ interface PayoutRequest {
   paymentMethodId?: string;
   requestedAt: string;
   adminNotes?: string;
+  transactionId?: string;
 }
 
 const AdminPayoutPageView = () => {
@@ -292,6 +293,10 @@ const AdminPayoutPageView = () => {
                     <Typography variant="subtitle2">Method</Typography>
                   </TableCell>
                   <TableCell>
+                    <Typography variant="subtitle2">Transaction ID</Typography>{' '}
+                    {/* Add this column */}
+                  </TableCell>
+                  <TableCell>
                     <Typography variant="subtitle2">Status</Typography>
                   </TableCell>
                   <TableCell>
@@ -328,6 +333,11 @@ const AdminPayoutPageView = () => {
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
                           {request.paymentMethodId || 'N/A'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {request.transactionId || 'N/A'} {/* Display the transactionId */}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -374,7 +384,9 @@ const AdminPayoutPageView = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
+                    <TableCell colSpan={7} align="center">
+                      {' '}
+                      {/* Update colSpan to 7 to account for the new column */}
                       <Typography variant="body2" color="text.secondary">
                         No payout requests available
                       </Typography>
