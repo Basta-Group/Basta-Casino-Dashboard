@@ -272,7 +272,7 @@ export default function AffiliateLoginPage() {
             <Typography variant="body2" color="text.secondary" textAlign="center">
               Don&apos;t have an account?{' '}
               <Link
-                href="/affiliate/register"
+                href="https://bastaxcasino.com/affiliate-registeration"
                 variant="subtitle2"
                 color="primary"
                 sx={{ '&:hover': { textDecoration: 'underline' } }}

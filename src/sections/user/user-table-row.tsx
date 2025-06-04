@@ -19,6 +19,7 @@ import Button from '@mui/material/Button';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { UserProps } from './types';
+import { UserKYCReview } from './view/user-kyc-review';
 
 type UserTableRowProps = {
   row: UserProps;
@@ -26,6 +27,7 @@ type UserTableRowProps = {
   onSelectRow: () => void;
   onUpdateStatus: (userId: string, newStatus: number) => void;
   onDeleteUser: (userId: string) => void;
+  onKYCStatusUpdate: (userId: string, newStatus: 'approved' | 'rejected') => void;
 };
 
 export function UserTableRow({
@@ -34,9 +36,11 @@ export function UserTableRow({
   onSelectRow,
   onUpdateStatus,
   onDeleteUser,
+  onKYCStatusUpdate,
 }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState<'status' | 'delete' | null>(null);
+  const [openKYCReview, setOpenKYCReview] = useState(false);
   const navigate = useNavigate();
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
@@ -77,6 +81,50 @@ export function UserTableRow({
     handleCloseDialog();
   }, [row.id, onDeleteUser, handleCloseDialog]);
 
+  const handleOpenKYCReview = useCallback(() => {
+    if (row.sumsub_id) {
+      setOpenKYCReview(true);
+      handleClosePopover();
+    }
+  }, [row.sumsub_id, handleClosePopover]);
+
+  const handleCloseKYCReview = useCallback(() => {
+    setOpenKYCReview(false);
+  }, []);
+
+  const handleReviewStatusUpdate = useCallback(
+    (status: 'approved' | 'rejected') => {
+      onKYCStatusUpdate(row.id, status);
+    },
+    [row.id, onKYCStatusUpdate]
+  );
+
+  const getVerificationStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'rejected':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const getVerificationStatusLabel = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'Approved';
+      case 'pending':
+        return 'Pending';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return 'Not Started';
+    }
+  };
+
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
@@ -96,6 +144,17 @@ export function UserTableRow({
         <TableCell>{row.phone_number || '-'}</TableCell>
 
         <TableCell>{row.referredByName || 'N/A'}</TableCell>
+
+        <TableCell align="center">
+          <Label color={getVerificationStatusColor(row.verification_status)}>
+            {getVerificationStatusLabel(row.verification_status)}
+          </Label>
+          {row.verification_status === 'pending' && row.sumsub_id && (
+            <Button size="small" variant="outlined" onClick={handleOpenKYCReview} sx={{ ml: 1 }}>
+              Review
+            </Button>
+          )}
+        </TableCell>
 
         <TableCell align="center">
           <Label color={row.is_verified === 1 ? 'success' : 'error'}>
@@ -270,6 +329,15 @@ export function UserTableRow({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {openKYCReview && row.sumsub_id && (
+        <UserKYCReview
+          userId={row.id}
+          sumsubId={row.sumsub_id}
+          onClose={handleCloseKYCReview}
+          onStatusUpdate={handleReviewStatusUpdate}
+        />
+      )}
     </>
   );
 }

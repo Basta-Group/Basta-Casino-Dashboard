@@ -24,37 +24,7 @@ import { UserTableHead } from '../user-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
-
-export interface UserProps {
-  id: string;
-  username: string;
-  fullname: string;
-  patronymic: string;
-  photo: string;
-  dob: Date;
-  gender: string;
-  email: string;
-  phone_number: string;
-  registration_date: Date;
-  last_login: Date;
-  status: number;
-  is_verified: number;
-  is_2fa: number;
-  currency: number;
-  language: string;
-  country: string;
-  city: string;
-  role_id: number;
-  created_at: Date;
-  updated_at: Date;
-  balance: number;
-  bonus_balance: number;
-  total_deposits: number;
-  total_withdrawals: number;
-  last_deposit_date: Date;
-  last_withdrawal_date: Date;
-  referredByName: string;
-}
+import { UserProps } from '../types';
 
 export function UserView() {
   const table = useTable();
@@ -64,6 +34,7 @@ export function UserView() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCurrency, setFilterCurrency] = useState('all');
   const [filter2FA, setFilter2FA] = useState('all');
+  const [filterVerificationStatus, setFilterVerificationStatus] = useState('all');
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
 
   useEffect(() => {
@@ -133,6 +104,23 @@ export function UserView() {
     }
   };
 
+  const handleKYCStatusUpdate = useCallback(
+    (userId: string, newStatus: 'approved' | 'rejected') => {
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId
+            ? {
+                ...user,
+                verification_status: newStatus,
+                is_verified: newStatus === 'approved' ? 1 : 0,
+              }
+            : user
+        )
+      );
+    },
+    []
+  );
+
   const dataFiltered = applyFilter({
     inputData: users,
     comparator: getComparator(table.order, table.orderBy),
@@ -140,6 +128,7 @@ export function UserView() {
     filterStatus,
     filterCurrency,
     filter2FA,
+    filterVerificationStatus,
   });
 
   const notFound = !dataFiltered.length && !!filterName;
@@ -173,6 +162,20 @@ export function UserView() {
             <MenuItem value="all">All Status</MenuItem>
             <MenuItem value="1">Active</MenuItem>
             <MenuItem value="0">Inactive</MenuItem>
+          </TextField>
+
+          <TextField
+            select
+            label="Verification Status"
+            value={filterVerificationStatus}
+            onChange={(e) => setFilterVerificationStatus(e.target.value)}
+            sx={{ width: 200 }}
+          >
+            <MenuItem value="all">All Verification Status</MenuItem>
+            <MenuItem value="not_started">Not Started</MenuItem>
+            <MenuItem value="pending">Pending</MenuItem>
+            <MenuItem value="approved">Approved</MenuItem>
+            <MenuItem value="rejected">Rejected</MenuItem>
           </TextField>
 
           <TextField
@@ -231,6 +234,7 @@ export function UserView() {
                   { id: 'email', label: 'Email' },
                   { id: 'phone_number', label: 'Phone Number' },
                   { id: 'referredByName', label: 'Affiliate' },
+                  { id: 'verification_status', label: 'Verification', align: 'center' },
                   { id: 'is_verified', label: 'Verified', align: 'center' },
                   { id: 'status', label: 'Status' },
                   // { id: 'is_2fa', label: '2FA' },
@@ -258,6 +262,7 @@ export function UserView() {
                       onSelectRow={() => table.onSelectRow(row.id)}
                       onUpdateStatus={updateUserStatus}
                       onDeleteUser={deleteUser}
+                      onKYCStatusUpdate={handleKYCStatusUpdate}
                     />
                   ))}
 

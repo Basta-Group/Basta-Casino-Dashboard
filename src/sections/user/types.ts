@@ -27,4 +27,6 @@ export interface UserProps {
   last_deposit_date: Date;
   last_withdrawal_date: Date;
   referredByName: string;
+  verification_status: 'not_started' | 'pending' | 'approved' | 'rejected';
+  sumsub_id: string;
 }

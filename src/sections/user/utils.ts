@@ -1,15 +1,15 @@
-import type { UserProps } from './view/user-view';
+import { UserProps } from './types';
 
 export const visuallyHidden = {
   border: 0,
-  margin: -1,
-  padding: 0,
-  width: '1px',
+  clip: 'rect(0 0 0 0)',
   height: '1px',
+  margin: -1,
   overflow: 'hidden',
+  padding: 0,
   position: 'absolute',
   whiteSpace: 'nowrap',
-  clip: 'rect(0 0 0 0)',
+  width: '1px',
 } as const;
 
 export function emptyRows(page: number, rowsPerPage: number, arrayLength: number) {
@@ -44,11 +44,12 @@ export function getComparator<Key extends keyof any>(
 
 type ApplyFilterProps = {
   inputData: UserProps[];
+  comparator: (a: any, b: any) => number;
   filterName: string;
   filterStatus: string;
   filterCurrency: string;
   filter2FA: string;
-  comparator: (a: any, b: any) => number;
+  filterVerificationStatus: string;
 };
 
 export function applyFilter({
@@ -57,7 +58,8 @@ export function applyFilter({
   filterName,
   filterStatus,
   filterCurrency,
-  filter2FA
+  filter2FA,
+  filterVerificationStatus,
 }: ApplyFilterProps) {
   const stabilizedThis = inputData.map((el, index) => [el, index] as const);
 
@@ -71,22 +73,24 @@ export function applyFilter({
 
   if (filterName) {
     inputData = inputData.filter(
-      (user) => 
-        (user.username?.toLowerCase().indexOf(filterName.toLowerCase()) !== -1) ||
-        (user.fullname?.toLowerCase().indexOf(filterName.toLowerCase()) !== -1)
+      (user) => user.username.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
     );
   }
 
   if (filterStatus !== 'all') {
-    inputData = inputData.filter((user) => user.status?.toString() === filterStatus);
+    inputData = inputData.filter((user) => user.status.toString() === filterStatus);
   }
 
   if (filterCurrency !== 'all') {
-    inputData = inputData.filter((user) => user.currency?.toString() === filterCurrency);
+    inputData = inputData.filter((user) => user.currency.toString() === filterCurrency);
   }
 
   if (filter2FA !== 'all') {
-    inputData = inputData.filter((user) => user.is_2fa?.toString() === filter2FA);
+    inputData = inputData.filter((user) => user.is_2fa.toString() === filter2FA);
+  }
+
+  if (filterVerificationStatus !== 'all') {
+    inputData = inputData.filter((user) => user.verification_status === filterVerificationStatus);
   }
 
   return inputData;
