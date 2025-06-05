@@ -48,10 +48,10 @@ const CommissionControlView: React.FC = () => {
         } else {
           setError(response.data.error || 'Failed to fetch commission rate');
         }
-      } catch (error) {
-        const err = error as AxiosError<ApiErrorResponse>;
+      } catch (fetchError) {
+        const err = fetchError as AxiosError<ApiErrorResponse>;
         setError(err.response?.data?.error || 'Failed to fetch commission rate');
-        console.error('Error fetching commission:', error);
+        console.error('Error fetching commission:', fetchError);
       }
     };
 
@@ -88,11 +88,11 @@ const CommissionControlView: React.FC = () => {
         setError(response.data.error || 'Failed to save commission');
         setSaveStatus(null);
       }
-    } catch (error) {
-      const err = error as AxiosError<ApiErrorResponse>;
+    } catch (saveError) {
+      const err = saveError as AxiosError<ApiErrorResponse>;
       setError(err.response?.data?.error || 'Failed to save commission');
       setSaveStatus(null);
-      console.error('Error saving commission:', error);
+      console.error('Error saving commission:', saveError);
     }
   };
 

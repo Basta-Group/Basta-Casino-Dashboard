@@ -15,8 +15,24 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { env } from 'src/config/env.config';
+
+interface AffiliateData {
+  couponCode: string;
+  referralLink: string;
+}
+
+interface ShareOption {
+  icon: string;
+  label: string;
+  color: 'primary' | 'info' | 'success';
+  onClick: () => void;
+}
+
+interface ApiErrorResponse {
+  message: string;
+}
 
 const ReferralHeader = styled(Box)(({ theme }) => ({
   background: `linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%)`,
@@ -54,71 +70,97 @@ const ShareButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const AffiliateReferralsPage = () => {
-  const [copied, setCopied] = useState(false);
-  const [affiliateData, setAffiliateData] = useState({
+const AffiliateReferralsPage: React.FC = () => {
+  const [copied, setCopied] = useState<boolean>(false);
+  const [affiliateData, setAffiliateData] = useState<AffiliateData>({
     couponCode: '',
     referralLink: '',
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchReferralLink = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('affiliateToken'); // Adjust based on how you store the JWT
+        const token = localStorage.getItem('affiliateToken');
+
+        if (!token) {
+          throw new Error('Authentication token not found');
+        }
+
+        if (!env.api?.affiliateUrl) {
+          throw new Error('API URL not configured');
+        }
+
         const response = await axios.get(`${env.api.affiliateUrl}/referral-link`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+
         const { referralLink } = response.data.data;
+
+        if (!referralLink) {
+          throw new Error('Invalid response format');
+        }
+
         setAffiliateData({
           couponCode: new URLSearchParams(new URL(referralLink).search).get('ref') || '',
           referralLink,
         });
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to fetch referral link');
+        const axiosError = err as AxiosError<ApiErrorResponse>;
+        setError(
+          axiosError.response?.data?.message ||
+            axiosError.message ||
+            'Failed to fetch referral link'
+        );
       } finally {
         setLoading(false);
       }
     };
+
     fetchReferralLink();
   }, []);
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async (text: string): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      setError('Failed to copy to clipboard');
+    }
   };
 
-  const shareOptions = [
+  const shareOptions: ShareOption[] = [
     {
       icon: 'solar:share-bold',
       label: 'Twitter',
       color: 'primary',
-      onClick: () =>
-        window.open(
-          `https://twitter.com/intent/tweet?url=${encodeURIComponent(affiliateData.referralLink)}&text=Join with my referral code: ${affiliateData.couponCode}`
-        ),
+      onClick: () => {
+        const shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(affiliateData.referralLink)}&text=Join with my referral code: ${affiliateData.couponCode}`;
+        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+      },
     },
     {
       icon: 'solar:letter-bold',
       label: 'Email',
       color: 'info',
       onClick: () => {
-        window.location.href = `mailto:?subject=Join with my referral&body=Use my referral code: ${affiliateData.couponCode} - ${affiliateData.referralLink}`;
+        const mailtoUrl = `mailto:?subject=Join with my referral&body=Use my referral code: ${affiliateData.couponCode} - ${affiliateData.referralLink}`;
+        window.location.href = mailtoUrl;
       },
     },
     {
       icon: 'solar:link-bold',
       label: 'WhatsApp',
       color: 'success',
-      onClick: () =>
-        window.open(
-          `https://wa.me/?text=Use my referral code: ${affiliateData.couponCode} - ${affiliateData.referralLink}`
-        ),
+      onClick: () => {
+        const whatsappUrl = `https://wa.me/?text=Use my referral code: ${affiliateData.couponCode} - ${affiliateData.referralLink}`;
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      },
     },
   ];
 

@@ -23,27 +23,45 @@ interface ApiErrorResponse {
 
 type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
-const DashboardBannerView: React.FC = () => {
+interface TimeInputs {
+  hours: string;
+  minutes: string;
+  seconds: string;
+}
+
+interface TimeErrors {
+  hours: string | null;
+  minutes: string | null;
+  seconds: string | null;
+}
+
+interface FormErrors {
+  title: string | null;
+  subtitle: string | null;
+  buttonText: string | null;
+}
+
+const DashboardBannerView = (): JSX.Element => {
   const [bannerData, setBannerData] = useState<BannerConfig>({
     title: '',
     subtitle: '',
     buttonText: '',
     countdown: '',
   });
-  const [timeInputs, setTimeInputs] = useState({
+  const [timeInputs, setTimeInputs] = useState<TimeInputs>({
     hours: '',
     minutes: '',
     seconds: '',
   });
-  const [timeErrors, setTimeErrors] = useState({
-    hours: null as string | null,
-    minutes: null as string | null,
-    seconds: null as string | null,
+  const [timeErrors, setTimeErrors] = useState<TimeErrors>({
+    hours: null,
+    minutes: null,
+    seconds: null,
   });
-  const [formErrors, setFormErrors] = useState({
-    title: null as string | null,
-    subtitle: null as string | null,
-    buttonText: null as string | null,
+  const [formErrors, setFormErrors] = useState<FormErrors>({
+    title: null,
+    subtitle: null,
+    buttonText: null,
   });
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
@@ -96,7 +114,7 @@ const DashboardBannerView: React.FC = () => {
   }, [token]);
 
   useEffect(() => {
-    if (!isRunning) return;
+    if (!isRunning) return undefined;
 
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
@@ -155,20 +173,20 @@ const DashboardBannerView: React.FC = () => {
       subtitle: validateTextInput('subtitle', bannerData.subtitle),
       buttonText: validateTextInput('buttonText', bannerData.buttonText),
     };
-    const timeErrors = {
+    const newTimeErrors = {
       hours: validateTimeInput('hours', timeInputs.hours),
       minutes: validateTimeInput('minutes', timeInputs.minutes),
       seconds: validateTimeInput('seconds', timeInputs.seconds),
     };
     setFormErrors(textErrors);
-    setTimeErrors(timeErrors);
+    setTimeErrors(newTimeErrors);
     return (
       !textErrors.title &&
       !textErrors.subtitle &&
       !textErrors.buttonText &&
-      !timeErrors.hours &&
-      !timeErrors.minutes &&
-      !timeErrors.seconds
+      !newTimeErrors.hours &&
+      !newTimeErrors.minutes &&
+      !newTimeErrors.seconds
     );
   };
 
@@ -204,9 +222,9 @@ const DashboardBannerView: React.FC = () => {
         title: bannerData.title,
         subtitle: bannerData.subtitle,
         buttonText: bannerData.buttonText,
-        hours: hours,
-        minutes: minutes,
-        seconds: seconds,
+        hours,
+        minutes,
+        seconds,
       };
 
       console.log('Saving payload:', payload);
@@ -499,7 +517,7 @@ const DashboardBannerView: React.FC = () => {
                 {bannerData.buttonText || 'PLAY'}
               </Button>
               <Typography variant="body2" fontWeight="medium">
-                DON'T MISS
+                DON&apos;T MISS
               </Typography>
               <Stack direction="row" spacing={0.5} alignItems="center">
                 {[timeLeft.hours, timeLeft.minutes, timeLeft.seconds].map((val, i) => (

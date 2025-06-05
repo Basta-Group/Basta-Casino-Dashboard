@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -29,11 +29,7 @@ export function UserKYCReview({ userId, sumsubId, onClose, onStatusUpdate }: KYC
   const [documents, setDocuments] = useState<any[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [sumsubId]);
-
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -56,7 +52,11 @@ export function UserKYCReview({ userId, sumsubId, onClose, onStatusUpdate }: KYC
     } finally {
       setLoading(false);
     }
-  };
+  }, [sumsubId]);
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
 
   const handleApprove = async () => {
     try {
