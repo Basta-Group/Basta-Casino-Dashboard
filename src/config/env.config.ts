@@ -10,7 +10,7 @@ export const env: EnvConfig = {
   api: {
     baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost',
     port: import.meta.env.VITE_API_PORT || '5000',
-    affiliateUrl: import.meta.env.AFFILIATE_URL || 'http://localhost:5000/api/affiliate'
+    affiliateUrl: import.meta.env.VITE_AFFILIATE_URL || 'http://localhost:5000/api/affiliate'
   }
 };
 
