@@ -1,3 +1,4 @@
+import { decodeToken } from 'src/utils/jwt';
 import {
   _id,
   _price,
@@ -10,8 +11,6 @@ import {
   _description,
   _productNames,
 } from './_mock';
-import { decodeToken } from 'src/utils/jwt';
-
 // ----------------------------------------------------------------------
 
 export const _myAccount = {
