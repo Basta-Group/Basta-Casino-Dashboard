@@ -134,7 +134,20 @@ export function UserTableRow({
 
         <TableCell component="th" scope="row">
           <Box gap={2} display="flex" alignItems="center">
-            <Avatar alt={row.username} src={row.photo} />
+            <Avatar
+              alt={row.username}
+              src={
+                row.photo ||
+                `/assets/images/avatar/avatar-${Math.floor(Math.random() * 24) + 1}.webp`
+              }
+              sx={{
+                width: 40,
+                height: 40,
+                bgcolor: !row.photo ? 'primary.main' : 'transparent',
+              }}
+            >
+              {!row.photo && row.username?.[0]?.toUpperCase()}
+            </Avatar>
             {row.username || '-'}
           </Box>
         </TableCell>
