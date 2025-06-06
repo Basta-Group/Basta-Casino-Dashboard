@@ -48,13 +48,11 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
       localStorage.removeItem('accessToken');
       localStorage.removeItem('affiliateToken');
       sessionStorage.clear();
-      
+
       // Close the popover
       handleClosePopover();
-      
-      
+
       router.push('/home');
-      
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -139,13 +137,7 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
         <Divider sx={{ borderStyle: 'dashed' }} />
 
         <Box sx={{ p: 1 }}>
-          <Button 
-            fullWidth 
-            color="error" 
-            size="medium" 
-            variant="text"
-            onClick={handleLogout}
-          >
+          <Button fullWidth color="error" size="medium" variant="text" onClick={handleLogout}>
             Logout
           </Button>
         </Box>

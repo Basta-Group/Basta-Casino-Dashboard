@@ -10,12 +10,20 @@ import {
   _description,
   _productNames,
 } from './_mock';
+import { decodeToken } from 'src/utils/jwt';
 
 // ----------------------------------------------------------------------
 
 export const _myAccount = {
   displayName: 'Basta Group',
-  email: 'admin@bastagroup.com',
+  email: (() => {
+    const token = localStorage.getItem('affiliateToken');
+    if (token) {
+      const decoded = decodeToken(token);
+      return decoded?.email || 'admin@bastagroup.com';
+    }
+    return 'admin@bastagroup.com';
+  })(),
   photoURL: '/assets/images/avatar/avatar-25.webp',
 };
 
