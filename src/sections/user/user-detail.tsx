@@ -66,8 +66,8 @@ export function UserDetailPage() {
     const currencySymbol =
       {
         0: '$', // USD
-        1: '₹', // INR
-        2: '£', // Pound
+        1: '€', // EUR
+        2: '₹', // INR
       }[currency] || '$';
     return `${currencySymbol}${balance.toFixed(2)}`;
   };
@@ -77,9 +77,9 @@ export function UserDetailPage() {
       case 0:
         return 'USD';
       case 1:
-        return 'INR';
+        return 'EUR';
       case 2:
-        return 'Pound';
+        return 'INR';
       default:
         return '-';
     }

@@ -187,8 +187,8 @@ export function UserView() {
           >
             <MenuItem value="all">All Currencies</MenuItem>
             <MenuItem value="0">USD</MenuItem>
-            <MenuItem value="1">INR</MenuItem>
-            <MenuItem value="2">Pound</MenuItem>
+            <MenuItem value="1">EUR</MenuItem>
+            <MenuItem value="2">INR</MenuItem>
           </TextField>
 
           <TextField
