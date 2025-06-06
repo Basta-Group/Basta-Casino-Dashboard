@@ -50,7 +50,9 @@ export default function AffiliateLoginPage() {
   // Handle input change
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Trim spaces from email and password
+    const trimmedValue = name === 'email' || name === 'password' ? value.trim() : value;
+    setFormData((prev) => ({ ...prev, [name]: trimmedValue }));
     setTouched((prev) => ({ ...prev, [name]: true }));
     setError('');
     setFieldErrors((prev) => ({ ...prev, [name]: '' }));
@@ -61,6 +63,7 @@ export default function AffiliateLoginPage() {
     if (!formData.email) return 'Email is required';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
     if (!formData.password) return 'Password is required';
+    if (formData.password.includes(' ')) return 'Password cannot contain spaces';
     return '';
   }, [formData]);
 
@@ -83,7 +86,10 @@ export default function AffiliateLoginPage() {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.email.trim(),
+          password: formData.password.trim(),
+        }),
       });
 
       const data: LoginResponse = await response.json();
