@@ -13,6 +13,7 @@ import {
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Iconify } from 'src/components/iconify';
 import { useRouter } from 'src/routes/hooks';
+import { Helmet } from 'react-helmet-async';
 
 // Type definitions
 interface LoginFormData {
@@ -139,156 +140,177 @@ export default function AffiliateLoginPage() {
   );
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        overflow: 'hidden',
-      }}
-    >
+    <>
+      {' '}
+      <Helmet>
+        <title>Affiliate | Login</title>
+      </Helmet>
       <Box
         sx={{
-          width: { xs: '100%' },
-          height: '100%',
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          bgcolor: 'white',
-          overflow: 'auto',
+          overflow: 'hidden',
         }}
       >
-        <Box>
-          <Stack spacing={3} alignItems="center" sx={{ mb: 4 }}>
-            <Box
-              component="img"
-              src="/assets/icons/BastaLogo.svg"
-              alt="BASTA Casino Logo"
-              sx={{ width: 150, height: 'auto' }}
-            />
-            <Typography variant="h4" fontWeight="bold">
-              Affiliate Login
-            </Typography>
-            <Typography variant="body1" color="text.secondary" textAlign="center">
-              Welcome to the BASTA Casino Affiliate Program
-            </Typography>
-          </Stack>
-
-          <Stack spacing={3}>
-            {error && (
-              <Alert severity="error" sx={{ borderRadius: 1 }}>
-                {error}
-              </Alert>
-            )}
-
-            <TextField
-              fullWidth
-              name="email"
-              label="Email address"
-              value={formData.email}
-              onChange={handleChange}
-              onKeyPress={handleKeyPress}
-              error={touched.email && (!formData.email || !!fieldErrors.email)}
-              helperText={
-                (touched.email && !formData.email && 'Email is required') || fieldErrors.email || ''
-              }
-              disabled={loading}
-              variant="outlined"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1,
-                  backgroundColor: '#f8f9fa',
-                },
-              }}
-            />
-
-            <TextField
-              fullWidth
-              name="password"
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={handleChange}
-              onKeyPress={handleKeyPress}
-              error={touched.password && (!formData.password || !!fieldErrors.password)}
-              helperText={
-                (touched.password && !formData.password && 'Password is required') ||
-                fieldErrors.password ||
-                ''
-              }
-              disabled={loading}
-              variant="outlined"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                      disabled={loading}
-                    >
-                      <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1,
-                  backgroundColor: '#f8f9fa',
-                },
-              }}
-            />
-
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Link
-                href="/affiliate/forget-password"
-                variant="body2"
-                color="text.secondary"
+        <Box
+          sx={{
+            width: { xs: '100%' },
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            bgcolor: 'white',
+            overflow: 'auto',
+          }}
+        >
+          <Box>
+            <Stack spacing={3} alignItems="center" sx={{ mb: 4 }}>
+              <Box
+                component="img"
+                src="/assets/icons/BastaLogo.svg"
+                alt="BASTA Casino Logo"
+                sx={{ width: 150, height: 'auto' }}
+              />
+              <Typography variant="h4" fontWeight="bold">
+                Affiliate Login
+              </Typography>
+              <Typography
+                variant="body1"
                 sx={{
-                  textDecoration: 'none',
-                  '&:hover': { textDecoration: 'underline' },
+                  textAlign: 'center',
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem',
+                  background: '#000',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  mb: 1,
                 }}
               >
-                Forgot password?
-              </Link>
-            </Box>
-
-            <LoadingButton
-              fullWidth
-              size="large"
-              variant="contained"
-              onClick={handleLogin}
-              loading={loading}
-              disabled={!formData.email || !formData.password}
-              sx={{
-                py: 1.5,
-                borderRadius: 1,
-                textTransform: 'none',
-                fontWeight: 'medium',
-                fontSize: '1rem',
-              }}
-            >
-              Login
-            </LoadingButton>
-
-            <Divider sx={{ my: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                OR
+                Welcome to the BASTA Casino Affiliate Program
               </Typography>
-            </Divider>
+            </Stack>
 
-            <Typography variant="body2" color="text.secondary" textAlign="center">
-              Don&apos;t have an account?{' '}
-              <Link
-                href="https://bastaxcasino.com/affiliate-registeration"
-                variant="subtitle2"
-                color="primary"
-                sx={{ '&:hover': { textDecoration: 'underline' } }}
+            <Stack spacing={3}>
+              {error && (
+                <Alert severity="error" sx={{ borderRadius: 1 }}>
+                  {error}
+                </Alert>
+              )}
+
+              <TextField
+                fullWidth
+                name="email"
+                label="Email address"
+                value={formData.email}
+                onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                error={touched.email && (!formData.email || !!fieldErrors.email)}
+                helperText={
+                  (touched.email && !formData.email && 'Email is required') ||
+                  fieldErrors.email ||
+                  ''
+                }
+                disabled={loading}
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1,
+                    backgroundColor: '#f8f9fa',
+                  },
+                }}
+              />
+
+              <TextField
+                fullWidth
+                name="password"
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                error={touched.password && (!formData.password || !!fieldErrors.password)}
+                helperText={
+                  (touched.password && !formData.password && 'Password is required') ||
+                  fieldErrors.password ||
+                  ''
+                }
+                disabled={loading}
+                variant="outlined"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                        disabled={loading}
+                      >
+                        <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1,
+                    backgroundColor: '#f8f9fa',
+                  },
+                }}
+              />
+
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Link
+                  href="/affiliate/forget-password"
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    textDecoration: 'none',
+                    '&:hover': { textDecoration: 'underline' },
+                  }}
+                >
+                  Forgot password?
+                </Link>
+              </Box>
+
+              <LoadingButton
+                fullWidth
+                size="large"
+                variant="contained"
+                onClick={handleLogin}
+                loading={loading}
+                disabled={!formData.email || !formData.password}
+                sx={{
+                  py: 1.5,
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  fontWeight: 'medium',
+                  fontSize: '1rem',
+                }}
               >
-                Sign up
-              </Link>
-            </Typography>
-          </Stack>
+                Login
+              </LoadingButton>
+
+              <Divider sx={{ my: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  OR
+                </Typography>
+              </Divider>
+
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                Don&apos;t have an account?{' '}
+                <Link
+                  href="https://bastaxcasino.com/affiliate-registeration"
+                  variant="subtitle2"
+                  color="primary"
+                  sx={{ '&:hover': { textDecoration: 'underline' } }}
+                >
+                  Sign up
+                </Link>
+              </Typography>
+            </Stack>
+          </Box>
         </Box>
       </Box>
-    </Box>
+    </>
   );
 }
