@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
+import { Helmet } from 'react-helmet-async';
+
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
-import { Helmet } from 'react-helmet-async';
+import { useTheme } from '@mui/material/styles';
+
+import { Iconify } from 'src/components/iconify';
+import { layoutClasses } from 'src/layouts/classes';
 import { LayoutSection } from 'src/layouts/core/layout-section';
 import { HeaderSection } from 'src/layouts/core/header-section';
 import { MenuButton } from 'src/layouts/components/menu-button';
@@ -11,12 +15,11 @@ import { NavMobile, NavDesktop } from 'src/layouts/dashboard/nav';
 import { AccountPopover } from 'src/layouts/components/account-popover';
 import { LanguagePopover } from 'src/layouts/components/language-popover';
 import { NotificationsPopover } from 'src/layouts/components/notifications-popover';
-// import { _langs } from 'src/_mock';
-import { Iconify } from 'src/components/iconify';
+import { Searchbar } from 'src/layouts/components/searchbar';
 
 import { affiliateNavData } from '../config-nav';
-import { layoutClasses } from 'src/layouts/classes';
-import { Searchbar } from 'src/layouts/components/searchbar';
+
+// import { _langs } from 'src/_mock';
 
 const transformedNavData = affiliateNavData.map((item) => ({
   path: item.href,

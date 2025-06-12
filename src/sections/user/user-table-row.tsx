@@ -16,6 +16,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Button from '@mui/material/Button';
+import { toast } from 'react-toastify';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { UserProps } from './types';
@@ -62,14 +63,24 @@ export function UserTableRow({
   }, [navigate, row.id, handleClosePopover]);
 
   const handleOpenStatusDialog = useCallback(() => {
+    if (!row.username && !row.fullname && !row.email && !row.phone_number) {
+      toast.error('Cannot perform action: User data is incomplete');
+      handleClosePopover();
+      return;
+    }
     setOpenConfirmDialog('status');
     handleClosePopover();
-  }, [handleClosePopover]);
+  }, [handleClosePopover, row]);
 
   const handleOpenDeleteDialog = useCallback(() => {
+    if (!row.username && !row.fullname && !row.email && !row.phone_number) {
+      toast.error('Cannot perform action: User data is incomplete');
+      handleClosePopover();
+      return;
+    }
     setOpenConfirmDialog('delete');
     handleClosePopover();
-  }, [handleClosePopover]);
+  }, [handleClosePopover, row]);
 
   const handleCloseDialog = useCallback(() => {
     setOpenConfirmDialog(null);
@@ -178,9 +189,6 @@ export function UserTableRow({
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
-        <TableCell padding="checkbox">
-          <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
-        </TableCell>
         <TableCell component="th" scope="row">
           <Box gap={2} display="flex" alignItems="center">
             <Avatar
@@ -297,7 +305,12 @@ export function UserTableRow({
           <DialogContentText id="status-confirm-dialog-description">
             <Typography variant="body1" color="#000">
               Are you sure you want to {row.status === 1 ? 'deactivate' : 'activate'} the user{' '}
-              <strong>"{row.fullname || row.email || row.phone_number || 'this user'}"</strong>?
+              <strong>
+                &ldquo;
+                {row.username || row.fullname || row.email || row.phone_number || 'Unknown User'}
+                &rdquo;
+              </strong>
+              ?
             </Typography>
           </DialogContentText>
         </DialogContent>
@@ -347,7 +360,12 @@ export function UserTableRow({
           <DialogContentText id="delete-confirm-dialog-description">
             <Typography variant="body1" color="#000">
               Are you sure you want to delete the user{' '}
-              <strong>"{row.fullname || row.email || row.phone_number || 'this user'}"</strong>?
+              <strong>
+                &ldquo;
+                {row.username || row.fullname || row.email || row.phone_number || 'Unknown User'}
+                &rdquo;
+              </strong>
+              ?
               <Typography component="span" color="error.main">
                 {' '}
                 <br />

@@ -114,6 +114,9 @@ export function UserView() {
   const deleteUser = async (userId: string) => {
     try {
       const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/${userId}`;
+      console.log('Deleting user with ID:', userId);
+      console.log('API URL:', apiUrl);
+
       const response = await fetch(apiUrl, {
         method: 'DELETE',
         headers: {
@@ -121,7 +124,11 @@ export function UserView() {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      console.log('Delete response status:', response.status);
       const data = await response.json();
+      console.log('Delete response data:', data);
+
       if (data.success) {
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
         toast.success('User deleted successfully!');
@@ -310,7 +317,6 @@ export function UserView() {
         </Stack>
 
         <UserTableToolbar
-          numSelected={table.selected.length}
           filterName={filterName}
           onFilterName={(event) => setFilterName(event.target.value)}
         />
@@ -321,15 +327,7 @@ export function UserView() {
               <UserTableHead
                 order={table.order}
                 orderBy={table.orderBy}
-                rowCount={users.length}
-                numSelected={table.selected.length}
                 onSort={table.onSort}
-                onSelectAllRows={(checked) =>
-                  table.onSelectAllRows(
-                    checked,
-                    users.map((user) => user.id)
-                  )
-                }
                 headLabel={[
                   { id: 'username', label: 'Username' },
                   { id: 'fullname', label: 'Full Name' },
@@ -337,7 +335,7 @@ export function UserView() {
                   { id: 'phone_number', label: 'Phone' },
                   { id: 'referredByName', label: 'Referred By' },
                   { id: 'sumsub_status', label: 'Sumsub Status' },
-                  { id: 'admin_status', label: 'Admin Status' },
+                  { id: 'admin_status', label: 'Final KYC Status' },
                   { id: 'is_verified', label: 'Email Verified' },
                   { id: 'status', label: 'Status' },
                   { id: 'action', label: 'Actions', align: 'right' },

@@ -81,8 +81,14 @@ export function applyFilter({
   inputData = stabilizedThis.map((el) => el[0]);
 
   if (filterName) {
+    const searchTerm = filterName.toLowerCase();
     inputData = inputData.filter(
-      (user) => user.username.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
+      (user) =>
+        user.username?.toLowerCase().includes(searchTerm) ||
+        user.fullname?.toLowerCase().includes(searchTerm) ||
+        user.email?.toLowerCase().includes(searchTerm) ||
+        user.phone_number?.toLowerCase().includes(searchTerm) ||
+        user.referredByName?.toLowerCase().includes(searchTerm)
     );
   }
 

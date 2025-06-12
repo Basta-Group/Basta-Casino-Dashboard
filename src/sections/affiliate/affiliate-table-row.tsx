@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 
 import Popover from '@mui/material/Popover';
 import TableRow from '@mui/material/TableRow';
-import Checkbox from '@mui/material/Checkbox';
 import MenuList from '@mui/material/MenuList';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
@@ -18,22 +17,16 @@ import type { AffiliateProps } from './types';
 
 type AffialiteTableRowProps = {
   row: AffiliateProps;
-  selected: boolean;
-  onSelectRow: () => void;
   onUpdateStatus: (userId: string, newStatus: number) => void;
-  // onDeleteUser: (userId: string) => void;
 };
 
 export function AffiliateTableRow({
   row,
-  selected,
-  onSelectRow,
   onUpdateStatus,
-  // onDeleteUser,
 }: AffialiteTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -58,30 +51,18 @@ export function AffiliateTableRow({
     handleClosePopover();
   }, [row.status, row.id, onUpdateStatus, handleClosePopover]);
 
-  // const handleDeleteUser = useCallback(() => {
-  //   onDeleteUser(row.id);
-  //   handleClosePopover();
-  // }, [row.id, onDeleteUser, handleClosePopover]);
-
-  
-    const handleViewDetails = useCallback(() => {
-      navigate(`/affilateDetails/${row.id}`);
-      handleClosePopover();
-    }, [navigate, row.id, handleClosePopover]);
-
-  
+  const handleViewDetails = useCallback(() => {
+    navigate(`/affilateDetails/${row.id}`);
+    handleClosePopover();
+  }, [navigate, row.id, handleClosePopover]);
 
   const handleOpenUsers = () => {
     navigate(`/referredUserListing/${row.id}`);
   };
-  
 
   return (
     <>
-      <TableRow hover tabIndex={-1} role="checkbox" selected={selected}>
-        <TableCell padding="checkbox">
-          <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
-        </TableCell>
+      <TableRow hover tabIndex={-1}>
         <TableCell>{row.firstname || '-'}</TableCell>
         <TableCell>{row.lastname || '-'}</TableCell>
         <TableCell>{}</TableCell>
@@ -129,20 +110,11 @@ export function AffiliateTableRow({
             <Iconify icon="solar:eye-bold" />
             View Details
           </MenuItem>
-          {/* <MenuItem onClick={handleOpenUsers}>
-            <Iconify icon="solar:eye-bold" />
-            Referred Users
-          </MenuItem> */}
 
           <MenuItem onClick={handleStatusChange}>
             <Iconify icon="solar:user-block-bold" />
             {row.status === 1 ? 'Banned' : 'Active'}
           </MenuItem>
-
-          {/* <MenuItem onClick={handleDeleteUser} sx={{ color: 'error.main' }}>
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
-          </MenuItem> */}
         </MenuList>
       </Popover>
 

@@ -109,7 +109,7 @@ export function AdminAffiliateView() {
       const result = await response.json();
       console.log('Status updated successfully:', result);
 
-      fetchUsers(); // will still work because it’s memoized
+      fetchUsers(); // will still work because it's memoized
     } catch (error) {
       console.error('Error updating user status:', error);
     }
@@ -166,7 +166,6 @@ export function AdminAffiliateView() {
           </TextField>
         </Stack>
         <AffiliateTableToolbar
-          numSelected={table.selected.length}
           filterName={filterName}
           onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
             setFilterName(event.target.value);
@@ -179,15 +178,7 @@ export function AdminAffiliateView() {
               <AffiliateTableHead
                 order={table.order}
                 orderBy={table.orderBy}
-                rowCount={users.length}
-                numSelected={table.selected.length}
                 onSort={table.onSort}
-                onSelectAllRows={(checked) =>
-                  table.onSelectAllRows(
-                    checked,
-                    users.map((user) => user.id)
-                  )
-                }
                 headLabel={[
                   { id: 'firstname', label: 'First Name' },
                   { id: 'lastname', label: 'Last Name' },
@@ -209,8 +200,8 @@ export function AdminAffiliateView() {
                     <AffiliateTableRow
                       key={row.id}
                       row={row}
-                      selected={table.selected.includes(row.id)}
-                      onSelectRow={() => table.onSelectRow(row.id)}
+                      // selected={table.selected.includes(row.id)}
+                      // onSelectRow={() => table.onSelectRow(row.id)}
                       onUpdateStatus={updateUserStatus}
                       // onDeleteUser={deleteUser}
                     />

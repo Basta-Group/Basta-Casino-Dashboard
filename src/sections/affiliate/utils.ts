@@ -70,10 +70,14 @@ export function applyFilter({
   inputData = stabilizedThis.map((el) => el[0]);
 
   if (filterName) {
+    const searchTerm = filterName.toLowerCase();
     inputData = inputData.filter(
-      (user) => 
-        (user.firstname?.toLowerCase().indexOf(filterName.toLowerCase()) !== -1) ||
-        (user.lastname?.toLowerCase().indexOf(filterName.toLowerCase()) !== -1)
+      (user) =>
+        user.firstname?.toLowerCase().includes(searchTerm) ||
+        user.lastname?.toLowerCase().includes(searchTerm) ||
+        user.email?.toLowerCase().includes(searchTerm) ||
+        user.phonenumber?.toLowerCase().includes(searchTerm) ||
+        user.referralCode?.toLowerCase().includes(searchTerm)
     );
   }
 
