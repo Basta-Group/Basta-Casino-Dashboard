@@ -28,6 +28,7 @@ type UserTableRowProps = {
   onUpdateStatus: (userId: string, newStatus: number) => void;
   onDeleteUser: (userId: string) => void;
   onKYCStatusUpdate: (userId: string, newStatus: 'approved' | 'rejected') => void;
+  onViewDocuments: (sumsubId: string, userId: string) => void;
   token: string;
 };
 
@@ -38,6 +39,7 @@ export function UserTableRow({
   onUpdateStatus,
   onDeleteUser,
   onKYCStatusUpdate,
+  onViewDocuments,
   token,
 }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
@@ -46,12 +48,9 @@ export function UserTableRow({
   const [selectedSumsubId, setSelectedSumsubId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleOpenPopover = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      setOpenPopover(event.currentTarget);
-    },
-    []
-  );
+  const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    setOpenPopover(event.currentTarget);
+  }, []);
 
   const handleClosePopover = useCallback(() => {
     setOpenPopover(null);
@@ -108,43 +107,71 @@ export function UserTableRow({
     [row.id, onKYCStatusUpdate, handleCloseKYCReview]
   );
 
+  const handleViewDocuments = useCallback(
+    (sumsubId: string, userId: string) => {
+      onViewDocuments(sumsubId, userId);
+      handleClosePopover();
+    },
+    [onViewDocuments, handleClosePopover]
+  );
+
   const getVerificationStatusColor = (status: string | null | undefined) => {
     switch (status) {
-      case 'not_started': return 'warning';
-      case 'in_review': return 'info';
-      case 'approved_sumsub': return 'success';
-      case 'rejected_sumsub': return 'error';
-      default: return 'default';
+      case 'not_started':
+        return 'warning';
+      case 'in_review':
+        return 'info';
+      case 'approved_sumsub':
+        return 'success';
+      case 'rejected_sumsub':
+        return 'error';
+      default:
+        return 'default';
     }
   };
 
   const getVerificationStatusLabel = (status: string | null | undefined) => {
     switch (status) {
-      case 'not_started': return 'Not Started';
-      case 'in_review': return 'In Review';
-      case 'approved_sumsub': return 'Approved by Sumsub';
-      case 'rejected_sumsub': return 'Rejected by Sumsub';
-      case 'approved': return 'Approved by Admin';
-      case 'rejected': return 'Rejected by Admin';
-      default: return 'Unknown';
+      case 'not_started':
+        return 'Not Started';
+      case 'in_review':
+        return 'In Review';
+      case 'approved_sumsub':
+        return 'Approved by Sumsub';
+      case 'rejected_sumsub':
+        return 'Rejected by Sumsub';
+      case 'approved':
+        return 'Approved by Admin';
+      case 'rejected':
+        return 'Rejected by Admin';
+      default:
+        return 'Unknown';
     }
   };
 
   const getAdminStatusColor = (status: string | null | undefined) => {
     switch (status) {
-      case 'pending': return 'warning';
-      case 'approved': return 'success';
-      case 'rejected': return 'error';
-      default: return 'default';
+      case 'pending':
+        return 'warning';
+      case 'approved':
+        return 'success';
+      case 'rejected':
+        return 'error';
+      default:
+        return 'default';
     }
   };
 
   const getAdminStatusLabel = (status: string | null | undefined) => {
     switch (status) {
-      case 'pending': return 'Pending';
-      case 'approved': return 'Approved';
-      case 'rejected': return 'Rejected';
-      default: return 'N/A';
+      case 'pending':
+        return 'Pending';
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return 'N/A';
     }
   };
 
@@ -158,7 +185,10 @@ export function UserTableRow({
           <Box gap={2} display="flex" alignItems="center">
             <Avatar
               alt={row.username}
-              src={row.photo || `/assets/images/avatar/avatar-${Math.floor(Math.random() * 24) + 1}.webp`}
+              src={
+                row.photo ||
+                `/assets/images/avatar/avatar-${Math.floor(Math.random() * 24) + 1}.webp`
+              }
               sx={{ width: 40, height: 40, bgcolor: !row.photo ? 'primary.main' : 'transparent' }}
             >
               {!row.photo && row.username?.[0]?.toUpperCase()}

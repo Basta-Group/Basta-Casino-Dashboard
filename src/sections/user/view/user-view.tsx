@@ -420,6 +420,7 @@ export function UserView() {
         <UserKYCReview
           userId={selectedUserId}
           sumsubId={selectedSumsubId}
+          sumsubStatus={users.find((user) => user.id === selectedUserId)?.sumsub_status}
           onClose={openKYCReviewDialog.onFalse}
           onStatusUpdate={handleKYCStatusUpdateFromReview}
           token={token}
