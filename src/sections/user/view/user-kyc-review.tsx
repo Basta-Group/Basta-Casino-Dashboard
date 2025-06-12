@@ -1,116 +1,115 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Card,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Typography,
-  Stack,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect, useCallback } from 'react';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
+import { toast } from 'react-toastify';
 import { env } from 'src/config/env.config';
 
-interface KYCReviewProps {
+interface UserKYCReviewProps {
   userId: string;
   sumsubId: string;
+  sumsubStatus: string | null | undefined;
   onClose: () => void;
-  onStatusUpdate: (status: 'approved' | 'rejected') => void;
+  onStatusUpdate: (status: 'approved' | 'rejected', reason?: string) => void;
+  token: string;
 }
 
-export function UserKYCReview({ userId, sumsubId, onClose, onStatusUpdate }: KYCReviewProps) {
+interface Document {
+  id: string;
+  type: string;
+  side: string;
+  status: string;
+  createdAt: string;
+}
+
+export function UserKYCReview({
+  userId,
+  sumsubId,
+  sumsubStatus,
+  onClose,
+  onStatusUpdate,
+  token,
+}: UserKYCReviewProps) {
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [imageUrls, setImageUrls] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [selectedDocument, setSelectedDocument] = useState<any>(null);
 
   const fetchDocuments = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(
-        `${env.api.baseUrl}:${env.api.port}/api/auth/admin/kyc/${sumsubId}/documents`,
+        `${env.api.baseUrl}:${env.api.port}/api/sumsub/documents/${sumsubId}`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       const data = await response.json();
-
       if (data.success) {
         setDocuments(data.data.documents);
+        await Promise.all(
+          data.data.documents.map(async (doc: Document) => {
+            try {
+              const imgResponse = await fetch(
+                `${env.api.baseUrl}:${env.api.port}/api/sumsub/documents/${sumsubId}/images/${doc.id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              if (imgResponse.ok) {
+                const blob = await imgResponse.blob();
+                const url = URL.createObjectURL(blob);
+                setImageUrls((prev) => ({ ...prev, [doc.id]: url }));
+              }
+            } catch (imgError) {
+              console.error(`Error fetching image for document ${doc.id}:`, imgError);
+            }
+          })
+        );
       } else {
-        setError(data.error || 'Failed to fetch documents');
+        setError(data.message || 'Failed to fetch documents');
       }
     } catch (err) {
-      setError('Failed to fetch documents');
+      setError('Error fetching documents');
     } finally {
       setLoading(false);
     }
-  }, [sumsubId]);
+  }, [sumsubId, token]);
 
   useEffect(() => {
     fetchDocuments();
-  }, [fetchDocuments]);
+    return () => {
+      Object.values(imageUrls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [fetchDocuments, imageUrls]);
 
-  const handleApprove = async () => {
-    try {
-      const response = await fetch(
-        `${env.api.baseUrl}:${env.api.port}/api/auth/admin/kyc/${sumsubId}/approve`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        }
-      );
-      const data = await response.json();
+  const handleApprove = useCallback(() => {
+    onStatusUpdate('approved');
+    toast.success('KYC approved successfully');
+  }, [onStatusUpdate]);
 
-      if (data.success) {
-        onStatusUpdate('approved');
-        onClose();
-      } else {
-        setError(data.error || 'Failed to approve KYC');
-      }
-    } catch (err) {
-      setError('Failed to approve KYC');
+  const handleReject = useCallback(() => {
+    if (rejectionReason.trim()) {
+      onStatusUpdate('rejected', rejectionReason);
+      toast.success('KYC rejected successfully');
+    } else {
+      toast.error('Please provide a rejection reason.');
     }
-  };
+  }, [rejectionReason, onStatusUpdate]);
 
-  const handleReject = async () => {
-    try {
-      const response = await fetch(
-        `${env.api.baseUrl}:${env.api.port}/api/auth/admin/kyc/${sumsubId}/reject`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        }
-      );
-      const data = await response.json();
-
-      if (data.success) {
-        onStatusUpdate('rejected');
-        onClose();
-      } else {
-        setError(data.error || 'Failed to reject KYC');
-      }
-    } catch (err) {
-      setError('Failed to reject KYC');
-    }
-  };
+  const canReview = sumsubStatus === 'in_review';
 
   if (loading) {
     return (
       <Dialog open onClose={onClose} maxWidth="md" fullWidth>
         <DialogContent>
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
             <CircularProgress />
           </Box>
         </DialogContent>
@@ -118,89 +117,98 @@ export function UserKYCReview({ userId, sumsubId, onClose, onStatusUpdate }: KYC
     );
   }
 
+  if (error) {
+    return (
+      <Dialog open onClose={onClose} maxWidth="md" fullWidth>
+        <DialogContent>
+          <Typography color="error">{error}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={fetchDocuments} color="primary">
+            Retry
+          </Button>
+          <Button onClick={onClose} color="inherit">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <Iconify icon="solar:document-bold" />
-          <Typography variant="h6">KYC Document Review</Typography>
-        </Stack>
-      </DialogTitle>
-
+      <DialogTitle>KYC Review for User ID: {userId}</DialogTitle>
       <DialogContent>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
+        <Typography variant="body1" gutterBottom>
+          Sumsub ID: {sumsubId}
+        </Typography>
+        <Typography variant="body2" gutterBottom>
+          Status: {sumsubStatus || 'Unknown'}
+        </Typography>
+        {documents.length > 0 ? (
+          <Box>
+            {documents.map((doc) => (
+              <Box key={doc.id} mb={2}>
+                <Typography variant="subtitle1">
+                  {doc.type} - {doc.side} (Status: {doc.status})
+                </Typography>
+                {imageUrls[doc.id] ? (
+                  <img
+                    src={imageUrls[doc.id]}
+                    alt={`${doc.type} - ${doc.side}`}
+                    style={{ maxWidth: '100%', marginTop: '10px' }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      toast.error(`Failed to load image for ${doc.type} - ${doc.side}`);
+                    }}
+                  />
+                ) : (
+                  <CircularProgress size={24} />
+                )}
+              </Box>
+            ))}
+            {canReview && (
+              <TextField
+                fullWidth
+                label="Rejection Reason (if rejecting)"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                multiline
+                rows={4}
+                margin="normal"
+                placeholder="Provide a reason if rejecting the KYC."
+              />
+            )}
+          </Box>
+        ) : (
+          <Typography>No documents found</Typography>
         )}
-
-        <Stack spacing={3}>
-          {documents.map((doc) => (
-            <Card key={doc.id} sx={{ p: 2 }}>
-              <Stack spacing={2}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="subtitle1">
-                    {doc.type} - {doc.side}
-                  </Typography>
-                  <Label color={doc.status === 'approved' ? 'success' : 'warning'}>
-                    {doc.status}
-                  </Label>
-                </Stack>
-
-                <Box
-                  component="img"
-                  src={doc.url}
-                  alt={`${doc.type} ${doc.side}`}
-                  sx={{
-                    width: '100%',
-                    height: 'auto',
-                    maxHeight: 400,
-                    objectFit: 'contain',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setSelectedDocument(doc)}
-                />
-              </Stack>
-            </Card>
-          ))}
-        </Stack>
       </DialogContent>
-
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} variant="outlined" color="inherit">
-          Close
+      <DialogActions>
+        <Button onClick={onClose} color="inherit">
+          Cancel
         </Button>
-        <Button onClick={handleReject} variant="contained" color="error">
-          Reject
-        </Button>
-        <Button onClick={handleApprove} variant="contained" color="success">
-          Approve
-        </Button>
+        {canReview && (
+          <>
+            <Button
+              onClick={handleReject}
+              color="error"
+              variant="contained"
+              disabled={!documents.length}
+            >
+              Reject
+            </Button>
+            <Button
+              onClick={handleApprove}
+              color="primary"
+              variant="contained"
+              disabled={!documents.length}
+            >
+              Approve
+            </Button>
+          </>
+        )}
       </DialogActions>
-
-      {/* Document Preview Dialog */}
-      <Dialog
-        open={!!selectedDocument}
-        onClose={() => setSelectedDocument(null)}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogContent>
-          {selectedDocument && (
-            <Box
-              component="img"
-              src={selectedDocument.url}
-              alt={`${selectedDocument.type} ${selectedDocument.side}`}
-              sx={{
-                width: '100%',
-                height: 'auto',
-                maxHeight: '80vh',
-                objectFit: 'contain',
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </Dialog>
   );
 }

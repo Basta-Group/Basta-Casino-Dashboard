@@ -1,9 +1,10 @@
+import Grid from '@mui/material/Grid';
 import Dialog from '@mui/material/Dialog';
+import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
-import Grid from '@mui/material/Grid';
-import Typography from '@mui/material/Typography';
-import { AffiliateProps } from './types';
+
+import type { AffiliateProps } from './types';
 
 interface UserDetailDialogProps {
   open: boolean;

@@ -9,7 +9,7 @@ import MenuList from '@mui/material/MenuList';
 import { Typography } from '@mui/material';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
-import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
+import MenuItem from '@mui/material/MenuItem';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -28,6 +28,7 @@ type UserTableRowProps = {
   onUpdateStatus: (userId: string, newStatus: number) => void;
   onDeleteUser: (userId: string) => void;
   onKYCStatusUpdate: (userId: string, newStatus: 'approved' | 'rejected') => void;
+  token: string;
 };
 
 export function UserTableRow({
@@ -37,15 +38,20 @@ export function UserTableRow({
   onUpdateStatus,
   onDeleteUser,
   onKYCStatusUpdate,
+  token,
 }: UserTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState<'status' | 'delete' | null>(null);
   const [openKYCReview, setOpenKYCReview] = useState(false);
+  const [selectedSumsubId, setSelectedSumsubId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    setOpenPopover(event.currentTarget);
-  }, []);
+  const handleOpenPopover = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      setOpenPopover(event.currentTarget);
+    },
+    []
+  );
 
   const handleClosePopover = useCallback(() => {
     setOpenPopover(null);
@@ -83,6 +89,7 @@ export function UserTableRow({
 
   const handleOpenKYCReview = useCallback(() => {
     if (row.sumsub_id) {
+      setSelectedSumsubId(row.sumsub_id);
       setOpenKYCReview(true);
       handleClosePopover();
     }
@@ -90,38 +97,54 @@ export function UserTableRow({
 
   const handleCloseKYCReview = useCallback(() => {
     setOpenKYCReview(false);
+    setSelectedSumsubId(null);
   }, []);
 
   const handleReviewStatusUpdate = useCallback(
-    (status: 'approved' | 'rejected') => {
+    (status: 'approved' | 'rejected', reason?: string) => {
       onKYCStatusUpdate(row.id, status);
+      handleCloseKYCReview();
     },
-    [row.id, onKYCStatusUpdate]
+    [row.id, onKYCStatusUpdate, handleCloseKYCReview]
   );
 
-  const getVerificationStatusColor = (status: string) => {
+  const getVerificationStatusColor = (status: string | null | undefined) => {
     switch (status) {
-      case 'approved':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'rejected':
-        return 'error';
-      default:
-        return 'default';
+      case 'not_started': return 'warning';
+      case 'in_review': return 'info';
+      case 'approved_sumsub': return 'success';
+      case 'rejected_sumsub': return 'error';
+      default: return 'default';
     }
   };
 
-  const getVerificationStatusLabel = (status: string) => {
+  const getVerificationStatusLabel = (status: string | null | undefined) => {
     switch (status) {
-      case 'approved':
-        return 'Approved';
-      case 'pending':
-        return 'Pending';
-      case 'rejected':
-        return 'Rejected';
-      default:
-        return 'Not Started';
+      case 'not_started': return 'Not Started';
+      case 'in_review': return 'In Review';
+      case 'approved_sumsub': return 'Approved by Sumsub';
+      case 'rejected_sumsub': return 'Rejected by Sumsub';
+      case 'approved': return 'Approved by Admin';
+      case 'rejected': return 'Rejected by Admin';
+      default: return 'Unknown';
+    }
+  };
+
+  const getAdminStatusColor = (status: string | null | undefined) => {
+    switch (status) {
+      case 'pending': return 'warning';
+      case 'approved': return 'success';
+      case 'rejected': return 'error';
+      default: return 'default';
+    }
+  };
+
+  const getAdminStatusLabel = (status: string | null | undefined) => {
+    switch (status) {
+      case 'pending': return 'Pending';
+      case 'approved': return 'Approved';
+      case 'rejected': return 'Rejected';
+      default: return 'N/A';
     }
   };
 
@@ -131,57 +154,43 @@ export function UserTableRow({
         <TableCell padding="checkbox">
           <Checkbox disableRipple checked={selected} onChange={onSelectRow} />
         </TableCell>
-
         <TableCell component="th" scope="row">
           <Box gap={2} display="flex" alignItems="center">
             <Avatar
               alt={row.username}
-              src={
-                row.photo ||
-                `/assets/images/avatar/avatar-${Math.floor(Math.random() * 24) + 1}.webp`
-              }
-              sx={{
-                width: 40,
-                height: 40,
-                bgcolor: !row.photo ? 'primary.main' : 'transparent',
-              }}
+              src={row.photo || `/assets/images/avatar/avatar-${Math.floor(Math.random() * 24) + 1}.webp`}
+              sx={{ width: 40, height: 40, bgcolor: !row.photo ? 'primary.main' : 'transparent' }}
             >
               {!row.photo && row.username?.[0]?.toUpperCase()}
             </Avatar>
             {row.username || '-'}
           </Box>
         </TableCell>
-
         <TableCell>{row.fullname || '-'}</TableCell>
         <TableCell>{row.email || '-'}</TableCell>
         <TableCell>{row.phone_number || '-'}</TableCell>
-
         <TableCell>{row.referredByName || 'N/A'}</TableCell>
-
         <TableCell align="center">
-          <Label color={getVerificationStatusColor(row.verification_status)}>
-            {getVerificationStatusLabel(row.verification_status)}
+          <Label color={getVerificationStatusColor(row.sumsub_status)}>
+            {getVerificationStatusLabel(row.sumsub_status)}
           </Label>
-          {row.verification_status === 'pending' && row.sumsub_id && (
-            <Button size="small" variant="outlined" onClick={handleOpenKYCReview} sx={{ ml: 1 }}>
-              Review
-            </Button>
-          )}
         </TableCell>
-
+        <TableCell align="center">
+          <Label color={getAdminStatusColor(row.admin_status)}>
+            {getAdminStatusLabel(row.admin_status)}
+          </Label>
+        </TableCell>
         <TableCell align="center">
           <Label color={row.is_verified === 1 ? 'success' : 'error'}>
             {row.is_verified === 1 ? 'Verified' : 'Unverified'}
           </Label>
         </TableCell>
-
-        <TableCell>
-          <Label color={row.status === 0 ? 'error' : 'success'}>
+        <TableCell align="center">
+          <Label color={row.status === 1 ? 'success' : 'error'}>
             {row.status === 1 ? 'Active' : 'Inactive'}
           </Label>
         </TableCell>
-
-        <TableCell>
+        <TableCell align="right">
           <IconButton onClick={handleOpenPopover}>
             <Iconify icon="eva:more-vertical-fill" />
           </IconButton>
@@ -194,35 +203,37 @@ export function UserTableRow({
         onClose={handleClosePopover}
         anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <MenuList
-          disablePadding
-          sx={{
+        PaperProps={{
+          sx: {
             p: 0.5,
-            gap: 0.5,
-            width: 160,
-            display: 'flex',
-            flexDirection: 'column',
-            [`& .${menuItemClasses.root}`]: {
+            width: 180,
+            '& .MuiMenuItem-root': {
               px: 1,
               gap: 2,
               borderRadius: 0.75,
-              [`&.${menuItemClasses.selected}`]: { bgcolor: 'action.selected' },
+              typography: 'body2',
+              '&:hover': { bgcolor: 'action.selected' },
             },
-          }}
-        >
+          },
+        }}
+      >
+        <MenuList>
           <MenuItem onClick={handleViewDetails}>
-            <Iconify icon="solar:eye-bold" />
+            <Iconify icon="eva:eye-fill" />
             View Details
           </MenuItem>
-
           <MenuItem onClick={handleOpenStatusDialog}>
-            <Iconify icon="solar:user-block-bold" />
+            <Iconify icon={row.status === 1 ? 'eva:slash-fill' : 'eva:checkmark-fill'} />
             {row.status === 1 ? 'Deactivate' : 'Activate'}
           </MenuItem>
-
+          {row.sumsub_id && (
+            <MenuItem onClick={handleOpenKYCReview}>
+              <Iconify icon="eva:file-text-fill" />
+              Review Documents
+            </MenuItem>
+          )}
           <MenuItem onClick={handleOpenDeleteDialog} sx={{ color: 'error.main' }}>
-            <Iconify icon="solar:trash-bin-trash-bold" />
+            <Iconify icon="eva:trash-2-outline" />
             Delete
           </MenuItem>
         </MenuList>
@@ -256,10 +267,7 @@ export function UserTableRow({
           <DialogContentText id="status-confirm-dialog-description">
             <Typography variant="body1" color="#000">
               Are you sure you want to {row.status === 1 ? 'deactivate' : 'activate'} the user{' '}
-              <strong>
-                &quot;{row.fullname || row.email || row.phone_number || 'this user'}&quot;
-              </strong>
-              ?
+              <strong>"{row.fullname || row.email || row.phone_number || 'this user'}"</strong>?
             </Typography>
           </DialogContentText>
         </DialogContent>
@@ -284,7 +292,6 @@ export function UserTableRow({
         </DialogActions>
       </Dialog>
 
-      {/* Confirmation Dialog for Delete */}
       <Dialog
         open={openConfirmDialog === 'delete'}
         onClose={handleCloseDialog}
@@ -310,10 +317,7 @@ export function UserTableRow({
           <DialogContentText id="delete-confirm-dialog-description">
             <Typography variant="body1" color="#000">
               Are you sure you want to delete the user{' '}
-              <strong>
-                &quot;{row.fullname || row.email || row.phone_number || 'this user'}&quot;
-              </strong>
-              ?
+              <strong>"{row.fullname || row.email || row.phone_number || 'this user'}"</strong>?
               <Typography component="span" color="error.main">
                 {' '}
                 <br />
@@ -343,12 +347,14 @@ export function UserTableRow({
         </DialogActions>
       </Dialog>
 
-      {openKYCReview && row.sumsub_id && (
+      {selectedSumsubId && (
         <UserKYCReview
           userId={row.id}
-          sumsubId={row.sumsub_id}
+          sumsubId={selectedSumsubId}
+          sumsubStatus={row.sumsub_status}
           onClose={handleCloseKYCReview}
           onStatusUpdate={handleReviewStatusUpdate}
+          token={token}
         />
       )}
     </>

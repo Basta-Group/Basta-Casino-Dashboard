@@ -17,9 +17,7 @@ import Logo from 'src/components/logo/logo';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import { CasinoPromo } from '../components/nav-upgrade';
-import { WorkspacesPopover } from '../components/workspaces-popover';
 
-import type { WorkspacesPopoverProps } from '../components/workspaces-popover';
 
 // ----------------------------------------------------------------------
 

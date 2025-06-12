@@ -1,7 +1,10 @@
+import type { AxiosError } from 'axios';
+
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import axios, { AxiosError } from 'axios';
-import { env } from 'src/config/env.config';
-import { Box, Button, TextField, Typography, Stack, Paper } from '@mui/material';
+
+import { Box, Stack, Paper, Button, TextField, Typography } from '@mui/material';
+
 import casinoImg from '../../../public/assets/background/casino.png';
 import casinoBg from '../../../public/assets/background/casino-bg-full.jpg';
 
@@ -91,7 +94,7 @@ const DashboardBannerView = (): JSX.Element => {
         );
         console.log('Fetch response:', response.data);
         if ('data' in response.data) {
-          const data = response.data.data;
+          const {data} = response.data;
           setBannerData(data);
           const time = parseTime(data.countdown);
           setTimeInputs({

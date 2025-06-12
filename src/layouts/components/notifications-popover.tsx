@@ -169,37 +169,45 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
     try {
       setLoading(true);
       const response = await fetch(
-        `${env.api.baseUrl}:${env.api.port}/api/auth/notifications?page=${page}&limit=${isViewAll ? 10 : 5}`
+        `${env.api.baseUrl}:${env.api.port}/api/auth/notifications?page=${page}&limit=${isViewAll ? 10 : 5}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
       );
       if (!response.ok) {
         throw new Error('Failed to fetch notifications');
       }
       const data = await response.json();
+      if (data.success) {
+        const transformedNotifications = data.data.notifications.map((notification: any) => ({
+          id: notification._id,
+          type: notification.type,
+          title: notification.user_id?.username || notification.metadata?.username || 'User',
+          isUnRead: true,
+          description: notification.message,
+          avatarUrl: null,
+          postedAt: notification.created_at,
+          metadata: notification.metadata,
+          user_id: notification.user_id
+            ? {
+                username: notification.user_id.username,
+                email: notification.user_id.email,
+                phone_number: notification.user_id.phone_number,
+              }
+            : null,
+        }));
 
-      const transformedNotifications = data.data.notifications.map((notification: any) => ({
-        id: notification._id,
-        type: notification.type,
-        title: notification.user_id?.username || notification.metadata?.username || 'User',
-        isUnRead: true,
-        description: notification.message,
-        avatarUrl: null,
-        postedAt: notification.created_at,
-        metadata: notification.metadata,
-        user_id: notification.user_id
-          ? {
-              username: notification.user_id.username,
-              email: notification.user_id.email,
-              phone_number: notification.user_id.phone_number,
-            }
-          : null,
-      }));
-
-      if (isViewAll) {
-        setAllNotifications(transformedNotifications);
+        if (isViewAll) {
+          setAllNotifications(transformedNotifications);
+        } else {
+          setNotifications(transformedNotifications);
+        }
+        setPagination(data.data.pagination);
       } else {
-        setNotifications(transformedNotifications);
+        setError(data.error || 'Failed to fetch notifications');
       }
-      setPagination(data.data.pagination);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -227,6 +235,9 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
         `${env.api.baseUrl}:${env.api.port}/api/auth/notifications/mark-all-read`,
         {
           method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
         }
       );
 
@@ -250,6 +261,9 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
         `${env.api.baseUrl}:${env.api.port}/api/auth/notifications/${notificationId}/mark-read`,
         {
           method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
         }
       );
 
@@ -541,7 +555,7 @@ function renderContent(notification: NotificationItemProps) {
     <Typography variant="subtitle2">
       {notification.title}
       <Typography component="span" variant="body2" sx={{ color: 'text.secondary' }}>
-        &nbsp; {notification.description}
+        {notification.description}
       </Typography>
     </Typography>
   );

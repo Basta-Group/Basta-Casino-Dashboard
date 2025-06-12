@@ -6,31 +6,33 @@
  * Affiliates can submit requests via /api/auth/affiliate/payouts/request, specifying amount, currency (USD, INR, POUND), and payment method.
  * With JWT authentication, Material-UI styling, Axios for API calls, and infinite scrolling, it ensures a seamless quest to claim rewards.
  */
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
+import InfiniteScroll from 'react-infinite-scroll-component';
+
+import { styled } from '@mui/material/styles';
 import {
   Box,
-  Typography,
   Card,
-  CardContent,
+  Grid,
   Table,
+  Paper,
+  Alert,
+  Avatar,
+  Button,
+  TableRow,
+  MenuItem,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
-  TableRow,
-  Paper,
-  Avatar,
   TextField,
-  Button,
-  MenuItem,
-  Alert,
-  Grid,
+  Typography,
+  CardContent,
+  TableContainer,
   CircularProgress,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import axios from 'axios';
+
 import { Iconify } from 'src/components/iconify';
-import InfiniteScroll from 'react-infinite-scroll-component';
 
 const PayoutsHeader = styled(Box)(({ theme }) => ({
   background: `linear-gradient(135deg, #26A69A 0%, #4DB6AC 100%)`,

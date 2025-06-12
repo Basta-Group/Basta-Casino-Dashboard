@@ -1,10 +1,11 @@
 import { env } from 'src/config/env.config';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useTable } from 'src/hooks/use-table';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
 import MenuItem from '@mui/material/MenuItem';
 import TableBody from '@mui/material/TableBody';
 import TextField from '@mui/material/TextField';
@@ -12,12 +13,17 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { GamingAnalyticsView } from 'src/sections/overview/view/overview-analytics-view';
-
 import { TableNoData } from '../table-no-data';
 import { UserTableRow } from '../user-table-row';
 import { UserTableHead } from '../user-table-head';
@@ -25,6 +31,7 @@ import { TableEmptyRows } from '../table-empty-rows';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
 import { UserProps } from '../types';
+import { UserKYCReview } from './user-kyc-review';
 
 export function UserView() {
   const table = useTable();
@@ -34,31 +41,49 @@ export function UserView() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCurrency, setFilterCurrency] = useState('all');
   const [filter2FA, setFilter2FA] = useState('all');
-  const [filterVerificationStatus, setFilterVerificationStatus] = useState('all');
-  const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  const [filterSumsubStatus, setFilterSumsubStatus] = useState('all');
+  const [filterAdminStatus, setFilterAdminStatus] = useState('all');
+  const [token, setToken] = useState(localStorage.getItem('accessToken') || '');
+  const openKYCDialog = useBoolean();
+  const openKYCReviewDialog = useBoolean();
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedSumsubId, setSelectedSumsubId] = useState<string | null>(null);
+  const [kycAction, setKycAction] = useState<'approved' | 'rejected' | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
+      if (!token) {
+        console.error('No access token found');
+        setLoading(false);
+        return;
+      }
+
       try {
         const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players`;
-        const response = await fetch(apiUrl);
+        const response = await fetch(apiUrl, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await response.json();
-        console.log('data', { data });
+        console.log('API Response:', data.data.players);
         if (data.success) {
           const nonAdminUsers = data.data.players.filter((user: UserProps) => user.role_id !== 1);
+          console.log('Non-Admin Users:', nonAdminUsers);
           setUsers(nonAdminUsers);
+        } else {
+          setFetchError(data.message || 'Failed to fetch users');
         }
       } catch (error) {
         console.error('Error fetching users:', error);
+        setFetchError('Error fetching users');
       } finally {
         setLoading(false);
       }
     };
 
     fetchUsers();
-  }, []);
-
-  const activePlayersCount = users.filter((user) => user.status === 1).length;
+  }, [token]);
 
   const updateUserStatus = async (userId: string, newStatus: number) => {
     try {
@@ -71,15 +96,18 @@ export function UserView() {
         },
         body: JSON.stringify({ status: newStatus }),
       });
-
       const data = await response.json();
       if (data.success) {
         setUsers((prevUsers) =>
           prevUsers.map((user) => (user.id === userId ? { ...user, status: newStatus } : user))
         );
+        toast.success('User status updated successfully!');
+      } else {
+        toast.error(data.message || 'Failed to update status');
       }
-    } catch (error) {
-      console.error('Error updating user status:', error);
+    } catch (statusError) {
+      console.error('Error updating user status:', statusError);
+      toast.error('Error updating user status');
     }
   };
 
@@ -93,33 +121,90 @@ export function UserView() {
           Authorization: `Bearer ${token}`,
         },
       });
-
       const data = await response.json();
       if (data.success) {
-        // Remove the deleted user from the local state
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+        toast.success('User deleted successfully!');
+      } else {
+        toast.error(data.message || 'Failed to delete user');
       }
-    } catch (error) {
-      console.error('Error deleting user:', error);
+    } catch (deleteError) {
+      console.error('Error deleting user:', deleteError);
+      toast.error('Error deleting user');
     }
   };
 
-  const handleKYCStatusUpdate = useCallback(
-    (userId: string, newStatus: 'approved' | 'rejected') => {
-      setUsers((prevUsers) =>
-        prevUsers.map((user) =>
-          user.id === userId
-            ? {
-                ...user,
-                verification_status: newStatus,
-                is_verified: newStatus === 'approved' ? 1 : 0,
-              }
-            : user
-        )
-      );
-    },
-    []
-  );
+  const handleKYCStatusUpdate = (userId: string, newStatus: 'approved' | 'rejected') => {
+    setSelectedUserId(userId);
+    setKycAction(newStatus);
+    openKYCDialog.onTrue();
+  };
+
+  const confirmKYCStatus = async () => {
+    if (!selectedUserId || !kycAction) return;
+
+    try {
+      const user = users.find((u) => u.id === selectedUserId);
+      if (!user || !user.sumsub_id) {
+        toast.error('Sumsub ID not found for this user');
+        return;
+      }
+      const sumsubId = user.sumsub_id;
+
+      const action = kycAction === 'approved' ? 'approve' : 'reject';
+      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/sumsub/${action}/${sumsubId}`;
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(kycAction === 'rejected' ? { adminNotes: rejectionReason } : {}),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setUsers((prevUsers) =>
+          prevUsers.map((prevUser) =>
+            prevUser.id === selectedUserId
+              ? {
+                  ...prevUser,
+                  admin_status: kycAction,
+                  admin_notes: kycAction === 'rejected' ? rejectionReason : 'Approved by admin',
+                  is_verified: kycAction === 'approved' ? 1 : 0,
+                }
+              : prevUser
+          )
+        );
+        toast.success(`KYC ${kycAction} successfully`);
+      } else {
+        toast.error(data.message || `Failed to ${kycAction} KYC`);
+      }
+    } catch (kycError) {
+      console.error('Error confirming KYC status:', kycError);
+      toast.error('Failed to update KYC status');
+    } finally {
+      openKYCDialog.onFalse();
+      setRejectionReason('');
+      setSelectedUserId(null);
+      setKycAction(null);
+    }
+  };
+
+  const viewDocuments = (sumsubId: string, userId: string) => {
+    setSelectedSumsubId(sumsubId);
+    setSelectedUserId(userId);
+    openKYCReviewDialog.onTrue();
+  };
+
+  const handleKYCStatusUpdateFromReview = (status: 'approved' | 'rejected', reason?: string) => {
+    setSelectedUserId(selectedUserId);
+    setKycAction(status);
+    setRejectionReason(reason || '');
+    openKYCDialog.onTrue();
+    openKYCReviewDialog.onFalse();
+  };
 
   const dataFiltered = applyFilter({
     inputData: users,
@@ -128,7 +213,8 @@ export function UserView() {
     filterStatus,
     filterCurrency,
     filter2FA,
-    filterVerificationStatus,
+    filterSumsubStatus: filterSumsubStatus === 'all' ? 'all' : filterSumsubStatus,
+    adminStatus: filterAdminStatus,
   });
 
   const notFound = !dataFiltered.length && !!filterName;
@@ -149,7 +235,12 @@ export function UserView() {
         </Typography>
       </Box>
 
-      {/* <GamingAnalyticsView activePlayersCount={activePlayersCount} /> */}
+      {fetchError && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setFetchError(null)}>
+          {fetchError}
+        </Alert>
+      )}
+
       <Card>
         <Stack direction="row" spacing={2} sx={{ p: 2 }}>
           <TextField
@@ -166,13 +257,28 @@ export function UserView() {
 
           <TextField
             select
-            label="Verification Status"
-            value={filterVerificationStatus}
-            onChange={(e) => setFilterVerificationStatus(e.target.value)}
+            label="Sumsub Status"
+            value={filterSumsubStatus}
+            onChange={(e) => setFilterSumsubStatus(e.target.value)}
             sx={{ width: 200 }}
           >
-            <MenuItem value="all">All Verification Status</MenuItem>
+            <MenuItem value="all">All Sumsub Status</MenuItem>
             <MenuItem value="not_started">Not Started</MenuItem>
+            <MenuItem value="in_review">In Review</MenuItem>
+            <MenuItem value="approved_sumsub">Approved (Sumsub)</MenuItem>
+            <MenuItem value="rejected_sumsub">Rejected (Sumsub)</MenuItem>
+            <MenuItem value="approved">Approved (Admin)</MenuItem>
+            <MenuItem value="rejected">Rejected (Admin)</MenuItem>
+          </TextField>
+
+          <TextField
+            select
+            label="Admin Status"
+            value={filterAdminStatus}
+            onChange={(e) => setFilterAdminStatus(e.target.value)}
+            sx={{ width: 200 }}
+          >
+            <MenuItem value="all">All Admin Status</MenuItem>
             <MenuItem value="pending">Pending</MenuItem>
             <MenuItem value="approved">Approved</MenuItem>
             <MenuItem value="rejected">Rejected</MenuItem>
@@ -186,9 +292,8 @@ export function UserView() {
             sx={{ width: 200 }}
           >
             <MenuItem value="all">All Currencies</MenuItem>
-            <MenuItem value="0">USD</MenuItem>
-            <MenuItem value="1">EUR</MenuItem>
-            <MenuItem value="2">INR</MenuItem>
+            <MenuItem value="USD">USD</MenuItem>
+            <MenuItem value="EUR">EUR</MenuItem>
           </TextField>
 
           <TextField
@@ -198,7 +303,7 @@ export function UserView() {
             onChange={(e) => setFilter2FA(e.target.value)}
             sx={{ width: 200 }}
           >
-            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="all">All 2FA Status</MenuItem>
             <MenuItem value="1">Enabled</MenuItem>
             <MenuItem value="0">Disabled</MenuItem>
           </TextField>
@@ -207,14 +312,11 @@ export function UserView() {
         <UserTableToolbar
           numSelected={table.selected.length}
           filterName={filterName}
-          onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setFilterName(event.target.value);
-            table.onResetPage();
-          }}
+          onFilterName={(event) => setFilterName(event.target.value)}
         />
 
-        <Scrollbar>
-          <TableContainer sx={{ overflow: 'unset' }}>
+        <TableContainer sx={{ overflow: 'unset' }}>
+          <Scrollbar>
             <Table sx={{ minWidth: 800 }}>
               <UserTableHead
                 order={table.order}
@@ -232,22 +334,16 @@ export function UserView() {
                   { id: 'username', label: 'Username' },
                   { id: 'fullname', label: 'Full Name' },
                   { id: 'email', label: 'Email' },
-                  { id: 'phone_number', label: 'Phone Number' },
-                  { id: 'referredByName', label: 'Affiliate' },
-                  { id: 'verification_status', label: 'Verification', align: 'center' },
-                  { id: 'is_verified', label: 'Verified', align: 'center' },
+                  { id: 'phone_number', label: 'Phone' },
+                  { id: 'referredByName', label: 'Referred By' },
+                  { id: 'sumsub_status', label: 'Sumsub Status' },
+                  { id: 'admin_status', label: 'Admin Status' },
+                  { id: 'is_verified', label: 'Email Verified' },
                   { id: 'status', label: 'Status' },
-                  // { id: 'is_2fa', label: '2FA' },
-                  // { id: 'currency', label: 'Currency' },
-                  // {id: 'balance', label: 'Balance'},
-                  // { id: 'language', label: 'Language' },
-                  // { id: 'country', label: 'Country' },
-                  // { id: 'city', label: 'City' },
-                  // { id: 'role_id', label: 'Role' },
-                  // { id: 'created_at', label: 'Created At' },
-                  { id: 'actions', label: 'Actions' },
+                  { id: 'action', label: 'Actions', align: 'right' },
                 ]}
               />
+
               <TableBody>
                 {dataFiltered
                   .slice(
@@ -263,100 +359,72 @@ export function UserView() {
                       onUpdateStatus={updateUserStatus}
                       onDeleteUser={deleteUser}
                       onKYCStatusUpdate={handleKYCStatusUpdate}
+                      onViewDocuments={(sumsubId) => viewDocuments(sumsubId, row.id)}
+                      token={token}
                     />
                   ))}
 
                 <TableEmptyRows
-                  height={68}
+                  height={77}
                   emptyRows={emptyRows(table.page, table.rowsPerPage, users.length)}
                 />
 
                 {notFound && <TableNoData searchQuery={filterName} />}
               </TableBody>
             </Table>
-          </TableContainer>
-        </Scrollbar>
+          </Scrollbar>
+        </TableContainer>
 
         <TablePagination
-          component="div"
           page={table.page}
-          count={users.length}
+          component="div"
+          count={dataFiltered.length}
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           rowsPerPageOptions={[5, 10, 25]}
           onRowsPerPageChange={table.onChangeRowsPerPage}
         />
       </Card>
+
+      <Dialog open={openKYCDialog.value} onClose={openKYCDialog.onFalse}>
+        <DialogTitle>Confirm KYC Status Change</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom>
+            You are about to change the KYC status to {kycAction} for user with ID: {selectedUserId}
+            .
+          </Typography>
+          {kycAction === 'rejected' && (
+            <TextField
+              fullWidth
+              label="Reason for Rejection"
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              multiline
+              rows={4}
+              margin="normal"
+              placeholder="Please provide a detailed reason for rejection."
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={openKYCDialog.onFalse} color="inherit">
+            Cancel
+          </Button>
+          <Button onClick={confirmKYCStatus} variant="contained" color="primary">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {selectedSumsubId && selectedUserId && (
+        <UserKYCReview
+          userId={selectedUserId}
+          sumsubId={selectedSumsubId}
+          onClose={openKYCReviewDialog.onFalse}
+          onStatusUpdate={handleKYCStatusUpdateFromReview}
+          token={token}
+        />
+      )}
     </DashboardContent>
   );
-}
-
-function useTable() {
-  const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('username');
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
-
-  const onSort = useCallback(
-    (id: string) => {
-      const isAsc = orderBy === id && order === 'asc';
-      setOrder(isAsc ? 'desc' : 'asc');
-      setOrderBy(id);
-    },
-    [order, orderBy]
-  );
-
-  const onSelectAllRows = useCallback((checked: boolean, newSelecteds: string[]) => {
-    setSelected(checked ? newSelecteds : []);
-  }, []);
-
-  const onSelectRow = useCallback(
-    (id: string) => {
-      const selectedIndex = selected.indexOf(id);
-      let newSelected: string[] = [];
-
-      if (selectedIndex === -1) {
-        newSelected = newSelected.concat(selected, id);
-      } else if (selectedIndex === 0) {
-        newSelected = newSelected.concat(selected.slice(1));
-      } else if (selectedIndex === selected.length - 1) {
-        newSelected = newSelected.concat(selected.slice(0, -1));
-      } else if (selectedIndex > 0) {
-        newSelected = newSelected.concat(
-          selected.slice(0, selectedIndex),
-          selected.slice(selectedIndex + 1)
-        );
-      }
-      setSelected(newSelected);
-    },
-    [selected]
-  );
-
-  const onResetPage = useCallback(() => {
-    setPage(0);
-  }, []);
-
-  const onChangePage = useCallback((event: unknown, newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const onChangeRowsPerPage = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  }, []);
-
-  return {
-    page,
-    order,
-    orderBy,
-    selected,
-    rowsPerPage,
-    onSort,
-    onSelectRow,
-    onResetPage,
-    onChangePage,
-    onSelectAllRows,
-    onChangeRowsPerPage,
-  };
 }

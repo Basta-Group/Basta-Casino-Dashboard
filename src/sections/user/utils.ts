@@ -49,7 +49,8 @@ type ApplyFilterProps = {
   filterStatus: string;
   filterCurrency: string;
   filter2FA: string;
-  filterVerificationStatus: string;
+  filterSumsubStatus: string;
+  adminStatus: string;
 };
 
 export function applyFilter({
@@ -59,8 +60,16 @@ export function applyFilter({
   filterStatus,
   filterCurrency,
   filter2FA,
-  filterVerificationStatus,
+  filterSumsubStatus,
+  adminStatus,
 }: ApplyFilterProps) {
+  // Sort by created_at in descending order first
+  inputData = [...inputData].sort((a, b) => {
+    const dateA = new Date(a.created_at).getTime();
+    const dateB = new Date(b.created_at).getTime();
+    return dateB - dateA;
+  });
+
   const stabilizedThis = inputData.map((el, index) => [el, index] as const);
 
   stabilizedThis.sort((a, b) => {
@@ -89,8 +98,12 @@ export function applyFilter({
     inputData = inputData.filter((user) => user.is_2fa.toString() === filter2FA);
   }
 
-  if (filterVerificationStatus !== 'all') {
-    inputData = inputData.filter((user) => user.verification_status === filterVerificationStatus);
+  if (filterSumsubStatus !== 'all') {
+    inputData = inputData.filter((user) => user.sumsub_status === filterSumsubStatus);
+  }
+
+  if (adminStatus !== 'all') {
+    inputData = inputData.filter((user) => user.admin_status === adminStatus);
   }
 
   return inputData;

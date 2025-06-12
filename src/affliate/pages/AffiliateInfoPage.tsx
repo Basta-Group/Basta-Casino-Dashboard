@@ -1,4 +1,4 @@
-import { Box, Typography, Stack, Grid } from '@mui/material';
+import { Box, Grid, Stack, Typography } from '@mui/material';
 
 const AffiliateInfoPage = () => (
   <Box

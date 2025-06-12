@@ -34,6 +34,51 @@ export default defineConfig({
       },
     ],
   },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@mui/material',
+      '@mui/icons-material',
+      '@emotion/react',
+      '@emotion/styled',
+      'react-toastify',
+      'axios',
+      'date-fns',
+      'lodash',
+      'react-hook-form',
+      'yup',
+      'react-beautiful-dnd',
+      'react-datepicker',
+      'react-dropzone',
+      'react-markdown',
+      'react-syntax-highlighter',
+      'recharts',
+      'socket.io-client',
+      'zustand'
+    ],
+    esbuildOptions: {
+      target: 'es2020',
+    },
+  },
+  build: {
+    target: 'es2020',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': [
+            'react',
+            'react-dom',
+            '@mui/material',
+            '@mui/icons-material',
+            '@emotion/react',
+            '@emotion/styled'
+          ],
+        },
+      },
+    },
+  },
   server: { 
     port: PORT, 
     host: '0.0.0.0', // Listen on all network interfaces

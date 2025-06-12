@@ -29,4 +29,8 @@ export interface UserProps {
   referredByName: string;
   verification_status: 'not_started' | 'pending' | 'approved' | 'rejected';
   sumsub_id: string;
+  sumsub_status: 'not_started' | 'in_review' | 'approved_sumsub' | 'rejected_sumsub' | 'approved' | 'rejected' | null;
+  admin_status: 'pending' | 'approved' | 'rejected' | null;
+  sumsub_notes: string | null;
+  admin_notes: string | null;
 }

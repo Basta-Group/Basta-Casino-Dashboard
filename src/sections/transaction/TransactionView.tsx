@@ -1,23 +1,28 @@
+import type { SetStateAction} from 'react';
+import type {
+  ChipProps} from '@mui/material';
+
+import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { CONFIG } from 'src/config-global';
+
 import {
-  Container,
-  Typography,
+  Box,
   Card,
+  Chip,
   Table,
+  Paper,
+  Stack,
+  TableRow,
+  Container,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  Stack,
-  Box,
-  TablePagination,
-  ChipProps, // Import ChipProps for the color type
+  Typography,
+  TableContainer,
+  TablePagination // Import ChipProps for the color type
 } from '@mui/material';
-import { SetStateAction, useState } from 'react';
+
+import { CONFIG } from 'src/config-global';
 
 // Define the status type
 type TransactionStatus = 'Completed' | 'Pending' | 'Failed';

@@ -1,6 +1,10 @@
+import type { AxiosError } from 'axios';
+
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Card, CardContent, TextField, Typography } from '@mui/material';
-import axios, { AxiosError } from 'axios';
+
+import { Box, Card, Button, TextField, Typography, CardContent } from '@mui/material';
+
 import { env } from 'src/config/env.config';
 
 interface CommissionData {

@@ -1,22 +1,27 @@
+import type { AxiosError } from 'axios';
+
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
+
+import { styled } from '@mui/material/styles';
 import {
   Box,
-  Typography,
   Card,
-  CardContent,
   Button,
-  TextField,
-  InputAdornment,
-  Snackbar,
-  IconButton,
-  Divider,
   Avatar,
+  Divider,
+  Snackbar,
+  TextField,
+  Typography,
+  IconButton,
+  CardContent,
+  InputAdornment,
   CircularProgress,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify';
-import axios, { AxiosError } from 'axios';
+
 import { env } from 'src/config/env.config';
+
+import { Iconify } from 'src/components/iconify';
 
 interface AffiliateData {
   couponCode: string;

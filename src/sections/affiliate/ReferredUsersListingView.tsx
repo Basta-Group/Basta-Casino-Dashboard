@@ -1,25 +1,27 @@
-import { env } from 'src/config/env.config';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+
+import { styled } from '@mui/material/styles';
 import {
   Box,
-  Typography,
-  Card,
-  CardContent,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
   Avatar,
-  TablePagination,
+  TableRow,
   Checkbox,
+  TableBody,
+  TableCell,
+  TableHead,
+  Typography,
+  TableContainer,
+  TablePagination,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+
+import { env } from 'src/config/env.config';
+
 import { Iconify } from 'src/components/iconify';
-import { useParams } from 'react-router-dom';
-import { ReferredUser } from './types';
+
+import type { ReferredUser } from './types';
 
 // Styled components
 const EarningsHeader = styled(Box)(({ theme }) => ({

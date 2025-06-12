@@ -1,9 +1,13 @@
-import { Box, Button, Card, Container, Typography, Stack } from '@mui/material';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
+
+import { Box, Card, Stack, Button, Container, Typography } from '@mui/material';
+
 import { useRouter } from 'src/routes/hooks';
-import { Iconify } from 'src/components/iconify';
+
 import { CONFIG } from 'src/config-global';
+
+import { Iconify } from 'src/components/iconify';
 
 export default function LandingPage() {
   const router = useRouter();

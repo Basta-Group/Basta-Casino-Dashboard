@@ -1,10 +1,13 @@
 import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
+
 import { useState } from 'react';
+
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 
 import { _langs } from 'src/_mock';
+
 import { Iconify } from 'src/components/iconify';
 
 import { Main } from './main';
@@ -12,7 +15,6 @@ import { layoutClasses } from '../classes';
 import { NavMobile, NavDesktop } from './nav';
 import { navData } from '../config-nav-dashboard';
 import { Searchbar } from '../components/searchbar';
-import { _workspaces } from '../config-nav-workspace';
 import { MenuButton } from '../components/menu-button';
 import { LayoutSection } from '../core/layout-section';
 import { HeaderSection } from '../core/header-section';

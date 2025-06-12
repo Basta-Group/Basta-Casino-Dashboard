@@ -1,23 +1,25 @@
 import { lazy, Suspense } from 'react';
 import { Outlet, Navigate, useRoutes } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
+
 import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 import TransactionPage from 'src/pages/TransactionPage';
 import DashboardBanner from 'src/pages/DashboardBanner';
+import AdminPayoutPage from 'src/pages/AdminPayoutPage';
 import AdminAffiliatePage from 'src/pages/AdminAffiliatePage';
+import CommissionControlPage from 'src/pages/commissionControl';
 import AffiliateInfoPage from 'src/affliate/pages/AffiliateInfoPage';
 import AffiliateEarningPage from 'src/affliate/pages/AffiliateEarningPage';
+import AffiliatePayoutsPage from 'src/affliate/pages/AffiliatePayoutsPage';
 import AffiliateReferralsPage from 'src/affliate/pages/AffiliateReferralsPage';
-import CommissionControlPage from 'src/pages/commissionControl';
+import AffiliateVerifyEmailPage from 'src/affliate/pages/AffiliateVerifyEmailPage';
+
 import { UserDetailPage } from 'src/sections/user/user-detail';
 import { AffiliateDetailPage } from 'src/sections/affiliate/affiliate-detail';
-import ReferredUsersListingView from 'src/sections/affiliate/ReferredUsersListingView';
-import AffiliatePayoutsPage from 'src/affliate/pages/AffiliatePayoutsPage';
-import AdminPayoutPage from 'src/pages/AdminPayoutPage';
-import AffiliateVerifyEmailPage from 'src/affliate/pages/AffiliateVerifyEmailPage';
 
 export const HomePage = lazy(() => import('src/pages/home'));
 export const LandingPage = lazy(() => import('src/pages/landing'));

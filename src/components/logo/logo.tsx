@@ -1,6 +1,9 @@
+import type { BoxProps } from '@mui/material/Box';
+
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Box, { BoxProps } from '@mui/material/Box';
+
+import Box from '@mui/material/Box';
 
 import fullLogo from '../../../public/assets/icons/BastaLogo.svg';
 

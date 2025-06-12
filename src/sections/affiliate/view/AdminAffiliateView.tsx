@@ -1,10 +1,9 @@
-import { env } from 'src/config/env.config';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
 import MenuItem from '@mui/material/MenuItem';
 import TableBody from '@mui/material/TableBody';
 import TextField from '@mui/material/TextField';
@@ -13,6 +12,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { env } from 'src/config/env.config';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Scrollbar } from 'src/components/scrollbar';
@@ -21,8 +21,8 @@ import { TableNoData } from '../../user/table-no-data';
 import { AffiliateTableRow } from '../affiliate-table-row';
 import { AffiliateTableHead } from '../affiliate-table-head';
 import { TableEmptyRows } from '../../user/table-empty-rows';
-import { AffiliateTableToolbar } from '../affiliate-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
+import { AffiliateTableToolbar } from '../affiliate-table-toolbar';
 
 export interface AffiliateProps {
   id: string;

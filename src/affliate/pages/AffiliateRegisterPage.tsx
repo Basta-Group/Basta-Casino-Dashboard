@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
-import { Box, TextField, Typography, Link, Alert } from '@mui/material';
+
 import LoadingButton from '@mui/lab/LoadingButton';
+import { Box, Link, Alert, TextField, Typography } from '@mui/material';
+
 import { useRouter } from 'src/routes/hooks';
 
 export default function AffiliateRegisterPage() {

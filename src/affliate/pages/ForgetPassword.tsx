@@ -1,8 +1,11 @@
-import { env } from 'src/config/env.config';
 import { useState, useCallback } from 'react';
-import { Box, Link, Divider, TextField, Typography, Alert } from '@mui/material';
+
 import LoadingButton from '@mui/lab/LoadingButton';
+import { Box, Link, Alert, Divider, TextField, Typography } from '@mui/material';
+
 import { useRouter } from 'src/routes/hooks';
+
+import { env } from 'src/config/env.config';
 
 export default function AffiliateForgotPasswordPage() {
   const router = useRouter();

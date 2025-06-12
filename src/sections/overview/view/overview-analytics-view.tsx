@@ -1,16 +1,19 @@
-import { env } from 'src/config/env.config';
-import { useState, useCallback, useEffect } from 'react';
+import { Icon } from '@iconify/react';
+import { useState, useEffect } from 'react';
+
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
-import { DashboardContent } from 'src/layouts/dashboard';
 import { Box, CircularProgress } from '@mui/material';
-import { Icon } from '@iconify/react';
+
+import { env } from 'src/config/env.config';
+import { DashboardContent } from 'src/layouts/dashboard';
+
 import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
 import { AnalyticsCurrentVisits } from '../analytics-current-visits';
 import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
-import { AnalyticsConversionRates } from '../analytics-conversion-rates';
-import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
 import { AnalyticsOrderTimeline } from '../analytics-order-timeline';
+import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
+import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 
 export interface UserProps {
   id: string;
@@ -40,6 +43,7 @@ export interface UserProps {
   total_withdrawals: number;
   last_deposit_date: Date;
   last_withdrawal_date: Date;
+  sumsub_status?:string
 }
 
 export function GamingAnalyticsView() {
