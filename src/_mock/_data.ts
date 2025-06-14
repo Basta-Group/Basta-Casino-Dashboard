@@ -44,6 +44,34 @@ export const _myAccount = {
     return 'guest@bastagroup.com';
   })(),
   photoURL: '/assets/images/avatar/avatar-25.webp',
+  userRole: (() => {
+    const adminToken = localStorage.getItem('accessToken');
+    const affiliateToken = localStorage.getItem('affiliateToken');
+
+    if (adminToken) {
+      const decoded = decodeToken(adminToken);
+      return decoded?.role === 1 ? 'Admin' : 'User';
+    }
+    if (affiliateToken) {
+      const decoded = decodeToken(affiliateToken);
+      return decoded?.role || 'Affiliate';
+    }
+    return 'Guest';
+  })(),
+  userId: (() => {
+    const adminToken = localStorage.getItem('accessToken');
+    const affiliateToken = localStorage.getItem('affiliateToken');
+
+    if (adminToken) {
+      const decoded = decodeToken(adminToken);
+      return decoded?.id || null;
+    }
+    if (affiliateToken) {
+      const decoded = decodeToken(affiliateToken);
+      return decoded?.id || null;
+    }
+    return null;
+  })(),
 };
 
 // ----------------------------------------------------------------------

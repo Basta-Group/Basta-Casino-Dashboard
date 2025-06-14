@@ -97,6 +97,16 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
             {_myAccount?.email}
           </Typography>
+          {_myAccount?.userRole && (
+            <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
+              {_myAccount.userRole}
+            </Typography>
+          )}
+          {_myAccount?.userId && (
+            <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
+              ID: {_myAccount.userId}
+            </Typography>
+          )}
         </Box>
 
         <Divider sx={{ borderStyle: 'dashed' }} />
