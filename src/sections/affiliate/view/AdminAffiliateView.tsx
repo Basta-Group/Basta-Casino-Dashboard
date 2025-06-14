@@ -197,14 +197,7 @@ export function AdminAffiliateView() {
                     table.page * table.rowsPerPage + table.rowsPerPage
                   )
                   .map((row) => (
-                    <AffiliateTableRow
-                      key={row.id}
-                      row={row}
-                      // selected={table.selected.includes(row.id)}
-                      // onSelectRow={() => table.onSelectRow(row.id)}
-                      onUpdateStatus={updateUserStatus}
-                      // onDeleteUser={deleteUser}
-                    />
+                    <AffiliateTableRow key={row.id} row={row} onUpdateStatus={updateUserStatus} />
                   ))}
 
                 <TableEmptyRows

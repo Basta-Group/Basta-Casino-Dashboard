@@ -66,10 +66,8 @@ export function UserView() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
-        console.log('API Response:', data.data.players);
         if (data.success) {
           const nonAdminUsers = data.data.players.filter((user: UserProps) => user.role_id !== 1);
-          console.log('Non-Admin Users:', nonAdminUsers);
           setUsers(nonAdminUsers);
         } else {
           setFetchError(data.message || 'Failed to fetch users');
@@ -114,9 +112,6 @@ export function UserView() {
   const deleteUser = async (userId: string) => {
     try {
       const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players/${userId}`;
-      console.log('Deleting user with ID:', userId);
-      console.log('API URL:', apiUrl);
-
       const response = await fetch(apiUrl, {
         method: 'DELETE',
         headers: {
@@ -124,11 +119,7 @@ export function UserView() {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      console.log('Delete response status:', response.status);
       const data = await response.json();
-      console.log('Delete response data:', data);
-
       if (data.success) {
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
         toast.success('User deleted successfully!');
@@ -206,11 +197,24 @@ export function UserView() {
   };
 
   const handleKYCStatusUpdateFromReview = (status: 'approved' | 'rejected', reason?: string) => {
-    setSelectedUserId(selectedUserId);
-    setKycAction(status);
-    setRejectionReason(reason || '');
-    openKYCDialog.onTrue();
-    openKYCReviewDialog.onFalse();
+    if (selectedUserId) {
+      setKycAction(status);
+      setRejectionReason(reason || '');
+      setUsers((prevUsers) =>
+        prevUsers.map((prevUser) =>
+          prevUser.id === selectedUserId
+            ? {
+                ...prevUser,
+                admin_status: status,
+                admin_notes: status === 'rejected' ? reason || 'Rejected by admin' : 'Approved by admin',
+                is_verified: status === 'approved' ? 1 : 0,
+              }
+            : prevUser
+        )
+      );
+      openKYCDialog.onTrue();
+      openKYCReviewDialog.onFalse();
+    }
   };
 
   const dataFiltered = applyFilter({
@@ -422,6 +426,11 @@ export function UserView() {
           onClose={openKYCReviewDialog.onFalse}
           onStatusUpdate={handleKYCStatusUpdateFromReview}
           token={token}
+          userData={(() => {
+            const userToPass = users.find((user) => user.id === selectedUserId);
+            console.log('User data being passed to UserKYCReview:', userToPass);
+            return userToPass;
+          })()}
         />
       )}
     </DashboardContent>

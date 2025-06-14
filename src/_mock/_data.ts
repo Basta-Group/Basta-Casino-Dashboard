@@ -14,14 +14,34 @@ import {
 // ----------------------------------------------------------------------
 
 export const _myAccount = {
-  displayName: 'Basta Group',
+  displayName: (() => {
+    const adminToken = localStorage.getItem('accessToken');
+    const affiliateToken = localStorage.getItem('affiliateToken');
+    
+    if (adminToken) {
+      const decoded = decodeToken(adminToken);
+      return decoded?.username || 'Admin User';
+    }
+    if (affiliateToken) {
+      const decoded = decodeToken(affiliateToken);
+      return decoded?.username || 'Affiliate User';
+    }
+    return 'Guest User';
+  })(),
   email: (() => {
-    const token = localStorage.getItem('affiliateToken');
-    if (token) {
-      const decoded = decodeToken(token);
+    const adminToken = localStorage.getItem('accessToken');
+    const affiliateToken = localStorage.getItem('affiliateToken');
+    
+    if (adminToken) {
+      const decoded = decodeToken(adminToken);
+      console.log('decoded.email', decoded.email)
       return decoded?.email || 'admin@bastagroup.com';
     }
-    return 'admin@bastagroup.com';
+    if (affiliateToken) {
+      const decoded = decodeToken(affiliateToken);
+      return decoded?.email || 'affiliate@bastagroup.com';
+    }
+    return 'guest@bastagroup.com';
   })(),
   photoURL: '/assets/images/avatar/avatar-25.webp',
 };

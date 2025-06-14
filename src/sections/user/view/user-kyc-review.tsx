@@ -8,6 +8,8 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
 import { toast } from 'react-toastify';
 import { env } from 'src/config/env.config';
 
@@ -18,6 +20,14 @@ interface UserKYCReviewProps {
   onClose: () => void;
   onStatusUpdate: (status: 'approved' | 'rejected', reason?: string) => void;
   token: string;
+  userData?: {
+    username: string;
+    fullname: string;
+    email: string;
+    phone_number: string;
+    country: string;
+    city: string;
+  };
 }
 
 interface Document {
@@ -35,6 +45,7 @@ export function UserKYCReview({
   onClose,
   onStatusUpdate,
   token,
+  userData,
 }: UserKYCReviewProps) {
   const [rejectionReason, setRejectionReason] = useState('');
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -53,11 +64,15 @@ export function UserKYCReview({
         }
       );
       const data = await response.json();
-      if (data.success) {
+      console.log('Documents data:', data);
+      if (data.success && data.data && Array.isArray(data.data.documents)) {
         setDocuments(data.data.documents);
         await Promise.all(
           data.data.documents.map(async (doc: Document) => {
             try {
+              if (!doc.id) {
+                throw new Error(`Document ID missing for document: ${JSON.stringify(doc)}`);
+              }
               const imgResponse = await fetch(
                 `${env.api.baseUrl}:${env.api.port}/api/sumsub/documents/${sumsubId}/images/${doc.id}`,
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -66,9 +81,13 @@ export function UserKYCReview({
                 const blob = await imgResponse.blob();
                 const url = URL.createObjectURL(blob);
                 setImageUrls((prev) => ({ ...prev, [doc.id]: url }));
+              } else {
+                console.error(`Failed to fetch image for document ${doc.id}: ${imgResponse.status}`);
+                setImageUrls((prev) => ({ ...prev, [doc.id]: '' }));
               }
             } catch (imgError) {
               console.error(`Error fetching image for document ${doc.id}:`, imgError);
+              setImageUrls((prev) => ({ ...prev, [doc.id]: '' }));
             }
           })
         );
@@ -76,6 +95,7 @@ export function UserKYCReview({
         setError(data.message || 'Failed to fetch documents');
       }
     } catch (err) {
+      console.error('Error fetching documents:', err);
       setError('Error fetching documents');
     } finally {
       setLoading(false);
@@ -137,34 +157,95 @@ export function UserKYCReview({
 
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>KYC Review for User ID: {userId}</DialogTitle>
+      <DialogTitle>
+        <Typography variant="h2">KYC Review</Typography>
+      </DialogTitle>
       <DialogContent>
-        <Typography variant="body1" gutterBottom>
-          Sumsub ID: {sumsubId}
+        <Box mb={3}>
+          <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.neutral' }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Username
+                </Typography>
+                <Typography variant="body1">{userData?.username || '-'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Full Name
+                </Typography>
+                <Typography variant="body1">{userData?.fullname || '-'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Email
+                </Typography>
+                <Typography variant="body1">{userData?.email || '-'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Phone
+                </Typography>
+                <Typography variant="body1">{userData?.phone_number || '-'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Location
+                </Typography>
+                <Typography variant="body1">
+                  {userData?.city && userData?.country
+                    ? `${userData.city}, ${userData.country}`
+                    : '-'}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  KYC Status
+                </Typography>
+                <Typography
+                  variant="body1"
+                  color={sumsubStatus === 'in_review' ? 'warning.main' : 'success.main'}
+                >
+                  {sumsubStatus?.replace('_', ' ').toUpperCase() || 'Unknown'}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Box>
+
+        <Typography variant="h6" gutterBottom>
+          Submitted Documents
         </Typography>
-        <Typography variant="body2" gutterBottom>
-          Status: {sumsubStatus || 'Unknown'}
-        </Typography>
+
         {documents.length > 0 ? (
           <Box>
             {documents.map((doc) => (
-              <Box key={doc.id} mb={2}>
-                <Typography variant="subtitle1">
-                  {doc.type} - {doc.side} (Status: {doc.status})
-                </Typography>
-                {imageUrls[doc.id] ? (
-                  <img
-                    src={imageUrls[doc.id]}
-                    alt={`${doc.type} - ${doc.side}`}
-                    style={{ maxWidth: '100%', marginTop: '10px' }}
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      toast.error(`Failed to load image for ${doc.type} - ${doc.side}`);
-                    }}
-                  />
-                ) : (
-                  <CircularProgress size={24} />
-                )}
+              <Box key={doc.id} mb={3}>
+                <Paper elevation={1} sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    {doc.type} - {doc.side}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Status: {doc.status}
+                  </Typography>
+                  {imageUrls[doc.id] ? (
+                    <Box sx={{ mt: 2 }}>
+                      <img
+                        src={imageUrls[doc.id]}
+                        alt={`${doc.type} - ${doc.side}`}
+                        style={{ maxWidth: '100%', borderRadius: '8px' }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          toast.error(`Failed to load image for ${doc.type} - ${doc.side}`);
+                        }}
+                      />
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                      <Typography color="error">Image not available</Typography>
+                    </Box>
+                  )}
+                </Paper>
               </Box>
             ))}
             {canReview && (
