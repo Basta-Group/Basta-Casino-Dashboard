@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
+import { env } from 'src/config/env.config';
 
 const VerifyContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -54,33 +55,42 @@ export default function AffiliateVerifyEmailPage() {
   const navigate = useNavigate();
 
   // Function to verify the email token
-  const verifyEmailToken = useCallback(async (token: string) => {
-    setIsVerifying(true);
-    setMessage('');
+  const verifyEmailToken = useCallback(
+    async (token: string) => {
+      setIsVerifying(true);
+      setMessage('');
 
-    try {
-      const response = await fetch('/api/auth/verify-affiliate-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      });
+      try {
+        const response = await fetch(
+          `${env.api.baseUrl}:${env.api.port}/api/auth/verify-affiliate-email`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          }
+        );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Invalid or expired token');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Invalid or expired token');
+        }
+
+        const data = await response.json();
+        setEmail(data.email || 'your email'); // Fallback if email not returned
+        setMessage('Email verified successfully! Redirecting to dashboard...');
+        setTimeout(() => navigate('/affiliate/dashboard'), 2000);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to verify email. The token may be invalid or expired.';
+        setMessage(errorMessage);
+      } finally {
+        setIsVerifying(false);
       }
-
-      const data = await response.json();
-      setEmail(data.email || 'your email'); // Fallback if email not returned
-      setMessage('Email verified successfully! Redirecting to dashboard...');
-      setTimeout(() => navigate('/affiliate/dashboard'), 2000);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to verify email. The token may be invalid or expired.';
-      setMessage(errorMessage);
-    } finally {
-      setIsVerifying(false);
-    }
-  }, [navigate]);
+    },
+    [navigate]
+  );
 
   // Extract token and fetch email on mount
   useEffect(() => {
@@ -88,7 +98,9 @@ export default function AffiliateVerifyEmailPage() {
     const token = query.get('token');
 
     if (!token) {
-      setMessage('Invalid or missing verification token. Please check the link or request a new one.');
+      setMessage(
+        'Invalid or missing verification token. Please check the link or request a new one.'
+      );
       return;
     }
 
@@ -106,20 +118,26 @@ export default function AffiliateVerifyEmailPage() {
     setMessage('');
 
     try {
-      const response = await fetch('/api/auth/resend-verification-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, isAffiliate: true }),
-      });
+      const response = await fetch(
+        `${env.api.baseUrl}:${env.api.port}/api/auth/resend-verification-email`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, isAffiliate: true }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to resend email');
       }
 
-      setMessage('Verification email resent successfully. Please check your inbox and spam/junk folder.');
+      setMessage(
+        'Verification email resent successfully. Please check your inbox and spam/junk folder.'
+      );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to resend email. Please try again later.';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to resend email. Please try again later.';
       setMessage(errorMessage);
     } finally {
       setIsResending(false);
@@ -141,8 +159,8 @@ export default function AffiliateVerifyEmailPage() {
             <Typography variant="body1" color="text.secondary" gutterBottom>
               {email ? (
                 <>
-                  We&apos;ve sent a verification link to <strong>{email}</strong>. Please check your inbox
-                  (and spam/junk folder) to verify your email address.
+                  We&apos;ve sent a verification link to <strong>{email}</strong>. Please check your
+                  inbox (and spam/junk folder) to verify your email address.
                 </>
               ) : (
                 'Verifying your email address...'
