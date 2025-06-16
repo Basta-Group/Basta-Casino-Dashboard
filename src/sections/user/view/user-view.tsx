@@ -295,6 +295,7 @@ export function UserView() {
             <MenuItem value="all">All Currencies</MenuItem>
             <MenuItem value="USD">USD</MenuItem>
             <MenuItem value="EUR">EUR</MenuItem>
+            <MenuItem value="INR">INR</MenuItem>
           </TextField>
 
           <TextField
