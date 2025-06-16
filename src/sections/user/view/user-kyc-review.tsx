@@ -32,7 +32,7 @@ interface UserKYCReviewProps {
     city: string;
     admin_status?: string | null;
     admin_notes?: string | null;
-    updated_at?: string;
+    updated_at?: string | Date;
   };
 }
 
