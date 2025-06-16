@@ -1,4 +1,4 @@
-import { UserProps } from './types';
+import type { UserProps } from './types';
 
 export const visuallyHidden = {
   border: 0,
@@ -47,8 +47,8 @@ type ApplyFilterProps = {
   comparator: (a: any, b: any) => number;
   filterName: string;
   filterStatus: string;
-  filterCurrency: string;
-  filter2FA: string;
+  filterCurrency?: string;
+  filter2FA?: string;
   filterSumsubStatus: string;
   adminStatus: string;
 };
@@ -96,11 +96,11 @@ export function applyFilter({
     inputData = inputData.filter((user) => user.status.toString() === filterStatus);
   }
 
-  if (filterCurrency !== 'all') {
+  if (filterCurrency && filterCurrency !== 'all') {
     inputData = inputData.filter((user) => user.currency.toString() === filterCurrency);
   }
 
-  if (filter2FA !== 'all') {
+  if (filter2FA && filter2FA !== 'all') {
     inputData = inputData.filter((user) => user.is_2fa.toString() === filter2FA);
   }
 

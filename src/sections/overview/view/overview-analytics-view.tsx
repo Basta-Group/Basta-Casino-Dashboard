@@ -43,7 +43,7 @@ export interface UserProps {
   total_withdrawals: number;
   last_deposit_date: Date;
   last_withdrawal_date: Date;
-  sumsub_status?:string
+  sumsub_status?: string;
 }
 
 export function GamingAnalyticsView() {
@@ -53,6 +53,9 @@ export function GamingAnalyticsView() {
   const [activePlayersData, setActivePlayersData] = useState<number[]>([0]);
   const [activePlayersRegionData, setActivePlayersRegionData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [kycStatusChartData, setKycStatusChartData] = useState<{ label: string; value: number }[]>(
+    []
+  );
 
   const activePlayersCount = users.filter((user) => user.status === 1).length;
 
@@ -65,6 +68,19 @@ export function GamingAnalyticsView() {
         console.log('data', { data });
         if (data.success) {
           setUsers(data.data.players);
+
+          // Process KYC status data for the chart
+          const statusCounts: { [key: string]: number } = {};
+          data.data.players.forEach((user: UserProps) => {
+            const status = user.sumsub_status || 'unknown'; // Handle undefined status
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+          });
+
+          const formattedKycData = Object.keys(statusCounts).map((status) => ({
+            label: status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()), // Format for display
+            value: statusCounts[status],
+          }));
+          setKycStatusChartData(formattedKycData);
         }
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -249,6 +265,29 @@ export function GamingAnalyticsView() {
             }}
           />
         </Grid>
+        <Grid xs={12} md={6} lg={8}>
+          <AnalyticsWebsiteVisits
+            title="Deposits & Withdrawals Trends"
+            subheader="(+10%) than last month"
+            chart={{
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+              series: [
+                { name: 'Deposits', data: [100, 120, 110, 130, 150, 140, 160, 170, 180] },
+                { name: 'Withdrawals', data: [50, 60, 55, 65, 70, 68, 75, 80, 85] },
+              ],
+            }}
+          />
+        </Grid>
+        <Grid xs={12} md={6} lg={8}>
+          <AnalyticsConversionRates
+            title="Top Games by Revenue"
+            subheader="Highest earning games this month"
+            chart={{
+              categories: ['Slots', 'Blackjack', 'Roulette', 'Poker', 'Baccarat'],
+              series: [{ name: 'Revenue', data: [70000, 55000, 40000, 30000, 20000] }],
+            }}
+          />
+        </Grid>
         <Grid xs={12} md={6} lg={4}>
           <AnalyticsTrafficBySite
             title="Payment Methods"
@@ -268,6 +307,14 @@ export function GamingAnalyticsView() {
               { id: '2', title: 'Withdrawal', time: '4 hours ago', type: 'withdrawal' },
               { id: '3', title: 'Game Purchase', time: '6 hours ago', type: 'purchase' },
             ]}
+          />
+        </Grid>
+        <Grid xs={12} md={6} lg={4}>
+          <AnalyticsCurrentVisits
+            title="KYC Status Overview"
+            chart={{
+              series: kycStatusChartData,
+            }}
           />
         </Grid>
       </Grid>

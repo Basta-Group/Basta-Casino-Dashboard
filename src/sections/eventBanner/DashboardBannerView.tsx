@@ -87,7 +87,7 @@ const DashboardBannerView = (): JSX.Element => {
     const fetchBannerConfig = async () => {
       try {
         const response = await axios.get<ApiResponse<BannerConfig>>(
-          `${import.meta.env.VITE_API_BASE_URL}:${import.meta.env.VITE_API_PORT}/api/banner`,
+          `${import.meta.env.VITE_API_BASE_URL}:${import.meta.env.VITE_API_PORT}/api/auth/banner`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

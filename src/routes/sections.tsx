@@ -21,6 +21,19 @@ import AffiliateVerifyEmailPage from 'src/affliate/pages/AffiliateVerifyEmailPag
 import { UserDetailPage } from 'src/sections/user/user-detail';
 import { AffiliateDetailPage } from 'src/sections/affiliate/affiliate-detail';
 
+const LoadingScreen = () => (
+  <Box display="flex" alignItems="center" justifyContent="center" flex="1 1 auto">
+    <LinearProgress
+      sx={{
+        width: 1,
+        maxWidth: 320,
+        bgcolor: (theme) => varAlpha(theme.vars.palette.text.primaryChannel, 0.16),
+        [`& .${linearProgressClasses.bar}`]: { bgcolor: 'text.primary' },
+      }}
+    />
+  </Box>
+);
+
 export const HomePage = lazy(() => import('src/pages/home'));
 export const LandingPage = lazy(() => import('src/pages/landing'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
@@ -31,6 +44,7 @@ export const PaymentPage = lazy(() => import('src/pages/PaymentPage'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
+export const PendingKYCPage = lazy(() => import('src/pages/pending-kyc'));
 
 // Affiliate routes
 const AffiliateLoginPage = lazy(() => import('src/affliate/pages/login'));
@@ -103,6 +117,14 @@ export function Router() {
         { path: 'dashboardBanner', element: <DashboardBanner /> },
         { path: 'commissionControl', element: <CommissionControlPage /> },
         { path: 'adminPayout', element: <AdminPayoutPage /> },
+        {
+          path: 'pending-kyc',
+          element: (
+            <Suspense fallback={<LoadingScreen />}>
+              <PendingKYCPage />
+            </Suspense>
+          ),
+        },
       ],
     },
     {

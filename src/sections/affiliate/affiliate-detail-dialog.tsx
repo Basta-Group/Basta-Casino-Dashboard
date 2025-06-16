@@ -6,12 +6,32 @@ import DialogContent from '@mui/material/DialogContent';
 
 import type { AffiliateProps } from './types';
 
+interface DetailItemProps {
+  label: string;
+  value: React.ReactNode;
+}
+
+/**
+ * DetailItem component for displaying label-value pairs in a grid
+ */
+const DetailItem = ({ label, value }: DetailItemProps) => (
+  <Grid item xs={12} sm={6}>
+    <Typography variant="subtitle2" color="text.secondary">
+      {label}
+    </Typography>
+    <Typography variant="body2">{value}</Typography>
+  </Grid>
+);
+
 interface UserDetailDialogProps {
   open: boolean;
   onClose: () => void;
   user: AffiliateProps;
 }
 
+/**
+ * AffiliateDialog component for displaying detailed affiliate information
+ */
 export function AffiliateDialog({ open, onClose, user }: UserDetailDialogProps) {
   const formatDate = (date: Date | null | undefined) => {
     if (!date) return '-';
@@ -21,15 +41,6 @@ export function AffiliateDialog({ open, onClose, user }: UserDetailDialogProps) 
       day: 'numeric',
     });
   };
-
-  const DetailItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <Grid item xs={12} sm={6}>
-      <Typography variant="subtitle2" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="body2">{value}</Typography>
-    </Grid>
-  );
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>

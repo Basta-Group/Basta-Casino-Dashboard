@@ -24,6 +24,9 @@ import { TableEmptyRows } from '../../user/table-empty-rows';
 import { emptyRows, applyFilter, getComparator } from '../utils';
 import { AffiliateTableToolbar } from '../affiliate-table-toolbar';
 
+/**
+ * Interface defining the structure of an affiliate user
+ */
 export interface AffiliateProps {
   id: string;
   firstname: string;
@@ -39,16 +42,18 @@ export interface AffiliateProps {
   promotionMethod: string[];
 }
 
+/**
+ * AdminAffiliateView component for managing affiliate users
+ * Provides functionality to view, filter, and manage affiliate users
+ */
 export function AdminAffiliateView() {
   const table = useTable();
   const [users, setUsers] = useState<AffiliateProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterName, setFilterName] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCurrency, setFilterCurrency] = useState('all');
-  const [filter2FA, setFilter2FA] = useState('all');
 
-  const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  const [token] = useState(localStorage.getItem('accessToken'));
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -109,17 +114,9 @@ export function AdminAffiliateView() {
       const result = await response.json();
       console.log('Status updated successfully:', result);
 
-      fetchUsers(); // will still work because it's memoized
+      fetchUsers();
     } catch (error) {
       console.error('Error updating user status:', error);
-    }
-  };
-
-  const deleteUser = async (userId: string) => {
-    try {
-      console.log('delete');
-    } catch (error) {
-      console.error('Error deleting user:', error);
     }
   };
 
@@ -128,8 +125,6 @@ export function AdminAffiliateView() {
     comparator: getComparator(table.order, table.orderBy),
     filterName,
     filterStatus,
-    filterCurrency,
-    filter2FA,
   });
 
   const notFound = !dataFiltered.length && !!filterName;
@@ -225,6 +220,9 @@ export function AdminAffiliateView() {
   );
 }
 
+/**
+ * Custom hook for managing table state and operations
+ */
 function useTable() {
   const [page, setPage] = useState(0);
   const [orderBy, setOrderBy] = useState('firstname');
@@ -262,21 +260,22 @@ function useTable() {
           selected.slice(selectedIndex + 1)
         );
       }
+
       setSelected(newSelected);
     },
     [selected]
   );
-
-  const onResetPage = useCallback(() => {
-    setPage(0);
-  }, []);
 
   const onChangePage = useCallback((event: unknown, newPage: number) => {
     setPage(newPage);
   }, []);
 
   const onChangeRowsPerPage = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setPage(0);
     setRowsPerPage(parseInt(event.target.value, 10));
+  }, []);
+
+  const onResetPage = useCallback(() => {
     setPage(0);
   }, []);
 
@@ -284,13 +283,13 @@ function useTable() {
     page,
     order,
     orderBy,
-    selected,
     rowsPerPage,
-    onSort,
+    selected,
     onSelectRow,
-    onResetPage,
-    onChangePage,
     onSelectAllRows,
+    onSort,
+    onChangePage,
     onChangeRowsPerPage,
+    onResetPage,
   };
 }

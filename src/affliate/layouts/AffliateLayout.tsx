@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 
-import { Iconify } from 'src/components/iconify';
 import { layoutClasses } from 'src/layouts/classes';
+import { Searchbar } from 'src/layouts/components/searchbar';
 import { LayoutSection } from 'src/layouts/core/layout-section';
 import { HeaderSection } from 'src/layouts/core/header-section';
 import { MenuButton } from 'src/layouts/components/menu-button';
 import { NavMobile, NavDesktop } from 'src/layouts/dashboard/nav';
 import { AccountPopover } from 'src/layouts/components/account-popover';
-import { LanguagePopover } from 'src/layouts/components/language-popover';
 import { NotificationsPopover } from 'src/layouts/components/notifications-popover';
-import { Searchbar } from 'src/layouts/components/searchbar';
+
+import { Iconify } from 'src/components/iconify';
 
 import { affiliateNavData } from '../config-nav';
 

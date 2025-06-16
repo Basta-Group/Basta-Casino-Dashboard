@@ -46,8 +46,8 @@ type ApplyFilterProps = {
   inputData: AffiliateProps[];
   filterName: string;
   filterStatus: string;
-  filterCurrency: string;
-  filter2FA: string;
+  filterCurrency?: string;
+  filter2FA?: string;
   comparator: (a: any, b: any) => number;
 };
 

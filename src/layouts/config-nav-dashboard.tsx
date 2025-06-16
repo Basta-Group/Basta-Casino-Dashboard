@@ -23,8 +23,8 @@ export const navData = [
     path: '/playerListing',
     icon: icon('ic-user'),
     children: [
-      { title: 'Player List', path: '/players/list' },
-      { title: 'Verification Queue', path: '/players/verification' },
+      { title: 'Player List', path: '/playerListing' },
+      { title: 'Verification Queue', path: '/pending-kyc' },
       { title: 'Player Balances', path: '/players/balances' },
     ],
   },

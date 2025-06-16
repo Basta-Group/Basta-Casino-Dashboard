@@ -1,26 +1,29 @@
+import { toast } from 'react-toastify';
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
+import Dialog from '@mui/material/Dialog';
+import Button from '@mui/material/Button';
+import { Typography } from '@mui/material';
 import Popover from '@mui/material/Popover';
 import TableRow from '@mui/material/TableRow';
-import Checkbox from '@mui/material/Checkbox';
 import MenuList from '@mui/material/MenuList';
-import { Typography } from '@mui/material';
+import MenuItem from '@mui/material/MenuItem';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
-import MenuItem from '@mui/material/MenuItem';
-import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import Button from '@mui/material/Button';
-import { toast } from 'react-toastify';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { UserProps } from './types';
+
 import { UserKYCReview } from './view/user-kyc-review';
+
+import type { UserProps } from './types';
 
 type UserTableRowProps = {
   row: UserProps;
@@ -403,6 +406,7 @@ export function UserTableRow({
           onClose={handleCloseKYCReview}
           onStatusUpdate={handleReviewStatusUpdate}
           token={token}
+          open={openKYCReview}
         />
       )}
     </>

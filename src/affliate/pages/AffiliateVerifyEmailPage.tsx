@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
+
 import { env } from 'src/config/env.config';
 
 const VerifyContainer = styled(Box)(({ theme }) => ({
@@ -62,13 +63,13 @@ export default function AffiliateVerifyEmailPage() {
 
       try {
         const response = await fetch(
-          `${env.api.baseUrl}:${env.api.port}/api/auth/verify-affiliate-email`,
+          `${env.api.baseUrl}:${env.api.port}/api/auth/verify-affiliate-email?token=${token}`,
           {
-            method: 'POST',
+            method: 'GET',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token }),
           }
         );
+        console.log('response', response);
 
         if (!response.ok) {
           const errorData = await response.json();

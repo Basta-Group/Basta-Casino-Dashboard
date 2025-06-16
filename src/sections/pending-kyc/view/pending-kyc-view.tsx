@@ -1,49 +1,52 @@
-import { env } from 'src/config/env.config';
-import { useState, useEffect, useCallback } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useTable } from 'src/hooks/use-table';
+import 'react-toastify/dist/ReactToastify.css';
+
+import { toast } from 'react-toastify';
+import { useState, useEffect } from 'react';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
-import Stack from '@mui/material/Stack';
-import MenuItem from '@mui/material/MenuItem';
+import Alert from '@mui/material/Alert';
+import Dialog from '@mui/material/Dialog';
+import Button from '@mui/material/Button';
 import TableBody from '@mui/material/TableBody';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import TableContainer from '@mui/material/TableContainer';
-import TablePagination from '@mui/material/TablePagination';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import TableContainer from '@mui/material/TableContainer';
+import TablePagination from '@mui/material/TablePagination';
+import CircularProgress from '@mui/material/CircularProgress';
 
+import { useTable } from 'src/hooks/use-table';
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { env } from 'src/config/env.config';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { Scrollbar } from 'src/components/scrollbar';
-import { TableNoData } from '../table-no-data';
-import { UserTableRow } from '../user-table-row';
-import { UserTableHead } from '../user-table-head';
-import { TableEmptyRows } from '../table-empty-rows';
-import { UserTableToolbar } from '../user-table-toolbar';
-import { emptyRows, applyFilter, getComparator } from '../utils';
-import { UserProps } from '../types';
-import { UserKYCReview } from './user-kyc-review';
 
-export function UserView() {
+import { Scrollbar } from 'src/components/scrollbar';
+
+import { TableNoData } from 'src/sections/user/table-no-data';
+import { UserTableRow } from 'src/sections/user/user-table-row';
+import { UserKYCReview } from 'src/sections/user/view/user-kyc-review';
+import { UserTableHead } from 'src/sections/user/user-table-head';
+import { TableEmptyRows } from 'src/sections/user/table-empty-rows';
+import { UserTableToolbar } from 'src/sections/user/user-table-toolbar';
+import { emptyRows, applyFilter, getComparator } from 'src/sections/user/utils';
+
+import type { UserProps } from 'src/sections/user/types';
+
+/**
+ * PendingKYCView component for managing users with pending KYC verification.
+ * Provides functionality to view, filter, and manage these users including KYC verification.
+ */
+export function PendingKYCView() {
   const table = useTable();
   const [users, setUsers] = useState<UserProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterName, setFilterName] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCurrency, setFilterCurrency] = useState('all');
-  const [filter2FA, setFilter2FA] = useState('all');
-  const [filterSumsubStatus, setFilterSumsubStatus] = useState('all');
-  const [filterAdminStatus, setFilterAdminStatus] = useState('all');
-  const [token, setToken] = useState(localStorage.getItem('accessToken') || '');
+  const [token] = useState(localStorage.getItem('accessToken') || '');
   const openKYCDialog = useBoolean();
   const openKYCReviewDialog = useBoolean();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -51,37 +54,31 @@ export function UserView() {
   const [kycAction, setKycAction] = useState<'approved' | 'rejected' | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [totalUsers, setTotalUsers] = useState(0);
 
   useEffect(() => {
     const fetchUsers = async () => {
-      if (!token) {
-        console.error('No access token found');
-        setLoading(false);
-        return;
-      }
-
+      setLoading(true);
       try {
-        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/auth/players`;
-        const response = await fetch(apiUrl, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/sumsub/pending-kycs?page=${table.page + 1}&limit=${table.rowsPerPage}`;
+        const response = await fetch(apiUrl);
         const data = await response.json();
         if (data.success) {
-          const nonAdminUsers = data.data.players.filter((user: UserProps) => user.role_id !== 1);
-          setUsers(nonAdminUsers);
+          setUsers(data.data.players);
+          setTotalUsers(data.data.pagination.total);
         } else {
-          setFetchError(data.message || 'Failed to fetch users');
+          setFetchError(data.message || 'Failed to fetch pending KYCs');
         }
       } catch (error) {
-        console.error('Error fetching users:', error);
-        setFetchError('Error fetching users');
+        console.error('Error fetching pending KYCs:', error);
+        setFetchError('Error fetching pending KYCs');
       } finally {
         setLoading(false);
       }
     };
 
     fetchUsers();
-  }, [token]);
+  }, [table.page, table.rowsPerPage]);
 
   const updateUserStatus = async (userId: string, newStatus: number) => {
     try {
@@ -96,9 +93,7 @@ export function UserView() {
       });
       const data = await response.json();
       if (data.success) {
-        setUsers((prevUsers) =>
-          prevUsers.map((user) => (user.id === userId ? { ...user, status: newStatus } : user))
-        );
+        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
         toast.success('User status updated successfully!');
       } else {
         toast.error(data.message || 'Failed to update status');
@@ -147,9 +142,10 @@ export function UserView() {
         toast.error('Sumsub ID not found for this user');
         return;
       }
+      const sumsubId = user.sumsub_id;
 
       const action = kycAction === 'approved' ? 'approve' : 'reject';
-      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/sumsub/${action}/${selectedUserId}`;
+      const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/sumsub/${action}/${sumsubId}`;
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -162,18 +158,7 @@ export function UserView() {
 
       const data = await response.json();
       if (data.success) {
-        setUsers((prevUsers) =>
-          prevUsers.map((prevUser) =>
-            prevUser.id === selectedUserId
-              ? {
-                  ...prevUser,
-                  admin_status: kycAction,
-                  admin_notes: kycAction === 'rejected' ? rejectionReason : 'Approved by admin',
-                  is_verified: kycAction === 'approved' ? 1 : 0,
-                }
-              : prevUser
-          )
-        );
+        setUsers((prevUsers) => prevUsers.filter((prevUser) => prevUser.id !== selectedUserId));
         toast.success(`KYC ${kycAction} successfully`);
       } else {
         toast.error(data.message || `Failed to ${kycAction} KYC`);
@@ -195,27 +180,25 @@ export function UserView() {
     openKYCReviewDialog.onTrue();
   };
 
-  const handleKYCStatusUpdateFromReview = useCallback(
-    (status: 'approved' | 'rejected', reason?: string) => {
-      if (selectedUserId) {
-        setKycAction(status);
-        setRejectionReason(reason || '');
-        openKYCDialog.onTrue();
-        openKYCReviewDialog.onFalse();
-      }
-    },
-    [selectedUserId, openKYCDialog, openKYCReviewDialog]
-  );
+  const handleKYCStatusUpdateFromReview = (status: 'approved' | 'rejected', reason?: string) => {
+    if (selectedUserId) {
+      setKycAction(status);
+      setRejectionReason(reason || '');
+      setUsers((prevUsers) => prevUsers.filter((prevUser) => prevUser.id !== selectedUserId));
+      openKYCDialog.onTrue();
+      openKYCReviewDialog.onFalse();
+    }
+  };
 
   const dataFiltered = applyFilter({
     inputData: users,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
-    filterStatus,
-    filterCurrency,
-    filter2FA,
-    filterSumsubStatus: filterSumsubStatus === 'all' ? 'all' : filterSumsubStatus,
-    adminStatus: filterAdminStatus,
+    filterStatus: 'all',
+    filterCurrency: 'all',
+    filter2FA: 'all',
+    filterSumsubStatus: 'all',
+    adminStatus: 'all',
   });
 
   const notFound = !dataFiltered.length && !!filterName;
@@ -232,91 +215,27 @@ export function UserView() {
     <DashboardContent>
       <Box display="flex" alignItems="center" mb={5}>
         <Typography variant="h4" flexGrow={1}>
-          Players
+          Pending KYC Users
         </Typography>
       </Box>
 
       {fetchError && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setFetchError(null)}>
+        <Alert severity="error" sx={{ mb: 2 }}>
           {fetchError}
         </Alert>
       )}
 
       <Card>
-        <Stack direction="row" spacing={2} sx={{ p: 2 }}>
-          <TextField
-            select
-            label="Status"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            sx={{ width: 200 }}
-          >
-            <MenuItem value="all">All Status</MenuItem>
-            <MenuItem value="1">Active</MenuItem>
-            <MenuItem value="0">Inactive</MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            label="Sumsub Status"
-            value={filterSumsubStatus}
-            onChange={(e) => setFilterSumsubStatus(e.target.value)}
-            sx={{ width: 200 }}
-          >
-            <MenuItem value="all">All Sumsub Status</MenuItem>
-            <MenuItem value="not_started">Not Started</MenuItem>
-            <MenuItem value="in_review">In Review</MenuItem>
-            <MenuItem value="approved_sumsub">Approved (Sumsub)</MenuItem>
-            <MenuItem value="rejected_sumsub">Rejected (Sumsub)</MenuItem>
-            <MenuItem value="approved">Approved (Admin)</MenuItem>
-            <MenuItem value="rejected">Rejected (Admin)</MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            label="Admin Status"
-            value={filterAdminStatus}
-            onChange={(e) => setFilterAdminStatus(e.target.value)}
-            sx={{ width: 200 }}
-          >
-            <MenuItem value="all">All Admin Status</MenuItem>
-            <MenuItem value="pending">Pending</MenuItem>
-            <MenuItem value="approved">Approved</MenuItem>
-            <MenuItem value="rejected">Rejected</MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            label="Currency"
-            value={filterCurrency}
-            onChange={(e) => setFilterCurrency(e.target.value)}
-            sx={{ width: 200 }}
-          >
-            <MenuItem value="all">All Currencies</MenuItem>
-            <MenuItem value="USD">USD</MenuItem>
-            <MenuItem value="EUR">EUR</MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            label="2FA Status"
-            value={filter2FA}
-            onChange={(e) => setFilter2FA(e.target.value)}
-            sx={{ width: 200 }}
-          >
-            <MenuItem value="all">All 2FA Status</MenuItem>
-            <MenuItem value="1">Enabled</MenuItem>
-            <MenuItem value="0">Disabled</MenuItem>
-          </TextField>
-        </Stack>
-
         <UserTableToolbar
           filterName={filterName}
-          onFilterName={(event) => setFilterName(event.target.value)}
+          onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setFilterName(event.target.value);
+            table.onResetPage();
+          }}
         />
 
-        <TableContainer sx={{ overflow: 'unset' }}>
-          <Scrollbar>
+        <Scrollbar>
+          <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>
               <UserTableHead
                 order={table.order}
@@ -324,15 +243,11 @@ export function UserView() {
                 onSort={table.onSort}
                 headLabel={[
                   { id: 'username', label: 'Username' },
-                  { id: 'fullname', label: 'Full Name' },
                   { id: 'email', label: 'Email' },
-                  { id: 'phone_number', label: 'Phone' },
-                  { id: 'referredByName', label: 'Referred By' },
+                  { id: 'phone_number', label: 'Phone Number' },
                   { id: 'sumsub_status', label: 'Sumsub Status' },
-                  { id: 'admin_status', label: 'Final KYC Status' },
-                  { id: 'is_verified', label: 'Email Verified' },
-                  { id: 'status', label: 'Status' },
-                  { id: 'action', label: 'Actions', align: 'right' },
+                  { id: 'sumsub_verification_date', label: 'Verification Date' },
+                  { id: 'actions', label: 'Actions' },
                 ]}
               />
 
@@ -346,31 +261,31 @@ export function UserView() {
                     <UserTableRow
                       key={row.id}
                       row={row}
-                      selected={table.selected.includes(row.id)}
-                      onSelectRow={() => table.onSelectRow(row.id)}
+                      selected={false}
+                      onSelectRow={() => {}}
                       onUpdateStatus={updateUserStatus}
                       onDeleteUser={deleteUser}
                       onKYCStatusUpdate={handleKYCStatusUpdate}
-                      onViewDocuments={(sumsubId) => viewDocuments(sumsubId, row.id)}
+                      onViewDocuments={viewDocuments}
                       token={token}
                     />
                   ))}
 
                 <TableEmptyRows
-                  height={77}
+                  height={68}
                   emptyRows={emptyRows(table.page, table.rowsPerPage, users.length)}
                 />
 
                 {notFound && <TableNoData searchQuery={filterName} />}
               </TableBody>
             </Table>
-          </Scrollbar>
-        </TableContainer>
+          </TableContainer>
+        </Scrollbar>
 
         <TablePagination
-          page={table.page}
           component="div"
-          count={dataFiltered.length}
+          page={table.page}
+          count={totalUsers}
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           rowsPerPageOptions={[5, 10, 25]}
@@ -379,30 +294,20 @@ export function UserView() {
       </Card>
 
       <Dialog open={openKYCDialog.value} onClose={openKYCDialog.onFalse}>
-        <DialogTitle>Confirm KYC Status Change</DialogTitle>
+        <DialogTitle>{kycAction === 'approved' ? 'Approve KYC' : 'Reject KYC'}</DialogTitle>
         <DialogContent>
-          <Typography variant="body1" gutterBottom>
-            You are about to change the KYC status to <strong>{kycAction}</strong> for user{' '}
-            <strong>{users.find((u) => u.id === selectedUserId)?.username || 'Unknown'}</strong> (
-            {users.find((u) => u.id === selectedUserId)?.fullname || 'No name provided'}).
-          </Typography>
           {kycAction === 'rejected' && (
             <TextField
               fullWidth
-              label="Reason for Rejection"
+              label="Rejection Reason"
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              multiline
-              rows={4}
-              margin="normal"
-              placeholder="Please provide a detailed reason for rejection."
+              sx={{ mt: 2 }}
             />
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={openKYCDialog.onFalse} color="inherit">
-            Cancel
-          </Button>
+          <Button onClick={openKYCDialog.onFalse}>Cancel</Button>
           <Button onClick={confirmKYCStatus} variant="contained" color="primary">
             Confirm
           </Button>

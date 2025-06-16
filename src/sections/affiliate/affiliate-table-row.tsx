@@ -15,15 +15,16 @@ import { AffiliateDialog } from './affiliate-detail-dialog';
 
 import type { AffiliateProps } from './types';
 
-type AffialiteTableRowProps = {
+type AffiliateTableRowProps = {
   row: AffiliateProps;
   onUpdateStatus: (userId: string, newStatus: number) => void;
 };
 
-export function AffiliateTableRow({
-  row,
-  onUpdateStatus,
-}: AffialiteTableRowProps) {
+/**
+ * AffiliateTableRow component for displaying affiliate information in a table row
+ * Provides actions to view details and update affiliate status
+ */
+export function AffiliateTableRow({ row, onUpdateStatus }: AffiliateTableRowProps) {
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const navigate = useNavigate();

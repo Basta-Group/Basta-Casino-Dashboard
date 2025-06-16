@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+
+import { Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import { Label } from 'src/components/label';
+
 import { env } from 'src/config/env.config';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { Box } from '@mui/material';
+
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { UserProps } from './types';
+
+import type { UserProps } from './types';
 
 export function UserDetailPage() {
   const { userId } = useParams();

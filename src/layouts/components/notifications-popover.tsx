@@ -1,29 +1,33 @@
-import { env } from 'src/config/env.config';
 import type { IconButtonProps } from '@mui/material/IconButton';
-import { useState, useCallback, useEffect } from 'react';
+
+import { Icon } from '@iconify/react';
+import { useState, useEffect, useCallback } from 'react';
+
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import Badge from '@mui/material/Badge';
+import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
+import Dialog from '@mui/material/Dialog';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import Popover from '@mui/material/Popover';
+import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import Pagination from '@mui/material/Pagination';
+import DialogTitle from '@mui/material/DialogTitle';
 import ListItemText from '@mui/material/ListItemText';
 import ListSubheader from '@mui/material/ListSubheader';
+import DialogContent from '@mui/material/DialogContent';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemButton from '@mui/material/ListItemButton';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import Pagination from '@mui/material/Pagination';
-import Stack from '@mui/material/Stack';
-import Skeleton from '@mui/material/Skeleton';
 
 import { fToNow } from 'src/utils/format-time';
-import { Icon } from '@iconify/react';
+
+import { env } from 'src/config/env.config';
+
 import { Scrollbar } from 'src/components/scrollbar';
 
 type NotificationItemProps = {

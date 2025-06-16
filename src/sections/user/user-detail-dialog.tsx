@@ -1,10 +1,30 @@
+import Grid from '@mui/material/Grid';
 import Dialog from '@mui/material/Dialog';
+import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
-import Grid from '@mui/material/Grid';
-import Typography from '@mui/material/Typography';
+
 import { Label } from 'src/components/label';
-import { UserProps } from './types';
+
+import type { UserProps } from './types';
+
+interface DetailItemProps {
+  label: string;
+  value: React.ReactNode;
+}
+
+/**
+ * DetailItem component for displaying label-value pairs in a grid
+ * Used to show user information in a consistent format
+ */
+const DetailItem = ({ label, value }: DetailItemProps) => (
+  <Grid item xs={12} sm={6}>
+    <Typography variant="subtitle2" color="text.secondary">
+      {label}
+    </Typography>
+    <Typography variant="body2">{value}</Typography>
+  </Grid>
+);
 
 interface UserDetailDialogProps {
   open: boolean;
@@ -12,6 +32,10 @@ interface UserDetailDialogProps {
   user: UserProps;
 }
 
+/**
+ * UserDetailDialog component for displaying detailed user information
+ * Shows user details including personal info, status, verification, and financial data
+ */
 export function UserDetailDialog({ open, onClose, user }: UserDetailDialogProps) {
   const formatDate = (date: Date | null | undefined) => {
     if (!date) return '-';
@@ -45,15 +69,6 @@ export function UserDetailDialog({ open, onClose, user }: UserDetailDialogProps)
         return '-';
     }
   };
-
-  const DetailItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <Grid item xs={12} sm={6}>
-      <Typography variant="subtitle2" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="body2">{value}</Typography>
-    </Grid>
-  );
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>

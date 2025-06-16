@@ -1,5 +1,6 @@
+import type { Order } from 'src/components/table';
+
 import { useState, useCallback } from 'react';
-import { Order } from 'src/components/table';
 
 interface UseTableProps {
   defaultOrderBy?: string;
