@@ -17,6 +17,13 @@ export function emptyRows(page: number, rowsPerPage: number, arrayLength: number
 }
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
+  // Special handling for createdAt field
+  if (orderBy === 'createdAt') {
+    const dateA = new Date(a[orderBy] as string).getTime();
+    const dateB = new Date(b[orderBy] as string).getTime();
+    return dateB - dateA; // Newest dates will be at the top
+  }
+
   if (b[orderBy] < a[orderBy]) {
     return -1;
   }
@@ -46,8 +53,8 @@ type ApplyFilterProps = {
   inputData: AffiliateProps[];
   filterName: string;
   filterStatus: string;
-  filterCurrency?: string;
-  filter2FA?: string;
+  filterMarketingOptIn?: string;
+  filterPromotionMethod?: string;
   comparator: (a: any, b: any) => number;
 };
 
@@ -56,8 +63,8 @@ export function applyFilter({
   comparator,
   filterName,
   filterStatus,
-  filterCurrency,
-  filter2FA
+  filterMarketingOptIn,
+  filterPromotionMethod
 }: ApplyFilterProps) {
   const stabilizedThis = inputData.map((el, index) => [el, index] as const);
 
@@ -83,6 +90,20 @@ export function applyFilter({
 
   if (filterStatus !== 'all') {
     inputData = inputData.filter((user) => user.status?.toString() === filterStatus);
+  }
+
+
+
+  if (filterMarketingOptIn && filterMarketingOptIn !== 'all') {
+    inputData = inputData.filter(
+      (user) => user.marketingEmailsOptIn.toString() === filterMarketingOptIn
+    );
+  }
+
+  if (filterPromotionMethod && filterPromotionMethod !== 'all') {
+    inputData = inputData.filter((user) => 
+      user.promotionMethod.includes(filterPromotionMethod)
+    );
   }
 
   return inputData;

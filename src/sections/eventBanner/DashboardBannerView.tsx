@@ -13,6 +13,7 @@ interface BannerConfig {
   subtitle: string;
   buttonText: string;
   countdown: string; // Format: hh:mm:ss
+  startTime?: string; // ISO string of when the countdown started
 }
 
 interface ApiSuccessResponse<T> {
@@ -94,15 +95,39 @@ const DashboardBannerView = (): JSX.Element => {
         );
         console.log('Fetch response:', response.data);
         if ('data' in response.data) {
-          const {data} = response.data;
+          const { data } = response.data;
           setBannerData(data);
+
+          // Set input fields to the original countdown duration
           const time = parseTime(data.countdown);
           setTimeInputs({
             hours: String(time.hours).padStart(2, '0'),
             minutes: String(time.minutes).padStart(2, '0'),
             seconds: String(time.seconds).padStart(2, '0'),
           });
-          setTimeLeft(time);
+
+          if (data.startTime) {
+            // Calculate remaining time for the preview banner
+            const startTime = new Date(data.startTime).getTime();
+            const now = Date.now();
+            const elapsedSeconds = Math.floor((now - startTime) / 1000);
+
+            const totalSeconds = time.hours * 3600 + time.minutes * 60 + time.seconds;
+            const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+
+            const hours = Math.floor(remainingSeconds / 3600);
+            const minutes = Math.floor((remainingSeconds % 3600) / 60);
+            const seconds = remainingSeconds % 60;
+
+            setTimeLeft({ hours, minutes, seconds });
+
+            if (remainingSeconds > 0) {
+              setIsRunning(true);
+            }
+          } else {
+            // No startTime, use countdown as initial time for preview
+            setTimeLeft(time);
+          }
         } else {
           setSaveStatus(response.data.message || 'Failed to fetch banner configuration');
         }
@@ -120,26 +145,31 @@ const DashboardBannerView = (): JSX.Element => {
     if (!isRunning) return undefined;
 
     const timer = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        const { hours, minutes, seconds } = prevTime;
+      if (bannerData.startTime) {
+        const startTime = new Date(bannerData.startTime).getTime();
+        const now = Date.now();
+        const elapsedSeconds = Math.floor((now - startTime) / 1000);
 
-        if (hours === 0 && minutes === 0 && seconds === 0) {
+        const [h, m, s] = bannerData.countdown.split(':').map(Number);
+        const totalSeconds = h * 3600 + m * 60 + s;
+        const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+
+        if (remainingSeconds <= 0) {
+          setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
           setIsRunning(false);
-          return { hours: 0, minutes: 0, seconds: 0 };
+          return;
         }
 
-        if (seconds > 0) {
-          return { hours, minutes, seconds: seconds - 1 };
-        }
-        if (minutes > 0) {
-          return { hours, minutes: minutes - 1, seconds: 59 };
-        }
-        return { hours: hours - 1, minutes: 59, seconds: 59 };
-      });
+        const hours = Math.floor(remainingSeconds / 3600);
+        const minutes = Math.floor((remainingSeconds % 3600) / 60);
+        const seconds = remainingSeconds % 60;
+
+        setTimeLeft({ hours, minutes, seconds });
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isRunning]);
+  }, [isRunning, bannerData.startTime, bannerData.countdown]);
 
   const validateTimeInput = (name: string, value: string): string | null => {
     if (!/^\d*$/.test(value)) {
@@ -167,6 +197,27 @@ const DashboardBannerView = (): JSX.Element => {
     if (!value.trim()) {
       return `${name.charAt(0).toUpperCase() + name.slice(1)} is required and cannot be empty`;
     }
+
+    switch (name) {
+      case 'title':
+        if (value.length > 50) {
+          return 'Title must be less than 50 characters';
+        }
+        break;
+      case 'subtitle':
+        if (value.length > 30) {
+          return 'Subtitle must be less than 30 characters';
+        }
+        break;
+      case 'buttonText':
+        if (value.length > 20) {
+          return 'Button text must be less than 20 characters';
+        }
+        break;
+      default:
+        break;
+    }
+
     return null;
   };
 
@@ -228,15 +279,14 @@ const DashboardBannerView = (): JSX.Element => {
         hours,
         minutes,
         seconds,
+        startTime: new Date().toISOString(),
       };
 
       console.log('Saving payload:', payload);
 
       const response = await axios({
         method: 'post',
-        url: `${import.meta.env.VITE_API_BASE_URL}:${
-          import.meta.env.VITE_API_PORT
-        }/api/auth/admin/banner`,
+        url: `${import.meta.env.VITE_API_BASE_URL}:${import.meta.env.VITE_API_PORT}/api/auth/admin/banner`,
         data: payload,
         headers: {
           Authorization: `Bearer ${token}`,
@@ -247,8 +297,15 @@ const DashboardBannerView = (): JSX.Element => {
       console.log('Save response:', response.data);
 
       if ('data' in response.data) {
-        const countdown = formatTimeString();
-        setBannerData({ ...bannerData, countdown });
+        // Update bannerData with server response
+        setBannerData(response.data.data);
+        // Keep timeInputs as entered by the user (original duration)
+        setTimeInputs({
+          hours: String(parseInt(hours, 10)).padStart(2, '0'),
+          minutes: String(parseInt(minutes, 10)).padStart(2, '0'),
+          seconds: String(parseInt(seconds, 10)).padStart(2, '0'),
+        });
+        // Set timeLeft to the full duration for the preview
         setTimeLeft({
           hours: parseInt(hours, 10),
           minutes: parseInt(minutes, 10),
@@ -301,7 +358,8 @@ const DashboardBannerView = (): JSX.Element => {
               onChange={handleChange}
               size="small"
               error={!!formErrors.title}
-              helperText={formErrors.title}
+              helperText={formErrors.title || `${bannerData.title.length}/50 characters`}
+              inputProps={{ maxLength: 50 }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
@@ -320,7 +378,8 @@ const DashboardBannerView = (): JSX.Element => {
               onChange={handleChange}
               size="small"
               error={!!formErrors.subtitle}
-              helperText={formErrors.subtitle}
+              helperText={formErrors.subtitle || `${bannerData.subtitle.length}/30 characters`}
+              inputProps={{ maxLength: 30 }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
@@ -339,7 +398,8 @@ const DashboardBannerView = (): JSX.Element => {
               onChange={handleChange}
               size="small"
               error={!!formErrors.buttonText}
-              helperText={formErrors.buttonText}
+              helperText={formErrors.buttonText || `${bannerData.buttonText.length}/20 characters`}
+              inputProps={{ maxLength: 20 }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',

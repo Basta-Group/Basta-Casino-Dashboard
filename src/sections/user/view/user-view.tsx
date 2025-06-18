@@ -1,37 +1,43 @@
-import { env } from 'src/config/env.config';
+import 'react-toastify/dist/ReactToastify.css';
+
+import { toast } from 'react-toastify';
 import { useState, useEffect, useCallback } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useTable } from 'src/hooks/use-table';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
+import Dialog from '@mui/material/Dialog';
+import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import TableBody from '@mui/material/TableBody';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import TableContainer from '@mui/material/TableContainer';
-import TablePagination from '@mui/material/TablePagination';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import TableContainer from '@mui/material/TableContainer';
+import TablePagination from '@mui/material/TablePagination';
+import CircularProgress from '@mui/material/CircularProgress';
 
+import { useTable } from 'src/hooks/use-table';
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { env } from 'src/config/env.config';
 import { DashboardContent } from 'src/layouts/dashboard';
+
 import { Scrollbar } from 'src/components/scrollbar';
+
 import { TableNoData } from '../table-no-data';
 import { UserTableRow } from '../user-table-row';
+import { UserKYCReview } from './user-kyc-review';
 import { UserTableHead } from '../user-table-head';
 import { TableEmptyRows } from '../table-empty-rows';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
-import { UserProps } from '../types';
-import { UserKYCReview } from './user-kyc-review';
+
+import type { UserProps } from '../types';
 
 export function UserView() {
   const table = useTable();

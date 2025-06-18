@@ -106,25 +106,23 @@ export default function AffiliateLayout() {
                   {/* <LanguagePopover data={_langs} /> */}
                   <NotificationsPopover />
                   <AccountPopover
-                    data={
-                      [
-                        // {
-                        //   label: 'Home',
-                        //   href: '/home',
-                        //   icon: <Iconify width={22} icon="solar:home-angle-bold-duotone" />,
-                        // },
-                        // {
-                        //   label: 'Settings',
-                        //   href: '#',
-                        //   icon: <Iconify width={22} icon="solar:settings-bold-duotone" />,
-                        // },
-                        // {
-                        //   label: 'Logout..',
-                        //   href: '#',
-                        //   icon: <Iconify width={22} icon="solar:logout-2-bold-duotone" />,
-                        // },
-                      ]
-                    }
+                    data={[
+                      {
+                        label: 'Home',
+                        href: '/affiliate/dashboard',
+                        icon: <Iconify width={22} icon="solar:home-angle-bold-duotone" />,
+                      },
+                      // {
+                      //   label: 'Settings',
+                      //   href: '#',
+                      //   icon: <Iconify width={22} icon="solar:settings-bold-duotone" />,
+                      // },
+                      // {
+                      //   label: 'Logout..',
+                      //   href: '#',
+                      //   icon: <Iconify width={22} icon="solar:logout-2-bold-duotone" />,
+                      // },
+                    ]}
                   />
                 </Box>
               ),

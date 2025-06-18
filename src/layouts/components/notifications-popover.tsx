@@ -557,7 +557,7 @@ function NotificationItem({
 function renderContent(notification: NotificationItemProps) {
   const title = (
     <Typography variant="subtitle2">
-      {notification.title}
+      {notification.title}{' '}
       <Typography component="span" variant="body2" sx={{ color: 'text.secondary' }}>
         {notification.description}
       </Typography>

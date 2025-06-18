@@ -52,6 +52,8 @@ export function AdminAffiliateView() {
   const [loading, setLoading] = useState(true);
   const [filterName, setFilterName] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterMarketingOptIn, setFilterMarketingOptIn] = useState('all');
+  const [filterPromotionMethod, setFilterPromotionMethod] = useState('all');
 
   const [token] = useState(localStorage.getItem('accessToken'));
 
@@ -125,7 +127,17 @@ export function AdminAffiliateView() {
     comparator: getComparator(table.order, table.orderBy),
     filterName,
     filterStatus,
+    filterMarketingOptIn,
+    filterPromotionMethod,
   });
+
+  // Get unique countries for filter
+  const uniqueCountries = Array.from(new Set(users.map((user) => user.country).filter(Boolean)));
+
+  // Get unique promotion methods for filter
+  const uniquePromotionMethods = Array.from(
+    new Set(users.flatMap((user) => user.promotionMethod).filter(Boolean))
+  );
 
   const notFound = !dataFiltered.length && !!filterName;
 
@@ -159,7 +171,34 @@ export function AdminAffiliateView() {
             <MenuItem value="0">Inactive</MenuItem>
             <MenuItem value="2">Banned</MenuItem>
           </TextField>
+          <TextField
+            select
+            label="Marketing Emails"
+            value={filterMarketingOptIn}
+            onChange={(e) => setFilterMarketingOptIn(e.target.value)}
+            sx={{ width: 200 }}
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="true">Opted In</MenuItem>
+            <MenuItem value="false">Not Opted In</MenuItem>
+          </TextField>
+
+          <TextField
+            select
+            label="Promotion Method"
+            value={filterPromotionMethod}
+            onChange={(e) => setFilterPromotionMethod(e.target.value)}
+            sx={{ width: 200 }}
+          >
+            <MenuItem value="all">All Methods</MenuItem>
+            {uniquePromotionMethods.map((method) => (
+              <MenuItem key={method} value={method}>
+                {method}
+              </MenuItem>
+            ))}
+          </TextField>
         </Stack>
+
         <AffiliateTableToolbar
           filterName={filterName}
           onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,6 +206,7 @@ export function AdminAffiliateView() {
             table.onResetPage();
           }}
         />
+
         <Scrollbar>
           <TableContainer sx={{ overflow: 'unset' }}>
             <Table sx={{ minWidth: 800 }}>
@@ -209,7 +249,7 @@ export function AdminAffiliateView() {
         <TablePagination
           component="div"
           page={table.page}
-          count={users.length}
+          count={dataFiltered.length}
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           rowsPerPageOptions={[5, 10, 25]}
@@ -225,10 +265,10 @@ export function AdminAffiliateView() {
  */
 function useTable() {
   const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('firstname');
+  const [orderBy, setOrderBy] = useState('createdAt');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selected, setSelected] = useState<string[]>([]);
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 
   const onSort = useCallback(
     (id: string) => {

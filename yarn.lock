@@ -360,7 +360,7 @@
   resolved "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-5.16.7.tgz"
   integrity sha512-RtsCt4Geed2/v74sbihWzzRs+HsIQCfclHeORh5Ynu2fS4icIKozcSubwuG7vtzq2uW3fOR1zITSP84TNt2GoQ==
 
-"@mui/icons-material@^5.15.11":
+"@mui/icons-material@^5.17.1":
   version "5.17.1"
   resolved "https://registry.npmjs.org/@mui/icons-material/-/icons-material-5.17.1.tgz"
   integrity sha512-CN86LocjkunFGG0yPlO4bgqHkNGgaEOEc3X/jG5Bzm401qYw79/SaLrofA7yAKCCXAGdIGnLoMHohc3+ubs95A==

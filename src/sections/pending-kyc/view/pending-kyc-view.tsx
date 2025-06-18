@@ -1,5 +1,7 @@
 import 'react-toastify/dist/ReactToastify.css';
 
+import type { UserProps } from 'src/sections/user/types';
+
 import { toast } from 'react-toastify';
 import { useState, useEffect } from 'react';
 
@@ -29,13 +31,11 @@ import { Scrollbar } from 'src/components/scrollbar';
 
 import { TableNoData } from 'src/sections/user/table-no-data';
 import { UserTableRow } from 'src/sections/user/user-table-row';
-import { UserKYCReview } from 'src/sections/user/view/user-kyc-review';
 import { UserTableHead } from 'src/sections/user/user-table-head';
 import { TableEmptyRows } from 'src/sections/user/table-empty-rows';
+import { UserKYCReview } from 'src/sections/user/view/user-kyc-review';
 import { UserTableToolbar } from 'src/sections/user/user-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from 'src/sections/user/utils';
-
-import type { UserProps } from 'src/sections/user/types';
 
 /**
  * PendingKYCView component for managing users with pending KYC verification.

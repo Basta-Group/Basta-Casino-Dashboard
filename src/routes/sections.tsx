@@ -4,6 +4,8 @@ import { Outlet, Navigate, useRoutes } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
+import { validateToken } from 'src/utils/jwt';
+
 import { varAlpha } from 'src/theme/styles';
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
@@ -67,11 +69,30 @@ const renderFallback = (
   </Box>
 );
 
-const isAdminAuthenticated = () => !!localStorage.getItem('accessToken');
-const isAffiliateAuthenticated = () => !!localStorage.getItem('affiliateToken');
+const isAdminAuthenticated = () => {
+  const token = localStorage.getItem('accessToken');
+  if (!validateToken(token)) {
+    localStorage.removeItem('accessToken');
+    return false;
+  }
+  return true;
+};
 
-const AdminAuthGuard = ({ children }: { children: React.ReactNode }) =>
-  isAdminAuthenticated() ? <>{children}</> : <Navigate to="/sign-in" replace />;
+const isAffiliateAuthenticated = () => {
+  const token = localStorage.getItem('affiliateToken');
+  if (!validateToken(token)) {
+    localStorage.removeItem('affiliateToken');
+    return false;
+  }
+  return true;
+};
+
+const AdminAuthGuard = ({ children }: { children: React.ReactNode }) => {
+  if (!isAdminAuthenticated()) {
+    return <Navigate to="/sign-in" replace />;
+  }
+  return <>{children}</>;
+};
 
 const AffiliateAuthGuard = ({ children }: { children: React.ReactNode }) =>
   isAffiliateAuthenticated() ? <>{children}</> : <Navigate to="/affiliate/login" replace />;

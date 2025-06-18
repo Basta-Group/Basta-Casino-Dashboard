@@ -6,12 +6,15 @@ import {
   Box,
   Table,
   Paper,
+  Stack,
   Avatar,
   TableRow,
   Checkbox,
+  MenuItem,
   TableBody,
   TableCell,
   TableHead,
+  TextField,
   Typography,
   TableContainer,
   TablePagination,
@@ -41,12 +44,56 @@ const ReferredUsersListingView: React.FC<Props> = ({ userId }) => {
   const { id } = useParams();
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
   const [referredPlayers, setReferredPlayers] = useState<ReferredUser[]>([]);
+  const [filterName, setFilterName] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterVerified, setFilterVerified] = useState('all');
   const table = useTable();
 
-  const paginatedUsers = referredPlayers.slice(
+  // Filter function
+  const applyFilter = ({
+    inputData,
+    nameFilter,
+    statusFilter,
+    verifiedFilter,
+  }: {
+    inputData: ReferredUser[];
+    nameFilter: string;
+    statusFilter: string;
+    verifiedFilter: string;
+  }) =>
+    inputData.filter((user) => {
+      const matchesName =
+        user.username?.toLowerCase().includes(nameFilter.toLowerCase()) ||
+        user.fullname?.toLowerCase().includes(nameFilter.toLowerCase()) ||
+        user.email?.toLowerCase().includes(nameFilter.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && user.status === 1) ||
+        (statusFilter === 'inactive' && user.status === 0);
+
+      const matchesVerified =
+        verifiedFilter === 'all' ||
+        (verifiedFilter === 'verified' && user.is_verified) ||
+        (verifiedFilter === 'unverified' && !user.is_verified);
+
+      return matchesName && matchesStatus && matchesVerified;
+    });
+
+  // Apply filters to data
+  const dataFiltered = applyFilter({
+    inputData: referredPlayers,
+    nameFilter: filterName,
+    statusFilter: filterStatus,
+    verifiedFilter: filterVerified,
+  });
+
+  // Get paginated data
+  const paginatedUsers = dataFiltered.slice(
     table.page * table.rowsPerPage,
     table.page * table.rowsPerPage + table.rowsPerPage
   );
+
   const selectedAll = table.selected.length === paginatedUsers.length && paginatedUsers.length > 0;
   const someSelected = table.selected.length > 0 && !selectedAll;
   const allIdsOnPage = paginatedUsers.map((user) => user._id);
@@ -95,6 +142,38 @@ const ReferredUsersListingView: React.FC<Props> = ({ userId }) => {
           </Box>
         </Box>
       </EarningsHeader>
+
+      {/* Filters */}
+      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+        <TextField
+          label="Search"
+          value={filterName}
+          onChange={(e) => setFilterName(e.target.value)}
+          sx={{ width: 200 }}
+        />
+        <TextField
+          select
+          label="Status"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          sx={{ width: 200 }}
+        >
+          <MenuItem value="all">All Status</MenuItem>
+          <MenuItem value="active">Active</MenuItem>
+          <MenuItem value="inactive">Inactive</MenuItem>
+        </TextField>
+        <TextField
+          select
+          label="Verification"
+          value={filterVerified}
+          onChange={(e) => setFilterVerified(e.target.value)}
+          sx={{ width: 200 }}
+        >
+          <MenuItem value="all">All</MenuItem>
+          <MenuItem value="verified">Verified</MenuItem>
+          <MenuItem value="unverified">Unverified</MenuItem>
+        </TextField>
+      </Stack>
 
       {/* Users Table */}
       <TableContainer component={Paper} elevation={3} sx={{ bgcolor: '#F9FAFB' }}>
@@ -187,11 +266,11 @@ const ReferredUsersListingView: React.FC<Props> = ({ userId }) => {
           </TableBody>
         </Table>
       </TableContainer>
-      {referredPlayers.length > 0 && (
+      {dataFiltered.length > 0 && (
         <TablePagination
           component="div"
           page={table.page}
-          count={referredPlayers.length}
+          count={dataFiltered.length}
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           rowsPerPageOptions={[5, 10, 25]}
