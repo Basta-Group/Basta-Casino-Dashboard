@@ -124,10 +124,7 @@ export function UserKYCReview({
   }, [onStatusUpdate]);
 
   const handleReject = useCallback(() => {
-    if (!rejectionReason.trim()) {
-      toast.error('Please provide a rejection reason.');
-      return;
-    }
+    // Always call onStatusUpdate, let parent handle empty reason
     onStatusUpdate('rejected', rejectionReason);
     toast.success('KYC action initiated. Please confirm.');
   }, [rejectionReason, onStatusUpdate]);

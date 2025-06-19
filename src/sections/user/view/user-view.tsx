@@ -202,15 +202,16 @@ export function UserView() {
   };
 
   const handleKYCStatusUpdateFromReview = useCallback(
-    (status: 'approved' | 'rejected', reason?: string) => {
-      if (selectedUserId) {
-        setKycAction(status);
-        setRejectionReason(reason || '');
-        openKYCDialog.onTrue();
-        openKYCReviewDialog.onFalse();
+    (status: 'approved' | 'rejected', reason?: string, userId?: string) => {
+      if (userId) {
+        setSelectedUserId(userId);
       }
+      setKycAction(status);
+      setRejectionReason(reason || '');
+      openKYCDialog.onTrue();
+      openKYCReviewDialog.onFalse();
     },
-    [selectedUserId, openKYCDialog, openKYCReviewDialog]
+    [openKYCDialog, openKYCReviewDialog]
   );
 
   const dataFiltered = applyFilter({
@@ -403,6 +404,8 @@ export function UserView() {
               rows={4}
               margin="normal"
               placeholder="Please provide a detailed reason for rejection."
+              error={!rejectionReason.trim()}
+              helperText={!rejectionReason.trim() ? 'Rejection reason is required.' : ''}
             />
           )}
         </DialogContent>
@@ -410,7 +413,12 @@ export function UserView() {
           <Button onClick={openKYCDialog.onFalse} color="inherit">
             Cancel
           </Button>
-          <Button onClick={confirmKYCStatus} variant="contained" color="primary">
+          <Button
+            onClick={confirmKYCStatus}
+            variant="contained"
+            color="primary"
+            disabled={kycAction === 'rejected' && !rejectionReason.trim()}
+          >
             Confirm
           </Button>
         </DialogActions>
@@ -424,7 +432,9 @@ export function UserView() {
           userId={selectedUserId}
           sumsubStatus={users.find((u) => u.id === selectedUserId)?.sumsub_status || null}
           token={token}
-          onStatusUpdate={handleKYCStatusUpdateFromReview}
+          onStatusUpdate={(status, reason) =>
+            handleKYCStatusUpdateFromReview(status, reason, selectedUserId)
+          }
           userData={users.find((u) => u.id === selectedUserId)}
         />
       )}
