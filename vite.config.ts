@@ -83,9 +83,9 @@ export default defineConfig({
     port: PORT, 
     host: '0.0.0.0', // Listen on all network interfaces
     strictPort: true,
-    hmr: {
-      host: 'bastaxcasino.com' // Set this for HMR in development
-    },
+    // hmr: {
+    //   host: 'bastaxcasino.com' // Set this for HMR in development
+    // },
     allowedHosts: [
       'admin.bastaxcasino.com' // Added to allow this host
     ],

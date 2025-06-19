@@ -33,4 +33,9 @@ export interface UserProps {
   admin_status: 'pending' | 'approved' | 'rejected' | null;
   sumsub_notes: string | null;
   admin_notes: string | null;
+  sumsub_verification_date?: string | null;
+  sumsub_details?: {
+    documents?: string[];
+    nextSteps?: string[];
+  };
 }

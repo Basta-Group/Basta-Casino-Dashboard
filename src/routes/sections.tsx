@@ -19,6 +19,7 @@ import AffiliateEarningPage from 'src/affliate/pages/AffiliateEarningPage';
 import AffiliatePayoutsPage from 'src/affliate/pages/AffiliatePayoutsPage';
 import AffiliateReferralsPage from 'src/affliate/pages/AffiliateReferralsPage';
 import AffiliateVerifyEmailPage from 'src/affliate/pages/AffiliateVerifyEmailPage';
+import PlatformFeePage from 'src/pages/platform-fee';
 
 import { UserDetailPage } from 'src/sections/user/user-detail';
 import { AffiliateDetailPage } from 'src/sections/affiliate/affiliate-detail';
@@ -138,6 +139,7 @@ export function Router() {
         { path: 'dashboardBanner', element: <DashboardBanner /> },
         { path: 'commissionControl', element: <CommissionControlPage /> },
         { path: 'adminPayout', element: <AdminPayoutPage /> },
+        { path: 'platform-fee', element: <PlatformFeePage /> },
         {
           path: 'pending-kyc',
           element: (

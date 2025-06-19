@@ -9,6 +9,7 @@ import { useScrollToTop } from 'src/hooks/use-scroll-to-top';
 import { ThemeProvider } from 'src/theme/theme-provider';
 
 import { Iconify } from 'src/components/iconify';
+import { Toaster } from 'react-hot-toast';
 
 // ----------------------------------------------------------------------
 
@@ -39,6 +40,7 @@ export default function App() {
     <ThemeProvider>
       <Router />
       {/* {githubButton} */}
+      <Toaster position="top-right" reverseOrder={false} />
     </ThemeProvider>
   );
 }

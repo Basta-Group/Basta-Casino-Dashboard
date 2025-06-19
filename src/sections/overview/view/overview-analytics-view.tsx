@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
@@ -57,7 +57,97 @@ export function GamingAnalyticsView() {
     []
   );
 
+  // New state for real-time metrics
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [gameSessions, setGameSessions] = useState(0);
+  const [totalTransactions, setTotalTransactions] = useState(0);
+
+  // Add state for recent transactions
+  const [recentTransactions, setRecentTransactions] = useState([
+    // fallback mock data for development
+    { id: '1', title: 'Deposit', time: '2 hours ago', type: 'deposit' },
+    { id: '2', title: 'Withdrawal', time: '4 hours ago', type: 'withdrawal' },
+    { id: '3', title: 'Game Purchase', time: '6 hours ago', type: 'purchase' },
+  ]);
+
   const activePlayersCount = users.filter((user) => user.status === 1).length;
+
+  // Functions to fetch real-time data
+  const fetchTotalRevenue = useCallback(async () => {
+    if (!token) return;
+    try {
+      const response = await fetch(`${env.api.baseUrl}:${env.api.port}/api/metrics/total-revenue`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setTotalRevenue(data.data.totalRevenue);
+      }
+    } catch (error) {
+      console.error('Error fetching total revenue:', error);
+    }
+  }, [token]);
+
+  const fetchGameSessions = useCallback(async () => {
+    if (!token) return;
+    try {
+      const response = await fetch(`${env.api.baseUrl}:${env.api.port}/api/metrics/game-sessions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setGameSessions(data.data.gameSessions);
+      }
+    } catch (error) {
+      console.error('Error fetching game sessions:', error);
+    }
+  }, [token]);
+
+  const fetchTotalTransactions = useCallback(async () => {
+    if (!token) return;
+    try {
+      const response = await fetch(
+        `${env.api.baseUrl}:${env.api.port}/api/metrics/total-transactions`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setTotalTransactions(data.data.totalTransactions);
+      }
+    } catch (error) {
+      console.error('Error fetching total transactions:', error);
+    }
+  }, [token]);
+
+  // Fetch recent transactions from backend
+  useEffect(() => {
+    const fetchRecentTransactions = async () => {
+      try {
+        const response = await fetch(`${env.api.baseUrl}:${env.api.port}/api/transactions/recent`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (data.success && Array.isArray(data.data.transactions)) {
+          setRecentTransactions(
+            data.data.transactions.map((tx: any) => ({
+              id: tx.id || tx._id || Math.random().toString(),
+              title: tx.type || 'Transaction',
+              time: tx.timeAgo || tx.created_at || '',
+              type: tx.type || 'other',
+            }))
+          );
+        }
+      } catch (error) {
+        // fallback to mock data on error
+        // console.error('Error fetching recent transactions:', error);
+      }
+    };
+    fetchRecentTransactions();
+    const interval = setInterval(fetchRecentTransactions, 20000); // Poll every 20s
+    return () => clearInterval(interval);
+  }, [token]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -145,7 +235,23 @@ export function GamingAnalyticsView() {
       }
     };
     fetchPlayerRegionStats();
-  }, [token]);
+
+    // Initial fetch for new real-time metrics
+    fetchTotalRevenue();
+    fetchGameSessions();
+    fetchTotalTransactions();
+
+    // Set up polling for real-time metrics
+    const revenueInterval = setInterval(fetchTotalRevenue, 10000); // Every 10 seconds
+    const sessionsInterval = setInterval(fetchGameSessions, 10000);
+    const transactionsInterval = setInterval(fetchTotalTransactions, 10000);
+
+    return () => {
+      clearInterval(revenueInterval);
+      clearInterval(sessionsInterval);
+      clearInterval(transactionsInterval);
+    };
+  }, [token, fetchTotalRevenue, fetchGameSessions, fetchTotalTransactions]);
 
   if (loading) {
     return (
@@ -165,7 +271,7 @@ export function GamingAnalyticsView() {
           <AnalyticsWidgetSummary
             title="Total Revenue"
             percent={2.6}
-            total={714000}
+            total={totalRevenue}
             icon={<Icon icon="mdi:currency-usd" style={{ fontSize: '48px' }} />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
@@ -204,7 +310,7 @@ export function GamingAnalyticsView() {
           <AnalyticsWidgetSummary
             title="Game Sessions"
             percent={2.8}
-            total={1723315}
+            total={gameSessions}
             color="warning"
             icon={<Icon icon="mdi:gamepad-variant" style={{ fontSize: '48px' }} />}
             chart={{
@@ -217,7 +323,7 @@ export function GamingAnalyticsView() {
           <AnalyticsWidgetSummary
             title="Transactions"
             percent={3.6}
-            total={234}
+            total={totalTransactions}
             color="success"
             icon={<Icon icon="mdi:cash-multiple" style={{ fontSize: '48px' }} />}
             chart={{
@@ -300,14 +406,7 @@ export function GamingAnalyticsView() {
           />
         </Grid>
         <Grid xs={12} md={6} lg={4}>
-          <AnalyticsOrderTimeline
-            title="Recent Transactions"
-            list={[
-              { id: '1', title: 'Deposit', time: '2 hours ago', type: 'deposit' },
-              { id: '2', title: 'Withdrawal', time: '4 hours ago', type: 'withdrawal' },
-              { id: '3', title: 'Game Purchase', time: '6 hours ago', type: 'purchase' },
-            ]}
-          />
+          <AnalyticsOrderTimeline title="Recent Transactions" list={recentTransactions} />
         </Grid>
         <Grid xs={12} md={6} lg={4}>
           <AnalyticsCurrentVisits

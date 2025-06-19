@@ -24,9 +24,13 @@ export const navData = [
     icon: icon('ic-user'),
     children: [
       { title: 'Player List', path: '/playerListing' },
-      { title: 'Verification Queue', path: '/pending-kyc' },
       { title: 'Player Balances', path: '/players/balances' },
     ],
+  },
+  {
+    title: 'Pending KYC',
+    path: '/pending-kyc',
+    icon: icon('ic-lock'),
   },
   {
     title: 'Affiliate Management',
@@ -98,6 +102,11 @@ export const navData = [
     title: 'Payout-Approval',
     path: '/adminPayout',
     icon: <Icon icon="mdi:credit-card" fontSize="22px" />,
+  },
+  {
+    title: 'Platform Fee',
+    path: '/platform-fee',
+    icon: <Icon icon="mdi:percent" />,
   },
 ];
 

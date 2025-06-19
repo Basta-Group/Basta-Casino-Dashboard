@@ -15,6 +15,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
 import type { UserProps } from './types';
+import { UserKYCReview } from './view/user-kyc-review';
 
 export function UserDetailPage() {
   const { userId } = useParams();
@@ -23,6 +24,7 @@ export function UserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const token = localStorage.getItem('accessToken');
+  const [kycDialogOpen, setKycDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -200,7 +202,28 @@ export function UserDetailPage() {
           <DetailItem label="Last Login" value={formatDate(user.last_login)} />
           <DetailItem label="Last Deposit" value={formatDate(user.last_deposit_date)} />
           <DetailItem label="Last Withdrawal" value={formatDate(user.last_withdrawal_date)} />
+          <DetailItem label="KYC Status" value={user.sumsub_status || '-'} />
+          <DetailItem label="Admin KYC Status" value={user.admin_status || '-'} />
+          <DetailItem label="Admin Notes" value={user.admin_notes || '-'} />
+          <DetailItem label="Sumsub ID" value={user.sumsub_id || '-'} />
         </Grid>
+        {user.sumsub_id && (
+          <Button variant="outlined" onClick={() => setKycDialogOpen(true)} sx={{ mt: 3 }}>
+            View KYC Documents
+          </Button>
+        )}
+        {user.sumsub_id && (
+          <UserKYCReview
+            open={kycDialogOpen}
+            onClose={() => setKycDialogOpen(false)}
+            userId={user.id}
+            sumsubId={user.sumsub_id}
+            sumsubStatus={user.sumsub_status}
+            token={token || ''}
+            userData={user}
+            onStatusUpdate={() => {}}
+          />
+        )}
       </Container>
     </DashboardContent>
   );

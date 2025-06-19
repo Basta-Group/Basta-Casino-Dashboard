@@ -20,6 +20,8 @@ import DialogActions from '@mui/material/DialogActions';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
 
 import { useTable } from 'src/hooks/use-table';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -242,7 +244,6 @@ export function PendingKYCView() {
                 orderBy={table.orderBy}
                 onSort={table.onSort}
                 headLabel={[
-                  { id: 'username', label: 'Username' },
                   { id: 'email', label: 'Email' },
                   { id: 'phone_number', label: 'Phone Number' },
                   { id: 'sumsub_status', label: 'Sumsub Status' },
@@ -258,17 +259,17 @@ export function PendingKYCView() {
                     table.page * table.rowsPerPage + table.rowsPerPage
                   )
                   .map((row) => (
-                    <UserTableRow
-                      key={row.id}
-                      row={row}
-                      selected={false}
-                      onSelectRow={() => {}}
-                      onUpdateStatus={updateUserStatus}
-                      onDeleteUser={deleteUser}
-                      onKYCStatusUpdate={handleKYCStatusUpdate}
-                      onViewDocuments={viewDocuments}
-                      token={token}
-                    />
+                    <TableRow key={row.id}>
+                      <TableCell>{row.email || '-'}</TableCell>
+                      <TableCell>{row.phone_number || '-'}</TableCell>
+                      <TableCell>{row.sumsub_status || '-'}</TableCell>
+                      <TableCell>
+                        {row.sumsub_verification_date
+                          ? new Date(row.sumsub_verification_date).toLocaleDateString()
+                          : 'N/A'}
+                      </TableCell>
+                      <TableCell>{/* Actions, e.g., review button, can be added here */}</TableCell>
+                    </TableRow>
                   ))}
 
                 <TableEmptyRows

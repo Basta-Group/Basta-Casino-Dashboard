@@ -23,12 +23,19 @@ import ListSubheader from '@mui/material/ListSubheader';
 import DialogContent from '@mui/material/DialogContent';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemButton from '@mui/material/ListItemButton';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Checkbox from '@mui/material/Checkbox';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
 
 import { fToNow } from 'src/utils/format-time';
 
 import { env } from 'src/config/env.config';
 
 import { Scrollbar } from 'src/components/scrollbar';
+
+import { toast } from 'react-hot-toast';
 
 type NotificationItemProps = {
   id: string;
@@ -168,62 +175,78 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
   const [allNotifications, setAllNotifications] = useState<NotificationItemProps[]>([]);
   const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [filterType, setFilterType] = useState<string>('all');
+  const [detailsNotification, setDetailsNotification] = useState<NotificationItemProps | null>(
+    null
+  );
 
-  const fetchNotifications = async (page: number = 1, isViewAll: boolean = false) => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `${env.api.baseUrl}:${env.api.port}/api/auth/notifications?page=${page}&limit=${isViewAll ? 10 : 5}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
+  const fetchNotifications = useCallback(
+    async (page: number = 1, isViewAll: boolean = false) => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: (isViewAll ? 10 : 5).toString(),
+        });
+        if (filterType !== 'all') {
+          params.append('type', filterType);
         }
-      );
-      if (!response.ok) {
-        throw new Error('Failed to fetch notifications');
-      }
-      const data = await response.json();
-      if (data.success) {
-        const transformedNotifications = data.data.notifications.map((notification: any) => ({
-          id: notification._id,
-          type: notification.type,
-          title: notification.user_id?.username || notification.metadata?.username || 'User',
-          isUnRead: true,
-          description: notification.message,
-          avatarUrl: null,
-          postedAt: notification.created_at,
-          metadata: notification.metadata,
-          user_id: notification.user_id
-            ? {
-                username: notification.user_id.username,
-                email: notification.user_id.email,
-                phone_number: notification.user_id.phone_number,
-              }
-            : null,
-        }));
 
-        if (isViewAll) {
-          setAllNotifications(transformedNotifications);
+        const response = await fetch(
+          `${env.api.baseUrl}:${env.api.port}/api/auth/notifications?${params.toString()}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch notifications');
+        }
+        const data = await response.json();
+        if (data.success) {
+          const transformedNotifications = data.data.notifications.map((notification: any) => ({
+            id: notification._id,
+            type: notification.type,
+            title: notification.user_id?.username || notification.metadata?.username || 'User',
+            isUnRead: true,
+            description: notification.message,
+            avatarUrl: null,
+            postedAt: notification.created_at,
+            metadata: notification.metadata,
+            user_id: notification.user_id
+              ? {
+                  username: notification.user_id.username,
+                  email: notification.user_id.email,
+                  phone_number: notification.user_id.phone_number,
+                }
+              : null,
+          }));
+
+          if (isViewAll) {
+            setAllNotifications(transformedNotifications);
+          } else {
+            setNotifications(transformedNotifications);
+          }
+          setPagination(data.data.pagination);
         } else {
-          setNotifications(transformedNotifications);
+          setError(data.error || 'Failed to fetch notifications');
         }
-        setPagination(data.data.pagination);
-      } else {
-        setError(data.error || 'Failed to fetch notifications');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [filterType, setLoading, setError, setNotifications, setAllNotifications, setPagination]
+  );
 
   useEffect(() => {
     if (openPopover) {
       fetchNotifications(1, false);
     }
-  }, [openPopover]);
+  }, [openPopover, fetchNotifications]);
 
   const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setOpenPopover(event.currentTarget);
@@ -297,6 +320,126 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
     fetchNotifications(page, true);
   };
 
+  // Filtering notifications by type
+  const filteredNotifications =
+    filterType === 'all' ? notifications : notifications.filter((n) => n.type === filterType);
+
+  // Bulk select logic
+  const handleSelect = (id: string) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+  };
+  const handleSelectAll = () => {
+    if (selectedIds.length === filteredNotifications.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredNotifications.map((n) => n.id));
+    }
+  };
+  const handleBulkMarkRead = async () => {
+    try {
+      const response = await fetch(
+        `${env.api.baseUrl}:${env.api.port}/api/auth/notifications/mark-bulk-read`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+          body: JSON.stringify({ notificationIds: selectedIds }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to mark notifications as read');
+      }
+
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          selectedIds.includes(notification.id)
+            ? { ...notification, isUnRead: false }
+            : notification
+        )
+      );
+      setAllNotifications((prev) =>
+        prev.map((notification) =>
+          selectedIds.includes(notification.id)
+            ? { ...notification, isUnRead: false }
+            : notification
+        )
+      );
+      setSelectedIds([]);
+      toast.success('Selected notifications marked as read');
+      fetchNotifications(pagination.page, true); // Re-fetch to update counts
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      toast.error('Failed to mark notifications as read');
+    }
+  };
+  const handleBulkDelete = async () => {
+    try {
+      const response = await fetch(
+        `${env.api.baseUrl}:${env.api.port}/api/auth/notifications/bulk-delete`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+          body: JSON.stringify({ notificationIds: selectedIds }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete notifications');
+      }
+
+      setNotifications((prev) =>
+        prev.filter((notification) => !selectedIds.includes(notification.id))
+      );
+      setAllNotifications((prev) =>
+        prev.filter((notification) => !selectedIds.includes(notification.id))
+      );
+      setSelectedIds([]);
+      toast.success('Selected notifications deleted');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      toast.error('Failed to delete notifications');
+    }
+  };
+  const onToggleRead = async (id: string, markUnread: boolean) => {
+    try {
+      const endpoint = markUnread ? `mark-unread` : `mark-read`;
+      const response = await fetch(
+        `${env.api.baseUrl}:${env.api.port}/api/auth/notifications/${id}/${endpoint}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to mark as ${markUnread ? 'unread' : 'read'}`);
+      }
+
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((notification) =>
+          notification.id === id ? { ...notification, isUnRead: markUnread } : notification
+        )
+      );
+      setAllNotifications((prevAllNotifications) =>
+        prevAllNotifications.map((notification) =>
+          notification.id === id ? { ...notification, isUnRead: markUnread } : notification
+        )
+      );
+      toast.success(`Notification marked as ${markUnread ? 'unread' : 'read'}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      toast.error(`Failed to mark as ${markUnread ? 'unread' : 'read'}`);
+    }
+  };
+
   return (
     <>
       <IconButton
@@ -322,7 +465,7 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
         slotProps={{
           paper: {
             sx: {
-              width: 360,
+              width: 400,
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
@@ -343,26 +486,32 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
                 : `${totalUnRead} unread message${totalUnRead > 1 ? 's' : ''}`}
             </Typography>
           </Box>
-
           {totalUnRead > 0 && (
             <Tooltip title="Mark all as read">
               <IconButton
                 color="primary"
                 onClick={handleMarkAllAsRead}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: 'primary.lighter',
-                  },
-                }}
+                sx={{ '&:hover': { backgroundColor: 'primary.lighter' } }}
+                aria-label="Mark all as read"
               >
                 <Icon icon="solar:check-read-outline" width={20} />
               </IconButton>
             </Tooltip>
           )}
         </Box>
-
+        <Tabs
+          value={filterType}
+          onChange={(_, v) => setFilterType(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ px: 2, borderBottom: 1, borderColor: 'divider' }}
+        >
+          <Tab label="All" value="all" />
+          <Tab label="System" value="SYSTEM_NOTIFICATION" />
+          <Tab label="KYC" value="KYC" />
+          <Tab label="Payments" value="PAYMENT_RECEIVED" />
+        </Tabs>
         <Divider sx={{ borderStyle: 'dashed' }} />
-
         <Scrollbar fillContent sx={{ minHeight: 240, maxHeight: { xs: 360, sm: '60vh' } }}>
           {loading ? (
             <Box sx={{ p: 2 }}>
@@ -385,7 +534,7 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
               <Icon icon="solar:danger-circle-bold-duotone" width={48} color="error.main" />
               <Typography sx={{ mt: 2, color: 'error.main' }}>{error}</Typography>
             </Box>
-          ) : notifications.length === 0 ? (
+          ) : filteredNotifications.length === 0 ? (
             <Box
               sx={{
                 p: 3,
@@ -402,44 +551,121 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
             </Box>
           ) : (
             <>
-              <List
-                disablePadding
-                subheader={
-                  <ListSubheader disableSticky sx={{ py: 1, px: 2.5, typography: 'overline' }}>
-                    New
-                  </ListSubheader>
-                }
-              >
-                {notifications.slice(0, 2).map((notification) => (
-                  <NotificationItem
+              <Box sx={{ px: 2, py: 1, display: 'flex', alignItems: 'center' }}>
+                <Checkbox
+                  checked={
+                    selectedIds.length === filteredNotifications.length &&
+                    filteredNotifications.length > 0
+                  }
+                  indeterminate={
+                    selectedIds.length > 0 && selectedIds.length < filteredNotifications.length
+                  }
+                  onChange={handleSelectAll}
+                  inputProps={{ 'aria-label': 'Select all notifications' }}
+                />
+                <Button
+                  size="small"
+                  onClick={handleBulkMarkRead}
+                  disabled={selectedIds.length === 0}
+                  sx={{ ml: 1 }}
+                >
+                  Mark as Read
+                </Button>
+                <Button
+                  size="small"
+                  color="error"
+                  onClick={handleBulkDelete}
+                  disabled={selectedIds.length === 0}
+                  sx={{ ml: 1 }}
+                >
+                  Delete
+                </Button>
+              </Box>
+              <List disablePadding>
+                {filteredNotifications.map((notification) => (
+                  <ListItemButton
                     key={notification.id}
-                    notification={notification}
-                    onClick={() => handleMarkAsRead(notification.id)}
-                  />
-                ))}
-              </List>
-
-              <List
-                disablePadding
-                subheader={
-                  <ListSubheader disableSticky sx={{ py: 1, px: 2.5, typography: 'overline' }}>
-                    Earlier
-                  </ListSubheader>
-                }
-              >
-                {notifications.slice(2, 5).map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    onClick={() => handleMarkAsRead(notification.id)}
-                  />
+                    onClick={() => setDetailsNotification(notification)}
+                    sx={{
+                      py: 1.5,
+                      px: 2.5,
+                      mt: '1px',
+                      gap: 2,
+                      ...(notification.isUnRead && {
+                        bgcolor: 'action.selected',
+                      }),
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                      },
+                    }}
+                  >
+                    <Checkbox
+                      checked={selectedIds.includes(notification.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleSelect(notification.id);
+                      }}
+                      inputProps={{ 'aria-label': 'Select notification' }}
+                      sx={{ mr: 1 }}
+                    />
+                    <Avatar
+                      sx={{
+                        bgcolor: 'background.neutral',
+                        color: 'primary.main',
+                        width: 40,
+                        height: 40,
+                      }}
+                    >
+                      {renderContent(notification).avatarIcon}
+                    </Avatar>
+                    <ListItemText
+                      primary={renderContent(notification).title}
+                      primaryTypographyProps={{
+                        variant: 'subtitle2',
+                        sx: {
+                          fontWeight: notification.isUnRead ? 'fontWeightBold' : 'fontWeightMedium',
+                        },
+                      }}
+                      secondary={
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            mt: 0.5,
+                            gap: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: 'text.disabled',
+                          }}
+                        >
+                          <Icon icon="solar:clock-circle-outline" width={14} />
+                          {fToNow(notification.postedAt)}
+                        </Typography>
+                      }
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleRead(notification.id, !notification.isUnRead);
+                      }}
+                      aria-label={notification.isUnRead ? 'Mark as read' : 'Mark as unread'}
+                    >
+                      <Icon
+                        icon={
+                          notification.isUnRead
+                            ? 'solar:check-read-outline'
+                            : 'solar:mail-unread-outline'
+                        }
+                      />
+                    </IconButton>
+                  </ListItemButton>
                 ))}
               </List>
             </>
           )}
         </Scrollbar>
 
-        {notifications.length > 0 && (
+        {filteredNotifications.length > 0 && (
           <>
             <Divider sx={{ borderStyle: 'dashed' }} />
             <Box sx={{ p: 1 }}>
@@ -474,6 +700,45 @@ export function NotificationsPopover({ sx, ...other }: NotificationsPopoverProps
         error={error}
         onMarkAsRead={handleMarkAsRead}
       />
+
+      {/* Notification Details Modal */}
+      <Dialog
+        open={!!detailsNotification}
+        onClose={() => setDetailsNotification(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Notification Details</DialogTitle>
+        <DialogContent>
+          <Typography variant="subtitle1">{detailsNotification?.title}</Typography>
+          <TextField
+            id="notification-description-field"
+            label="Description"
+            fullWidth
+            multiline
+            rows={4}
+            value={detailsNotification?.description || ''}
+            InputProps={{ readOnly: true }}
+            sx={{ mb: 2, mt: 1 }}
+          />
+          <Typography variant="caption" color="text.secondary">
+            {detailsNotification?.postedAt ? fToNow(detailsNotification.postedAt) : ''}
+          </Typography>
+          {/* You can add more metadata/details here if `detailsNotification.metadata` has more fields */}
+          {detailsNotification?.metadata &&
+            Object.keys(detailsNotification.metadata).length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2">Metadata:</Typography>
+                {Object.entries(detailsNotification.metadata).map(([key, value]) => (
+                  <Typography key={key} variant="body2">{`${key}: ${String(value)}`}</Typography>
+                ))}
+              </Box>
+            )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDetailsNotification(null)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
