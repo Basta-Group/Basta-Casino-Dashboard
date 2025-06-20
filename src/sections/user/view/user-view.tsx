@@ -55,7 +55,6 @@ export function UserView() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedSumsubId, setSelectedSumsubId] = useState<string | null>(null);
   const [kycAction, setKycAction] = useState<'approved' | 'rejected' | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -157,13 +156,16 @@ export function UserView() {
       const action = kycAction === 'approved' ? 'approve' : 'reject';
       const apiUrl = `${env.api.baseUrl}:${env.api.port}/api/sumsub/${action}/${selectedUserId}`;
 
+      const body =
+        kycAction === 'rejected' && user?.admin_notes ? { adminNotes: user.admin_notes } : {};
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(kycAction === 'rejected' ? { adminNotes: rejectionReason } : {}),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -174,7 +176,7 @@ export function UserView() {
               ? {
                   ...prevUser,
                   admin_status: kycAction,
-                  admin_notes: kycAction === 'rejected' ? rejectionReason : 'Approved by admin',
+                  admin_notes: kycAction === 'rejected' ? user?.admin_notes : 'Approved by admin',
                   is_verified: kycAction === 'approved' ? 1 : 0,
                 }
               : prevUser
@@ -189,7 +191,6 @@ export function UserView() {
       toast.error('Failed to update KYC status');
     } finally {
       openKYCDialog.onFalse();
-      setRejectionReason('');
       setSelectedUserId(null);
       setKycAction(null);
     }
@@ -207,7 +208,11 @@ export function UserView() {
         setSelectedUserId(userId);
       }
       setKycAction(status);
-      setRejectionReason(reason || '');
+      if (status === 'rejected' && reason && userId) {
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => (user.id === userId ? { ...user, admin_notes: reason } : user))
+        );
+      }
       openKYCDialog.onTrue();
       openKYCReviewDialog.onFalse();
     },
@@ -394,31 +399,12 @@ export function UserView() {
             <strong>{users.find((u) => u.id === selectedUserId)?.username || 'Unknown'}</strong> (
             {users.find((u) => u.id === selectedUserId)?.fullname || 'No name provided'}).
           </Typography>
-          {kycAction === 'rejected' && (
-            <TextField
-              fullWidth
-              label="Reason for Rejection"
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              multiline
-              rows={4}
-              margin="normal"
-              placeholder="Please provide a detailed reason for rejection."
-              error={!rejectionReason.trim()}
-              helperText={!rejectionReason.trim() ? 'Rejection reason is required.' : ''}
-            />
-          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={openKYCDialog.onFalse} color="inherit">
             Cancel
           </Button>
-          <Button
-            onClick={confirmKYCStatus}
-            variant="contained"
-            color="primary"
-            disabled={kycAction === 'rejected' && !rejectionReason.trim()}
-          >
+          <Button onClick={confirmKYCStatus} variant="contained" color="primary">
             Confirm
           </Button>
         </DialogActions>

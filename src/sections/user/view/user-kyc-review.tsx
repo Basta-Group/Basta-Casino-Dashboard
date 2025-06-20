@@ -81,7 +81,7 @@ export function UserKYCReview({
                 throw new Error(`Document ID missing for document: ${JSON.stringify(doc)}`);
               }
               const imgResponse = await fetch(
-                `${env.api.baseUrl}:${env.api.port}/api/sumsub/documents/${sumsubId}/images/${doc.id}`,
+                `${env.api.baseUrl}:${env.api.port}/api/sumsub/documents/${sumsubId}/images/${doc.id}`, // No inspectionId needed
                 { headers: { Authorization: `Bearer ${token}` } }
               );
               if (imgResponse.ok) {
@@ -124,7 +124,6 @@ export function UserKYCReview({
   }, [onStatusUpdate]);
 
   const handleReject = useCallback(() => {
-    // Always call onStatusUpdate, let parent handle empty reason
     onStatusUpdate('rejected', rejectionReason);
     toast.success('KYC action initiated. Please confirm.');
   }, [rejectionReason, onStatusUpdate]);
