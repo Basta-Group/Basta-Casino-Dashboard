@@ -21,13 +21,13 @@ export const _myAccount = {
     
     if (adminToken) {
       const decoded = decodeToken(adminToken);
-      return decoded?.username || 'Admin User';
+      return decoded?.username || '';
     }
     if (affiliateToken) {
       const decoded = decodeToken(affiliateToken);
-      return decoded?.username || 'Affiliate User';
+      return decoded?.username || '';
     }
-    return 'Guest User';
+    return '';
   })(),
   email: (() => {
     const adminToken = localStorage.getItem('accessToken');
@@ -36,13 +36,13 @@ export const _myAccount = {
     if (adminToken) {
       const decoded = decodeToken(adminToken);
       console.log('decoded.email', decoded.email)
-      return decoded?.email || 'admin@bastagroup.com';
+      return decoded?.email || '';
     }
     if (affiliateToken) {
       const decoded = decodeToken(affiliateToken);
-      return decoded?.email || 'affiliate@bastagroup.com';
+      return decoded?.email || '';
     }
-    return 'guest@bastagroup.com';
+    return '';
   })(),
   photoURL: '/assets/images/avatar/avatar-25.webp',
   userRole: (() => {
@@ -57,7 +57,7 @@ export const _myAccount = {
       const decoded = decodeToken(affiliateToken);
       return decoded?.role || 'Affiliate';
     }
-    return 'Guest';
+    return '';
   })(),
   userId: (() => {
     const adminToken = localStorage.getItem('accessToken');
